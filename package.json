@@ -1,0 +1,37 @@
+{
+  "name": "sledgehammer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack-serve webpack.config.js",
+    "lobby": "ts-node lobby/lobby.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thomas Boyt <me@thomasboyt.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-loader": "^4.3.0",
+    "typescript": "^2.8.3",
+    "webpack": "^4.9.1",
+    "webpack-serve": "^1.0.2"
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/cors": "^2.8.4",
+    "@types/express": "^4.11.1",
+    "@types/query-string": "^5.1.0",
+    "@types/simple-peer": "^6.1.4",
+    "@types/uuid": "^3.4.3",
+    "@types/ws": "^5.1.1",
+    "axios": "^0.18.0",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "query-string": "^6.1.0",
+    "simple-peer": "^9.1.2",
+    "ts-node": "^6.0.5",
+    "uuid": "^3.2.1",
+    "ws": "^5.2.0"
+  }
+}
