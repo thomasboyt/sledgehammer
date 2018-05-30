@@ -31,8 +31,9 @@ function generateCode(length: number): string {
 
 app.post('/rooms', (req, res) => {
   // create game code
-  const code = generateCode(5);
   // (TODO: check uniqueness lol)
+  const code = generateCode(5);
+  rooms.set(code, {});
   res.json({ code });
 });
 
@@ -132,7 +133,20 @@ wss.on('connection', (ws, req) => {
   const query = url.parse(req.url!, true).query;
 
   if (typeof query.code !== 'string') {
-    // TODO: idk send an error message or something
+    ws.send(
+      JSON.stringify({
+        error: `Missing room code in query string`,
+      })
+    );
+
+    return ws.close();
+  } else if (!rooms.has(query.code)) {
+    ws.send(
+      JSON.stringify({
+        error: `No room exists with code ${query.code}`,
+      })
+    );
+
     return ws.close();
   }
 

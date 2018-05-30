@@ -2,6 +2,7 @@ import * as Peer from 'simple-peer';
 import axios from 'axios';
 import { lobbyServer } from './constants';
 import * as uuidv1 from 'uuid/v1';
+import HostGame from './HostGame';
 
 const peers = new Set<Peer.Instance>();
 
@@ -10,6 +11,8 @@ export default async function initializeHost() {
   console.log('Created room with code', code);
   console.log(`http://localhost:8080/?game=${code}`);
   const socket = createHostSocket(code);
+
+  const game = new HostGame();
 }
 
 // Host flow
