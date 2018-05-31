@@ -1,8 +1,6 @@
 const path = require('path');
 
 module.exports = {
-  mode: process.env.WEBPACK_SERVE ? 'development' : 'production',
-
   entry: './src/main.ts',
   module: {
     rules: [
@@ -18,10 +16,6 @@ module.exports = {
   },
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  serve: {
-    content: './static',
-    hot: false,
+    path: path.resolve(__dirname, '../dist'),
   },
 };
