@@ -17,6 +17,19 @@ export default async function initializeHost() {
     roomCode: code,
     isHost: true,
 
+    onOpen() {
+      // report room created to parent for debug iframe usage
+      if (window.parent !== window) {
+        window.parent.postMessage(
+          {
+            type: 'hostCreatedRoom',
+            roomCode: code,
+          },
+          window.location.origin
+        );
+      }
+    },
+
     onClientOfferSignal(offerSignal, answerCallback) {
       const peer = createPeer(answerCallback);
       peer.signal(offerSignal);
