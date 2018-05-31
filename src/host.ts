@@ -12,7 +12,7 @@ export default async function initializeHost() {
   console.log(`http://localhost:8080/?game=${code}`);
   const socket = createHostSocket(code);
 
-  const game = new HostGame();
+  const game = new HostGame(peers);
 }
 
 // Host flow
@@ -27,6 +27,7 @@ function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
   const p = new Peer({
     initiator: false,
     trickle: false,
+    objectMode: true,
   });
 
   p.on('error', (err) => {
@@ -41,8 +42,7 @@ function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
 
   p.on('connect', () => {
     console.log('CONNECT');
-
-    // TODO: this is where we need to take this peer object and throw it in
+    peers.add(p);
   });
 
   p.on('data', (data) => {
@@ -79,14 +79,6 @@ function createHostSocket(code: string) {
       });
 
       peer.signal(message.data.offerSignal);
-
-      peers.add(peer);
     }
   };
 }
-
-setInterval(() => {
-  for (let peer of peers) {
-    peer.send('hello world');
-  }
-}, 1000);

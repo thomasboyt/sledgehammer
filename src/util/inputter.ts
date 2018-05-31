@@ -5,7 +5,7 @@ import keyCodes from './keyCodes';
 
 export const keysDown = new Set<number>();
 
-const interruptKeyCodes = new Set([
+export const interruptKeyCodes = new Set([
   keyCodes.LEFT_ARROW,
   keyCodes.RIGHT_ARROW,
   keyCodes.UP_ARROW,

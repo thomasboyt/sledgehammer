@@ -1,12 +1,14 @@
 import * as Peer from 'simple-peer';
 import axios from 'axios';
 import { lobbyServer } from './constants';
+import ClientGame from './ClientGame';
 
 export default async function initializeClient(roomCode: string) {
   function createPeer() {
     const p = new Peer({
       initiator: true,
       trickle: false,
+      objectMode: true,
     });
 
     p.on('error', (err) => {
@@ -30,17 +32,12 @@ export default async function initializeClient(roomCode: string) {
 
     p.on('connect', () => {
       console.log('CONNECT');
-    });
 
-    p.on('data', (data) => {
-      console.log('data:', data);
-      // handle incoming data as client
+      const game = new ClientGame(p);
     });
 
     return p;
   }
-
-  // const answerSignal = await connectToHost(offerSignal, roomCode);
 
   const ws = new WebSocket(`ws://${lobbyServer}?code=${roomCode}`);
 
