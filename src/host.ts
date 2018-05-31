@@ -1,27 +1,32 @@
 import * as Peer from 'simple-peer';
-import axios from 'axios';
 import { lobbyServer } from './constants';
 import HostGame from './HostGame';
+import GroovejetClient from './groovejet/GroovejetClient';
+import { createRoom } from './groovejet/GroovejetHTTP';
 
 const peers = new Set<Peer.Instance>();
 
 let game: HostGame;
 export default async function initializeHost() {
-  const code = await createRoom();
+  const code = await createRoom(lobbyServer);
   console.log('Created room with code', code);
-  console.log(`http://localhost:8080/?game=${code}`);
-  const socket = createHostSocket(code);
+  console.log(`${window.location.origin}/?game=${code}`);
+
+  const groovejet = new GroovejetClient({
+    url: lobbyServer,
+    roomCode: code,
+    isHost: true,
+
+    onClientOfferSignal(offerSignal, answerCallback) {
+      const peer = createPeer(answerCallback);
+      peer.signal(offerSignal);
+    },
+  });
 
   game = new HostGame(peers);
 }
 
 // Host flow
-
-async function createRoom(): Promise<string> {
-  const resp = await axios.post(`http://${lobbyServer}/rooms`);
-  const code = resp.data.code;
-  return code;
-}
 
 function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
   const p = new Peer({
@@ -52,28 +57,4 @@ function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
   });
 
   return p;
-}
-
-function createHostSocket(code: string) {
-  const ws = new WebSocket(`ws://${lobbyServer}?code=${code}&host=true`);
-
-  ws.onmessage = (evt: MessageEvent) => {
-    const message = JSON.parse(evt.data);
-
-    if (message.type === 'clientConnection') {
-      const peer = createPeer((signalData: any) => {
-        ws.send(
-          JSON.stringify({
-            type: 'hostSignal',
-            data: {
-              answerSignal: signalData,
-              clientId: message.data.clientId,
-            },
-          })
-        );
-      });
-
-      peer.signal(message.data.offerSignal);
-    }
-  };
 }

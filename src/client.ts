@@ -2,6 +2,7 @@ import * as Peer from 'simple-peer';
 import axios from 'axios';
 import { lobbyServer } from './constants';
 import ClientGame from './ClientGame';
+import GroovejetClient from './groovejet/GroovejetClient';
 
 export default async function initializeClient(roomCode: string) {
   function createPeer() {
@@ -17,58 +18,33 @@ export default async function initializeClient(roomCode: string) {
 
     p.on('signal', (signalData) => {
       console.log('SIGNAL', JSON.stringify(signalData));
-
       console.log('sending client offer');
-      ws.send(
-        JSON.stringify({
-          type: 'clientSignal',
-          data: {
-            roomCode,
-            offerSignal: signalData,
-          },
-        })
-      );
+      groovejet.sendClientOfferSignal(signalData);
     });
 
     p.on('connect', () => {
       console.log('CONNECT');
-
       const game = new ClientGame(p);
     });
 
     return p;
   }
 
-  const ws = new WebSocket(`ws://${lobbyServer}?code=${roomCode}`);
+  // we wait to create the peer until after the websocket is established so the peer can
+  // immediately send the signal upon generation
+  let peer: Peer.Instance;
 
-  let p: Peer.Instance;
-  ws.onopen = () => {
-    p = createPeer();
-  };
+  const groovejet = new GroovejetClient({
+    url: lobbyServer,
+    roomCode,
+    isHost: false,
 
-  ws.onmessage = (evt: MessageEvent) => {
-    const message = JSON.parse(evt.data);
+    onOpen() {
+      peer = createPeer();
+    },
 
-    if (message.type === 'hostSignal') {
-      const answerSignal = message.data.answerSignal;
-      p.signal(answerSignal);
-    }
-  };
+    onHostAnswerSignal(answerSignal) {
+      peer.signal(answerSignal);
+    },
+  });
 }
-
-/**
- * Get the peer signal of the host for a given room code, to generate this client's peer signal
- */
-// async function getRtcConnectCode(code: string): Promise<string> {
-//   const resp = await axios.get(`http://${lobbyServer}/rooms/${code}`);
-//   return resp.data.rtcData;
-// }
-
-// /**
-//  * Connect a client to a host by sending the server the client's peer signal
-//  */
-// async function connectToHost(ownSignalData: any, code: string): Promise<void> {
-//   const resp = await axios.post(`http://${lobbyServer}/rooms/${code}`, {
-//     rtcData: ownSignalData,
-//   });
-// }
