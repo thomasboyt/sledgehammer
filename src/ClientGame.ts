@@ -55,11 +55,4 @@ export default class ClientGame {
     const state = ARSON.decode(snapshot) as GameState;
     render(this.canvasCtx, state);
   }
-
-  // sendSnapshot() {
-  //   /*
-  //    * TODO: state currently contains shit i ain't wanna serialize
-  //    */
-  //   this.sendToPeers(serialized);
-  // }
 }
