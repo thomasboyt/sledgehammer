@@ -1,7 +1,9 @@
+import { BoundingBox } from './util/collision';
+
 interface Level {}
 
-interface Player {
-  pos: [number, number];
+export interface Player {
+  box: BoundingBox;
   color: string;
   keysDown: Set<number>;
 }

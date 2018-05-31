@@ -1,4 +1,4 @@
-import GameState from './GameState';
+import GameState, { Player } from './GameState';
 import keyCodes from './util/keyCodes';
 import {
   registerListeners as registerInputterListeners,
@@ -8,6 +8,7 @@ import RunLoop from './util/RunLoop';
 import render from './render';
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
+import { isColliding, getXDepth, getYDepth } from './util/collision';
 
 interface PlayerOptions {
   color: string;
@@ -76,17 +77,59 @@ export default class HostGame {
     }
   }
 
+  movePlayer(player: Player, dt: number, vec: [number, number]) {
+    const xMove = vec[0] * MOVE_SPEED * dt;
+    const yMove = vec[1] * MOVE_SPEED * dt;
+
+    const players = this.state.players.values();
+
+    // Collision code is hacked together as fuck from
+    // https://gamedev.stackexchange.com/a/71123
+
+    if (xMove !== 0) {
+      player.box.center[0] += xMove;
+
+      for (let otherPlayer of players) {
+        if (player === otherPlayer) {
+          continue;
+        }
+
+        if (isColliding(player.box, otherPlayer.box)) {
+          const depth = getXDepth(player.box, otherPlayer.box);
+          player.box.center[0] -= depth;
+        }
+      }
+    }
+
+    if (yMove !== 0) {
+      player.box.center[1] += yMove;
+
+      for (let otherPlayer of players) {
+        if (player === otherPlayer) {
+          continue;
+        }
+
+        if (isColliding(player.box, otherPlayer.box)) {
+          const depth = getYDepth(player.box, otherPlayer.box);
+          player.box.center[1] -= depth;
+        }
+      }
+    }
+  }
+
   update(dt: number) {
     for (let player of this.state.players.values()) {
+      const vec: [number, number] = [0, 0];
       if (player.keysDown.has(keyCodes.RIGHT_ARROW)) {
-        player.pos[0] += dt * MOVE_SPEED;
+        vec[0] = 1;
       } else if (player.keysDown.has(keyCodes.LEFT_ARROW)) {
-        player.pos[0] -= dt * MOVE_SPEED;
+        vec[0] = -1;
       } else if (player.keysDown.has(keyCodes.UP_ARROW)) {
-        player.pos[1] -= dt * MOVE_SPEED;
+        vec[1] = -1;
       } else if (player.keysDown.has(keyCodes.DOWN_ARROW)) {
-        player.pos[1] += dt * MOVE_SPEED;
+        vec[1] = 1;
       }
+      this.movePlayer(player, dt, vec);
     }
 
     this.sendSnapshot();
@@ -116,7 +159,11 @@ export default class HostGame {
 
     this.state.players.set(playerIdCounter, {
       color: opts.color,
-      pos: [0, 0],
+      box: {
+        center: [50, playerIdCounter * 50],
+        width: 20,
+        height: 20,
+      },
       keysDown: new Set(),
     });
 

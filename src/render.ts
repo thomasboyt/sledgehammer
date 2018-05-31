@@ -13,6 +13,11 @@ export default function render(
 
   for (let player of state.players.values()) {
     ctx.fillStyle = player.color;
-    ctx.fillRect(player.pos[0], player.pos[1], 20, 20);
+    ctx.fillRect(
+      player.box.center[0] - player.box.width / 2,
+      player.box.center[1] - player.box.height / 2,
+      player.box.width,
+      player.box.height
+    );
   }
 }
