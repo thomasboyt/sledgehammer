@@ -1,7 +1,6 @@
 import * as Peer from 'simple-peer';
 import axios from 'axios';
 import { lobbyServer } from './constants';
-import * as uuidv1 from 'uuid/v1';
 import HostGame from './HostGame';
 
 const peers = new Set<Peer.Instance>();
@@ -62,19 +61,13 @@ function createHostSocket(code: string) {
     const message = JSON.parse(evt.data);
 
     if (message.type === 'clientConnection') {
-      // create Peer object
-      // send signal to lobby server, which sends to the client waiting to join
-      // we also give the peer a UUID that we can use to track it when it comes back
-      const clientId = uuidv1();
-      console.log('received clientConnection');
-
       const peer = createPeer((signalData: any) => {
         ws.send(
           JSON.stringify({
             type: 'hostSignal',
             data: {
               answerSignal: signalData,
-              clientId,
+              clientId: message.data.clientId,
             },
           })
         );
