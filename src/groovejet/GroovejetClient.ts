@@ -31,6 +31,7 @@ export default class GroovejetClient {
     this.ws = new WebSocket(url);
     this.ws.onopen = opts.onOpen || null;
     this.ws.onmessage = this.handleMessage.bind(this);
+    this.ws.onclose = this.handleClose.bind(this);
 
     this.onClientOfferSignal = opts.onClientOfferSignal;
     this.onHostAnswerSignal = opts.onHostAnswerSignal;
@@ -49,6 +50,10 @@ export default class GroovejetClient {
         this.sendHostAnswerSignal(answerSignal);
       });
     }
+  }
+
+  private handleClose() {
+    console.error('Lost connection to lobby server');
   }
 
   private send(msg: any) {
