@@ -6,11 +6,8 @@ import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
 
 export default class ClientGame {
-  // state: GameState;
-  // hostId: number;
   hostPeer: Peer.Instance;
   canvasCtx: CanvasRenderingContext2D;
-  // peers: Set<Peer.Instance>;
 
   constructor(hostPeer: Peer.Instance) {
     this.hostPeer = hostPeer;
@@ -50,8 +47,8 @@ export default class ClientGame {
   }
 
   sendToHost(data: {}) {
-    // const serialized = ARSON.encode(data);
-    // this.hostPeer.send(serialized);
+    const serialized = JSON.stringify(data);
+    this.hostPeer.send(serialized);
   }
 
   onHostSnapshot(snapshot: string) {

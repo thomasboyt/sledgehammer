@@ -6,13 +6,14 @@ import HostGame from './HostGame';
 
 const peers = new Set<Peer.Instance>();
 
+let game: HostGame;
 export default async function initializeHost() {
   const code = await createRoom();
   console.log('Created room with code', code);
   console.log(`http://localhost:8080/?game=${code}`);
   const socket = createHostSocket(code);
 
-  const game = new HostGame(peers);
+  game = new HostGame(peers);
 }
 
 // Host flow
@@ -43,6 +44,7 @@ function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
   p.on('connect', () => {
     console.log('CONNECT');
     peers.add(p);
+    game.onPeerConnected(p);
   });
 
   p.on('data', (data) => {

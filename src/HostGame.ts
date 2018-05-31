@@ -23,6 +23,8 @@ export default class HostGame {
   canvasCtx: CanvasRenderingContext2D;
   peers: Set<Peer.Instance>;
 
+  peerToPlayerId = new Map<Peer.Instance, number>();
+
   constructor(peers: Set<Peer.Instance>) {
     this.state = {
       level: {},
@@ -47,6 +49,24 @@ export default class HostGame {
     const loop = new RunLoop();
     loop.onTick(this.update.bind(this));
     loop.start();
+  }
+
+  onPeerConnected(peer: Peer.Instance) {
+    const playerId = this.addPlayer({
+      color: 'cyan',
+    });
+
+    this.peerToPlayerId.set(peer, playerId);
+
+    peer.on('data', (data: string) => {
+      const msg = JSON.parse(data);
+
+      if (msg.type === 'keyDown') {
+        this.onClientKeyDown(playerId, msg.data.keyCode);
+      } else if (msg.type === 'keyUp') {
+        this.onClientKeyUp(playerId, msg.data.keyCode);
+      }
+    });
   }
 
   sendToPeers(data: {}) {
