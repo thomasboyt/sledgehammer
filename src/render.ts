@@ -1,7 +1,5 @@
 import GameState from './GameState';
-
-const WIDTH = 640;
-const HEIGHT = 480;
+import { WIDTH, HEIGHT, TILE_SIZE } from './constants';
 
 export default function render(
   ctx: CanvasRenderingContext2D,
@@ -19,5 +17,16 @@ export default function render(
       player.box.width,
       player.box.height
     );
+  }
+
+  for (let y = 0; y < state.level.tiles.length; y += 1) {
+    const tileRow = state.level.tiles[y];
+    for (let x = 0; x < tileRow.length; x += 1) {
+      const tile = tileRow[x];
+      if (tile === 'wall') {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(x * 20, y * 20, TILE_SIZE, TILE_SIZE);
+      }
+    }
   }
 }

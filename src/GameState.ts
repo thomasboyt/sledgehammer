@@ -1,6 +1,10 @@
 import { BoundingBox } from './util/collision';
 
-interface Level {}
+export type Tile = 'wall' | null;
+
+export interface Level {
+  tiles: Tile[][];
+}
 
 export interface Player {
   box: BoundingBox;
