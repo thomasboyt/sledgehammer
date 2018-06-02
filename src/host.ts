@@ -3,6 +3,7 @@ import { lobbyServer } from './constants';
 import HostGame from './HostGame';
 import GroovejetClient from './groovejet/GroovejetClient';
 import { createRoom } from './groovejet/GroovejetHTTP';
+import showRoomLink from './roomLink';
 
 const peers = new Set<Peer.Instance>();
 
@@ -11,6 +12,8 @@ export default async function initializeHost() {
   const code = await createRoom(lobbyServer);
   console.log('Created room with code', code);
   console.log(`${window.location.origin}/?game=${code}`);
+
+  showRoomLink(code);
 
   const groovejet = new GroovejetClient({
     url: lobbyServer,
@@ -36,7 +39,7 @@ export default async function initializeHost() {
     },
   });
 
-  game = new HostGame(peers);
+  game = new HostGame();
 
   (window as any).game = game;
 }
@@ -70,6 +73,5 @@ function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
     console.log('data:', data);
     // handle incoming data as host
   });
-
   return p;
 }

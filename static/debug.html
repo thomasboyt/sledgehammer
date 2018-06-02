@@ -9,7 +9,7 @@
 
   <body>
     <div class="game-iframes">
-      <iframe id="host" src="/?host=true" width="640" height="480"></iframe>
+      <iframe id="host" src="/game.html?host=true" width="640" height="480"></iframe>
       <div id="client-container"></div>
     </div>
 
@@ -19,7 +19,7 @@
           if (evt.data.type === 'hostCreatedRoom') {
             const roomCode = evt.data.roomCode;
             document.getElementById('client-container').innerHTML = `
-              <iframe id="game" src="/?game=${roomCode}" width="640" height="480"></iframe>
+              <iframe id="game" src="/game.html?game=${roomCode}" width="640" height="480"></iframe>
             `;
           }
         }

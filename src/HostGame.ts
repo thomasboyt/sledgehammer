@@ -106,12 +106,11 @@ export default class HostGame {
   state: GameState;
   hostId: number;
   canvasCtx: CanvasRenderingContext2D;
-  peers: Set<Peer.Instance>;
   playerInputters = new Map<number, PlayerInputter>();
 
   peerToPlayerId = new Map<Peer.Instance, number>();
 
-  constructor(peers: Set<Peer.Instance>) {
+  constructor() {
     const tiles = getTilesFromString(tilesString);
 
     this.state = {
@@ -121,8 +120,6 @@ export default class HostGame {
       players: new Map(),
       bullets: [],
     };
-
-    this.peers = peers;
 
     // create a host player
     this.hostId = this.addPlayer({
@@ -158,11 +155,16 @@ export default class HostGame {
         this.onClientKeyUp(playerId, msg.data.keyCode);
       }
     });
+
+    peer.on('close', () => {
+      this.peerToPlayerId.delete(peer);
+      this.removePlayer(playerId);
+    });
   }
 
   sendToPeers(data: {}) {
     const serialized = JSON.stringify(data);
-    for (let peer of this.peers) {
+    for (let peer of this.peerToPlayerId.keys()) {
       peer.send(serialized);
     }
   }
@@ -318,5 +320,10 @@ export default class HostGame {
     this.playerInputters.set(playerIdCounter, new PlayerInputter());
 
     return playerIdCounter;
+  }
+
+  removePlayer(playerId: number) {
+    this.state.players.delete(playerId);
+    this.playerInputters.delete(playerId);
   }
 }
