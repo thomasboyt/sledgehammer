@@ -6,11 +6,10 @@ import initializeHost from './host';
 
 const query = queryString.parse(location.search);
 
-const isHost = !!query.host;
 const roomCode = query.game;
 
-if (isHost) {
-  initializeHost();
-} else {
+if (roomCode) {
   initializeClient(roomCode);
+} else {
+  initializeHost();
 }
