@@ -9,12 +9,18 @@ export interface Level {
 export interface Player {
   box: BoundingBox;
   color: string;
-  keysDown: Set<number>;
+  vec: [number, number];
+  angle: number;
+}
+
+export interface Bullet {
+  box: BoundingBox;
+  angle: number;
 }
 
 export default interface GameState {
   level: Level;
   players: Map<number, Player>;
-  // bullets: Bullet[];
+  bullets: Bullet[];
   // enemy: Enemies[];
 }

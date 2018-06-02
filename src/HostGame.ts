@@ -2,10 +2,7 @@ import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
 
 import keyCodes from './util/keyCodes';
-import {
-  registerListeners as registerInputterListeners,
-  keysDown as inputterKeysDown,
-} from './util/inputter';
+import PlayerInputter from './util/PlayerInputter';
 import RunLoop from './util/RunLoop';
 import {
   isColliding,
@@ -17,13 +14,15 @@ import {
 
 import GameState, { Player, Tile } from './GameState';
 import render from './render';
-import { TILE_SIZE } from './constants';
+import { TILE_SIZE, WIDTH, HEIGHT } from './constants';
+import { getVectorComponents } from './util/math';
 
 interface PlayerOptions {
   color: string;
 }
 
 const MOVE_SPEED = 0.1;
+const BULLET_SPEED = 0.2;
 
 let playerIdCounter = 0;
 
@@ -42,7 +41,7 @@ x                              x
 x                              x
 x                              x
 x                              x
-x                              x
+x      xxxxxx                  x
 x                              x
 x                              x
 x                              x
@@ -108,6 +107,7 @@ export default class HostGame {
   hostId: number;
   canvasCtx: CanvasRenderingContext2D;
   peers: Set<Peer.Instance>;
+  playerInputters = new Map<number, PlayerInputter>();
 
   peerToPlayerId = new Map<Peer.Instance, number>();
 
@@ -119,6 +119,7 @@ export default class HostGame {
         tiles,
       },
       players: new Map(),
+      bullets: [],
     };
 
     this.peers = peers;
@@ -128,13 +129,13 @@ export default class HostGame {
       color: 'red',
     });
 
-    this.state.players.get(this.hostId)!.keysDown = inputterKeysDown;
-
-    registerInputterListeners();
-
     this.canvasCtx = (document.getElementById(
       'game'
     ) as HTMLCanvasElement).getContext('2d')!;
+
+    const hostInputter = new PlayerInputter();
+    hostInputter.registerLocalListeners();
+    this.playerInputters.set(this.hostId, hostInputter);
 
     const loop = new RunLoop();
     loop.onTick(this.update.bind(this));
@@ -189,7 +190,6 @@ export default class HostGame {
 
         if (isColliding(player.box, other.box)) {
           const depth = getXDepth(player.box, other.box);
-          console.log('collision very yes', depth);
           player.box.center[0] -= depth;
         }
       }
@@ -209,27 +209,75 @@ export default class HostGame {
         }
       }
     }
+
+    player.vec = vec;
+
+    if (vec[0] !== 0 || vec[1] !== 0) {
+      let angle = Math.atan(player.vec[1] / player.vec[0]);
+      if (player.vec[0] < 0) {
+        angle += Math.PI;
+      }
+
+      player.angle = angle;
+    }
+  }
+
+  playerShoot(player: Player) {
+    this.state.bullets.push({
+      // todo: spawn from edge of player instead of center
+      box: {
+        center: [player.box.center[0], player.box.center[1]],
+        width: 10,
+        height: 6,
+      },
+      angle: player.angle,
+    });
   }
 
   update(dt: number) {
-    for (let player of this.state.players.values()) {
-      const vec: [number, number] = [0, 0];
+    for (let [playerId, player] of this.state.players.entries()) {
+      const inputter = this.playerInputters.get(playerId)!;
 
-      if (player.keysDown.has(keyCodes.RIGHT_ARROW)) {
+      let vec: [number, number] = [0, 0];
+
+      if (inputter.keysDown.has(keyCodes.RIGHT_ARROW)) {
         vec[0] += 1;
       }
-      if (player.keysDown.has(keyCodes.LEFT_ARROW)) {
+      if (inputter.keysDown.has(keyCodes.LEFT_ARROW)) {
         vec[0] -= 1;
       }
-      if (player.keysDown.has(keyCodes.UP_ARROW)) {
+      if (inputter.keysDown.has(keyCodes.UP_ARROW)) {
         vec[1] -= 1;
       }
-      if (player.keysDown.has(keyCodes.DOWN_ARROW)) {
+      if (inputter.keysDown.has(keyCodes.DOWN_ARROW)) {
         vec[1] += 1;
       }
 
       this.movePlayer(player, dt, vec);
+
+      const keysPressed = inputter.getKeysPressedAndClear();
+      if (keysPressed.has(keyCodes.SPACE)) {
+        this.playerShoot(player);
+      }
     }
+
+    for (let bullet of this.state.bullets) {
+      // update with angle + velocity i guess
+      const vec = getVectorComponents(BULLET_SPEED * dt, bullet.angle);
+      bullet.box.center[0] += vec[0];
+      bullet.box.center[1] += vec[1];
+    }
+
+    this.state.bullets = this.state.bullets.filter((bullet) => {
+      // clean up off screen bullets
+      // (this shouldn't need to happen once collision detection is in obviously)
+      const x = bullet.box.center[0];
+      const y = bullet.box.center[1];
+      const w = bullet.box.width;
+      const h = bullet.box.height;
+
+      return !(x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT);
+    });
 
     this.sendSnapshot();
 
@@ -246,11 +294,11 @@ export default class HostGame {
 
   // TODO: move this elsewhere maybe idk
   onClientKeyDown(playerId: number, keyCode: number) {
-    this.state.players.get(playerId)!.keysDown.add(keyCode);
+    this.playerInputters.get(playerId)!.onKeyDown(keyCode);
   }
 
   onClientKeyUp(playerId: number, keyCode: number) {
-    this.state.players.get(playerId)!.keysDown.delete(keyCode);
+    this.playerInputters.get(playerId)!.onKeyUp(keyCode);
   }
 
   addPlayer(opts: PlayerOptions) {
@@ -263,8 +311,11 @@ export default class HostGame {
         width: 20,
         height: 20,
       },
-      keysDown: new Set(),
+      vec: [0, 0],
+      angle: 0,
     });
+
+    this.playerInputters.set(playerIdCounter, new PlayerInputter());
 
     return playerIdCounter;
   }

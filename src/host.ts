@@ -37,6 +37,8 @@ export default async function initializeHost() {
   });
 
   game = new HostGame(peers);
+
+  (window as any).game = game;
 }
 
 // Host flow

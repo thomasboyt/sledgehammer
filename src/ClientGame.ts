@@ -1,7 +1,7 @@
 import GameState from './GameState';
 import keyCodes from './util/keyCodes';
 import render from './render';
-import { interruptKeyCodes } from './util/inputter';
+import { interruptKeyCodes } from './util/keyCodes';
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
 

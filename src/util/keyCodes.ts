@@ -1,4 +1,4 @@
-export default {
+const keyCodes = {
   BACKSPACE: 8,
   TAB: 9,
   ENTER: 13,
@@ -81,3 +81,13 @@ export default {
   CLOSE_SQUARE_BRACKET: 221,
   SINGLE_QUOTE: 222,
 };
+
+export const interruptKeyCodes = new Set([
+  keyCodes.LEFT_ARROW,
+  keyCodes.RIGHT_ARROW,
+  keyCodes.UP_ARROW,
+  keyCodes.DOWN_ARROW,
+  keyCodes.SPACE,
+]);
+
+export default keyCodes;
