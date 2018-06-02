@@ -31,18 +31,18 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 x                              x
 x                              x
 x                              x
-x       x  x   xxx             x
-x       x  x    x              x
-x       xxxx    x              x
-x       x  x    x              x
-x       x  x   xxx             x
+x            x x xxx           x
+x            x x  x            x
+x            xxx  x            x
+x            x x  x            x
+x            x x xxx           x
 x                              x
 x                              x
-x                              x
-x                              x
-x                              x
-x      xxxxxx                  x
-x                              x
+x      xxx x x xxx xxx xxx     x
+x       x  x x x   x x x       x
+x       x  xxx xxx xx  xxx     x
+x       x  x x x   x x x       x
+x       x  x x xxx x x xxx     x
 x                              x
 x                              x
 x                              x
@@ -278,12 +278,59 @@ export default class HostGame {
       const w = bullet.box.width;
       const h = bullet.box.height;
 
-      return !(x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT);
+      if (x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT) {
+        return false;
+      }
+
+      // remove bullets colliding with things
+      if (this.testCollisionWithTiles(bullet.box)) {
+        return false;
+      }
+
+      return true;
     });
 
     this.sendSnapshot();
 
     render(this.canvasCtx, this.state);
+  }
+
+  testCollisionWithTiles(box: BoundingBox): boolean {
+    // this fancy logic just filters down the tiles we're checking collisions with to the ones
+    // around the box being tested
+    // it hasn't been tested with boxes larger than one tile yet but i think it might work idk
+
+    const leftX = box.center[0] - box.width / 2;
+    const rightX = box.center[0] + box.width / 2;
+    const topY = box.center[1] - box.height / 2;
+    const bottomY = box.center[1] + box.height / 2;
+
+    for (
+      let tileY = Math.floor(topY / TILE_SIZE);
+      tileY <= Math.ceil(bottomY / TILE_SIZE);
+      tileY += 1
+    ) {
+      for (
+        let tileX = Math.floor(leftX / TILE_SIZE);
+        tileX <= Math.ceil(rightX / TILE_SIZE);
+        tileX += 1
+      ) {
+        const tile = this.state.level.tiles[tileY][tileX];
+
+        if (tile === 'wall') {
+          return isColliding(box, {
+            center: [
+              tileX * TILE_SIZE + TILE_SIZE / 2,
+              tileY * TILE_SIZE + TILE_SIZE / 2,
+            ],
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+          });
+        }
+      }
+    }
+
+    return false;
   }
 
   sendSnapshot() {
@@ -310,8 +357,8 @@ export default class HostGame {
       color: opts.color,
       box: {
         center: [50, playerIdCounter * 50],
-        width: 20,
-        height: 20,
+        width: 18,
+        height: 18,
       },
       vec: [0, 0],
       angle: 0,
