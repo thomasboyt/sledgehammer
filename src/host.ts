@@ -69,9 +69,5 @@ function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
     game.onPeerConnected(p);
   });
 
-  p.on('data', (data) => {
-    console.log('data:', data);
-    // handle incoming data as host
-  });
   return p;
 }
