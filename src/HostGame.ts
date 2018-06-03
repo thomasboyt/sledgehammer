@@ -124,12 +124,6 @@ function moveEntitiesAndResolveCollisions(state: GameState, dt: number) {
 
     const collidedEntities = new Set<Entity>();
 
-    // TODO:
-    // Only push entities out of each other if they've opted into it, somehow?
-    // Like, bullet does not need to be pushed out
-    // It doesn't super matter in cases of things getting destroyed on the same frame anyways,
-    // but eh.
-
     // TODO: need to make sure this is prioritized correctly
     //
     // e.g. if player B collides with another, stationary player A, player *B* should get moved back
