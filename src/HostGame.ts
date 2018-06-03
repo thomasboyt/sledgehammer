@@ -12,10 +12,11 @@ import {
   BoundingBox,
 } from './util/collision';
 
-import GameState, { Player, Tile } from './GameState';
+import GameState, { Player, Tile, Entity } from './GameState';
 import render from './render';
 import { TILE_SIZE, WIDTH, HEIGHT } from './constants';
 import { getVectorComponents } from './util/math';
+import { isDeepStrictEqual } from 'util';
 
 interface PlayerOptions {
   color: string;
@@ -73,12 +74,8 @@ function getTilesFromString(str: string): Tile[][] {
   return tiles;
 }
 
-interface CollisionEntity {
-  box: BoundingBox;
-}
-
-function tilesToCollisionEntities(tiles: Tile[][]): CollisionEntity[] {
-  const collisionEntities: CollisionEntity[] = [];
+function tilesToCollisionEntities(tiles: Tile[][]): Entity[] {
+  const collisionEntities: Entity[] = [];
 
   for (let y = 0; y < tiles.length; y += 1) {
     const tileRow = tiles[y];
@@ -86,20 +83,97 @@ function tilesToCollisionEntities(tiles: Tile[][]): CollisionEntity[] {
       const tile = tileRow[x];
       if (tile === 'wall') {
         collisionEntities.push({
-          box: {
-            center: [
-              x * TILE_SIZE + TILE_SIZE / 2,
-              y * TILE_SIZE + TILE_SIZE / 2,
-            ],
-            width: TILE_SIZE,
-            height: TILE_SIZE,
-          },
+          type: 'wall',
+          center: [
+            x * TILE_SIZE + TILE_SIZE / 2,
+            y * TILE_SIZE + TILE_SIZE / 2,
+          ],
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+          angle: 0,
         });
       }
     }
   }
 
   return collisionEntities;
+}
+
+function handleCollision(state: GameState, entity: Entity, other: Entity) {
+  if (entity.type === 'bullet' && other.type === 'wall') {
+    state.bullets = state.bullets.filter((bullet) => entity !== bullet);
+  }
+}
+
+function shouldResolveCollision(entity: Entity, other: Entity): boolean {
+  return (
+    entity.type === 'player' &&
+    (other.type === 'wall' || other.type === 'player')
+  );
+}
+
+function moveEntitiesAndResolveCollisions(state: GameState, dt: number) {
+  // TODO: cache the fuck outta this
+  const tileEntities = tilesToCollisionEntities(state.level.tiles);
+  const entities = [...state.players.values(), ...state.bullets];
+  const collisionTargets = [...entities, ...tileEntities];
+
+  for (let entity of entities) {
+    const vec: [number, number] = [entity.vec[0] * dt, entity.vec[1] * dt];
+
+    const collidedEntities = new Set<Entity>();
+
+    // TODO:
+    // Only push entities out of each other if they've opted into it, somehow?
+    // Like, bullet does not need to be pushed out
+    // It doesn't super matter in cases of things getting destroyed on the same frame anyways,
+    // but eh.
+
+    // TODO: need to make sure this is prioritized correctly
+    //
+    // e.g. if player B collides with another, stationary player A, player *B* should get moved back
+    // but if player A comes first in the iteration order, it would be moved back, without a logic
+    // check
+    // ALSO if two players move towards each other at same speed, if this is done in "order" then one will be pushed back while the other moves into them!
+
+    entity.center[0] += vec[0];
+
+    for (let other of collisionTargets) {
+      if (entity === other) {
+        continue;
+      }
+
+      if (isColliding(entity, other)) {
+        if (shouldResolveCollision(entity, other)) {
+          const xDepth = getXDepth(entity, other);
+          entity.center[0] -= xDepth;
+        }
+        collidedEntities.add(other);
+      }
+    }
+
+    entity.center[1] += vec[1];
+
+    for (let other of collisionTargets) {
+      if (entity === other) {
+        continue;
+      }
+
+      if (isColliding(entity, other)) {
+        if (shouldResolveCollision(entity, other)) {
+          const yDepth = getYDepth(entity, other);
+          entity.center[1] -= yDepth;
+        }
+        collidedEntities.add(other);
+      }
+    }
+
+    for (let other of collidedEntities) {
+      // TODO: pass some information about the collision intersection here?
+      // (example use case: reflective bullet)
+      handleCollision(state, entity, other);
+    }
+  }
 }
 
 export default class HostGame {
@@ -169,70 +243,17 @@ export default class HostGame {
     }
   }
 
-  movePlayer(player: Player, dt: number, vec: [number, number]) {
-    const xMove = vec[0] * MOVE_SPEED * dt;
-    const yMove = vec[1] * MOVE_SPEED * dt;
-
-    const players = this.state.players.values();
-    // TODO: cache the fuck outta this
-    const tiles = tilesToCollisionEntities(this.state.level.tiles);
-
-    const collisionEntities = [...players, ...tiles];
-
-    // Collision code is hacked together as fuck from
-    // https://gamedev.stackexchange.com/a/71123
-
-    if (xMove !== 0) {
-      player.box.center[0] += xMove;
-
-      for (let other of collisionEntities) {
-        if (player === other) {
-          continue;
-        }
-
-        if (isColliding(player.box, other.box)) {
-          const depth = getXDepth(player.box, other.box);
-          player.box.center[0] -= depth;
-        }
-      }
-    }
-
-    if (yMove !== 0) {
-      player.box.center[1] += yMove;
-
-      for (let other of collisionEntities) {
-        if (player === other) {
-          continue;
-        }
-
-        if (isColliding(player.box, other.box)) {
-          const depth = getYDepth(player.box, other.box);
-          player.box.center[1] -= depth;
-        }
-      }
-    }
-
-    player.vec = vec;
-
-    if (vec[0] !== 0 || vec[1] !== 0) {
-      let angle = Math.atan(player.vec[1] / player.vec[0]);
-      if (player.vec[0] < 0) {
-        angle += Math.PI;
-      }
-
-      player.angle = angle;
-    }
-  }
-
   playerShoot(player: Player) {
+    const vec = getVectorComponents(BULLET_SPEED, player.angle);
+
     this.state.bullets.push({
+      type: 'bullet',
       // todo: spawn from edge of player instead of center
-      box: {
-        center: [player.box.center[0], player.box.center[1]],
-        width: 10,
-        height: 6,
-      },
+      center: [player.center[0], player.center[1]],
+      width: 6,
+      height: 6,
       angle: player.angle,
+      vec,
     });
   }
 
@@ -242,6 +263,7 @@ export default class HostGame {
 
       let vec: [number, number] = [0, 0];
 
+      // TODO: SET VECTOR FROM ANGLE INSTEAD OF OTHER WAY AROUND
       if (inputter.keysDown.has(keyCodes.RIGHT_ARROW)) {
         vec[0] += 1;
       }
@@ -255,7 +277,16 @@ export default class HostGame {
         vec[1] += 1;
       }
 
-      this.movePlayer(player, dt, vec);
+      if (vec[0] !== 0 || vec[1] !== 0) {
+        let angle = Math.atan(player.vec[1] / player.vec[0]);
+        if (player.vec[0] < 0) {
+          angle += Math.PI;
+        }
+
+        player.angle = angle;
+      }
+
+      player.vec = [vec[0] * MOVE_SPEED, vec[1] * MOVE_SPEED];
 
       const keysPressed = inputter.getKeysPressedAndClear();
       if (keysPressed.has(keyCodes.SPACE)) {
@@ -263,74 +294,26 @@ export default class HostGame {
       }
     }
 
-    for (let bullet of this.state.bullets) {
-      // update with angle + velocity i guess
-      const vec = getVectorComponents(BULLET_SPEED * dt, bullet.angle);
-      bullet.box.center[0] += vec[0];
-      bullet.box.center[1] += vec[1];
-    }
-
     this.state.bullets = this.state.bullets.filter((bullet) => {
       // clean up off screen bullets
       // (this shouldn't need to happen once collision detection is in obviously)
-      const x = bullet.box.center[0];
-      const y = bullet.box.center[1];
-      const w = bullet.box.width;
-      const h = bullet.box.height;
+      const x = bullet.center[0];
+      const y = bullet.center[1];
+      const w = bullet.width;
+      const h = bullet.height;
 
       if (x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT) {
-        return false;
-      }
-
-      // remove bullets colliding with things
-      if (this.testCollisionWithTiles(bullet.box)) {
         return false;
       }
 
       return true;
     });
 
+    moveEntitiesAndResolveCollisions(this.state, dt);
+
     this.sendSnapshot();
 
     render(this.canvasCtx, this.state);
-  }
-
-  testCollisionWithTiles(box: BoundingBox): boolean {
-    // this fancy logic just filters down the tiles we're checking collisions with to the ones
-    // around the box being tested
-    // it hasn't been tested with boxes larger than one tile yet but i think it might work idk
-
-    const leftX = box.center[0] - box.width / 2;
-    const rightX = box.center[0] + box.width / 2;
-    const topY = box.center[1] - box.height / 2;
-    const bottomY = box.center[1] + box.height / 2;
-
-    for (
-      let tileY = Math.floor(topY / TILE_SIZE);
-      tileY <= Math.ceil(bottomY / TILE_SIZE);
-      tileY += 1
-    ) {
-      for (
-        let tileX = Math.floor(leftX / TILE_SIZE);
-        tileX <= Math.ceil(rightX / TILE_SIZE);
-        tileX += 1
-      ) {
-        const tile = this.state.level.tiles[tileY][tileX];
-
-        if (tile === 'wall') {
-          return isColliding(box, {
-            center: [
-              tileX * TILE_SIZE + TILE_SIZE / 2,
-              tileY * TILE_SIZE + TILE_SIZE / 2,
-            ],
-            width: TILE_SIZE,
-            height: TILE_SIZE,
-          });
-        }
-      }
-    }
-
-    return false;
   }
 
   sendSnapshot() {
@@ -354,14 +337,15 @@ export default class HostGame {
     playerIdCounter += 1;
 
     this.state.players.set(playerIdCounter, {
-      color: opts.color,
-      box: {
-        center: [50, playerIdCounter * 50],
-        width: 18,
-        height: 18,
-      },
-      vec: [0, 0],
+      type: 'player',
+
+      center: [50, playerIdCounter * 50],
+      width: 18,
+      height: 18,
       angle: 0,
+
+      color: opts.color,
+      vec: [0, 0],
     });
 
     this.playerInputters.set(playerIdCounter, new PlayerInputter());

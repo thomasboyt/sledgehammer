@@ -9,15 +9,15 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   // 3. rotate by angle based on current vector
 
   ctx.save();
-  ctx.translate(player.box.center[0], player.box.center[1]);
+  ctx.translate(player.center[0], player.center[1]);
   ctx.rotate(player.angle);
 
   ctx.fillStyle = player.color;
 
   ctx.beginPath();
-  ctx.moveTo(-player.box.width / 2, -player.box.height / 2);
-  ctx.lineTo(-player.box.width / 2, player.box.height / 2);
-  ctx.lineTo(player.box.width / 2, 0);
+  ctx.moveTo(-player.width / 2, -player.height / 2);
+  ctx.lineTo(-player.width / 2, player.height / 2);
+  ctx.lineTo(player.width / 2, 0);
   ctx.closePath();
   ctx.fill();
 
@@ -26,15 +26,15 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
 
 function renderBullet(ctx: CanvasRenderingContext2D, bullet: Bullet) {
   ctx.save();
-  ctx.translate(bullet.box.center[0], bullet.box.center[1]);
+  ctx.translate(bullet.center[0], bullet.center[1]);
   ctx.rotate(bullet.angle);
 
   ctx.fillStyle = 'limegreen';
   ctx.fillRect(
-    -bullet.box.width / 2,
-    -bullet.box.height / 2,
-    bullet.box.width,
-    bullet.box.height
+    -bullet.width / 2,
+    -bullet.height / 2,
+    bullet.width,
+    bullet.height
   );
   ctx.restore();
 }

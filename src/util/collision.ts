@@ -4,6 +4,9 @@ export interface BoundingBox {
   center: Coordinates;
   width: number;
   height: number;
+  // TODO: ACTUALLY SUPPORT COLLISIONS USING THIS LMAO
+  angle: number;
+  vec?: [number, number];
 }
 
 interface SidePositions {
