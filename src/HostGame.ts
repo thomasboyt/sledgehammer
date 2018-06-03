@@ -22,6 +22,7 @@ interface PlayerOptions {
   color: string;
 }
 
+const MAX_FRAME_MS = 50;
 const MOVE_SPEED = 0.1;
 const BULLET_SPEED = 0.2;
 
@@ -209,7 +210,7 @@ export default class HostGame {
     this.playerInputters.set(this.hostId, hostInputter);
 
     const loop = new RunLoop();
-    loop.onTick(this.update.bind(this));
+    loop.onTick(this.onTick.bind(this));
     loop.start();
   }
 
@@ -255,6 +256,23 @@ export default class HostGame {
       angle: player.angle,
       vec,
     });
+  }
+
+  onTick(dt: number) {
+    if (dt > MAX_FRAME_MS) {
+      const maxFrames = Math.floor(dt / MAX_FRAME_MS);
+      for (let i = 0; i < maxFrames; i += 1) {
+        this.update(MAX_FRAME_MS);
+      }
+
+      const leftoverFrameDt = dt % MAX_FRAME_MS;
+      this.update(leftoverFrameDt);
+    } else {
+      this.update(dt);
+    }
+
+    this.sendSnapshot();
+    render(this.canvasCtx, this.state);
   }
 
   update(dt: number) {
@@ -310,10 +328,6 @@ export default class HostGame {
     });
 
     moveEntitiesAndResolveCollisions(this.state, dt);
-
-    this.sendSnapshot();
-
-    render(this.canvasCtx, this.state);
   }
 
   sendSnapshot() {
