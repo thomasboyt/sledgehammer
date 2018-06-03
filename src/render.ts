@@ -22,6 +22,14 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   ctx.fill();
 
   ctx.restore();
+
+  ctx.strokeStyle = player.color;
+  ctx.strokeRect(
+    player.center[0] - player.width / 2,
+    player.center[1] - player.height / 2,
+    player.width,
+    player.height
+  );
 }
 
 function renderBullet(ctx: CanvasRenderingContext2D, bullet: Bullet) {
