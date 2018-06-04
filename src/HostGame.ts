@@ -17,6 +17,7 @@ import render from './render';
 import { TILE_SIZE, WIDTH, HEIGHT } from './constants';
 import { getVectorComponents } from './util/math';
 import { isDeepStrictEqual } from 'util';
+import { setupCanvas } from './setupCanvas';
 
 interface PlayerOptions {
   color: string;
@@ -195,9 +196,8 @@ export default class HostGame {
       color: 'red',
     });
 
-    this.canvasCtx = (document.getElementById(
-      'game'
-    ) as HTMLCanvasElement).getContext('2d')!;
+    const canvas = setupCanvas('#game');
+    this.canvasCtx = canvas.getContext('2d')!;
 
     const hostInputter = new PlayerInputter();
     hostInputter.registerLocalListeners();

@@ -4,6 +4,7 @@ import render from './render';
 import { interruptKeyCodes } from './util/keyCodes';
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
+import { setupCanvas } from './setupCanvas';
 
 export default class ClientGame {
   hostPeer: Peer.Instance;
@@ -41,9 +42,8 @@ export default class ClientGame {
       });
     });
 
-    this.canvasCtx = (document.getElementById(
-      'game'
-    ) as HTMLCanvasElement).getContext('2d')!;
+    const canvas = setupCanvas('#game');
+    this.canvasCtx = canvas.getContext('2d')!;
   }
 
   sendToHost(data: {}) {
