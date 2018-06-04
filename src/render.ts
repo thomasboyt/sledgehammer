@@ -1,6 +1,7 @@
-import GameState, { Player, Bullet } from './GameState';
+import GameState, { Player, Bullet, Tile } from './GameState';
 import { WIDTH, HEIGHT, TILE_SIZE } from './constants';
 import { stat } from 'fs';
+import createCachedRender from './util/createCachedRender';
 
 function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   // drawing the player works like this:
@@ -47,6 +48,24 @@ function renderBullet(ctx: CanvasRenderingContext2D, bullet: Bullet) {
   ctx.restore();
 }
 
+const renderTiles = createCachedRender(
+  WIDTH,
+  HEIGHT,
+  (ctx: CanvasRenderingContext2D, tiles: Tile[][]) => {
+    ctx.fillStyle = 'yellow';
+
+    for (let y = 0; y < tiles.length; y += 1) {
+      const tileRow = tiles[y];
+      for (let x = 0; x < tileRow.length; x += 1) {
+        const tile = tileRow[x];
+        if (tile === 'wall') {
+          ctx.fillRect(x * 20, y * 20, TILE_SIZE, TILE_SIZE);
+        }
+      }
+    }
+  }
+);
+
 export default function render(
   ctx: CanvasRenderingContext2D,
   state: GameState
@@ -55,16 +74,7 @@ export default function render(
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  for (let y = 0; y < state.level.tiles.length; y += 1) {
-    const tileRow = state.level.tiles[y];
-    for (let x = 0; x < tileRow.length; x += 1) {
-      const tile = tileRow[x];
-      if (tile === 'wall') {
-        ctx.fillStyle = 'yellow';
-        ctx.fillRect(x * 20, y * 20, TILE_SIZE, TILE_SIZE);
-      }
-    }
-  }
+  renderTiles(ctx, 1, state.level.tiles);
 
   for (let player of state.players.values()) {
     renderPlayer(ctx, player);
