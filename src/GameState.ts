@@ -16,10 +16,12 @@ export interface Player extends Entity {
   type: 'player';
   color: string;
   vec: [number, number];
+  angle: number;
 }
 
 export interface Bullet extends Entity {
   vec: [number, number];
+  angle: number;
 }
 
 export default interface GameState {

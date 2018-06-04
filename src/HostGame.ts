@@ -92,7 +92,6 @@ function tilesToCollisionEntities(tiles: Tile[][]): Entity[] {
           ],
           width: TILE_SIZE,
           height: TILE_SIZE,
-          angle: 0,
         });
       }
     }
@@ -275,7 +274,6 @@ export default class HostGame {
 
       let vec: [number, number] = [0, 0];
 
-      // TODO: SET VECTOR FROM ANGLE INSTEAD OF OTHER WAY AROUND
       if (inputter.keysDown.has(keyCodes.RIGHT_ARROW)) {
         vec[0] += 1;
       }
