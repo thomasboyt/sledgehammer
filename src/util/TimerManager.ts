@@ -21,7 +21,7 @@ export default class TimerManager {
     for (let timer of this.timers) {
       timer.elapsedMs += dt;
 
-      if (timer.elapsedMs > timer.timerMs) {
+      if (timer.elapsedMs >= timer.timerMs) {
         timer.elapsedMs = timer.timerMs;
         this.timers.delete(timer);
       }
