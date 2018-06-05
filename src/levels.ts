@@ -1,3 +1,5 @@
+import { Tile } from './GameState';
+
 export const levelTiles = `
 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
       x                         x      
@@ -23,6 +25,26 @@ x xxxxx x x x x xxx xxx x x x x xxxxx x
 x         x                 x         x
 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
 `;
+
+const charToTile: { [char: string]: Tile } = {
+  x: 'wall',
+  ' ': null,
+};
+
+export function getTilesFromString(str: string): Tile[][] {
+  const tiles: Tile[][] = [];
+  const lines = str.trim().split('\n');
+
+  for (let y = 0; y < lines.length; y += 1) {
+    tiles[y] = [];
+    for (let x = 0; x < lines[y].length; x += 1) {
+      const tile = charToTile[lines[y][x]];
+      tiles[y][x] = tile;
+    }
+  }
+
+  return tiles;
+}
 
 function mirrorLevel(halfString: string): string {
   return halfString

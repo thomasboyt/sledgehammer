@@ -21,10 +21,17 @@ import {
   WORLD_SIZE_HEIGHT,
   WORLD_SIZE_WIDTH,
 } from './constants';
-import { getVectorComponents } from './util/math';
+import { getVectorComponents, lerp2, add2, Vec2 } from './util/math';
 import { isDeepStrictEqual } from 'util';
 import { setupCanvas } from './setupCanvas';
-import { levelTiles } from './levels';
+import { levelTiles, getTilesFromString } from './levels';
+import TimerManager from './util/TimerManager';
+import {
+  getTile,
+  wrapTileCoordinates,
+  centerToTile,
+  tileToCenter,
+} from './tileMap';
 
 interface PlayerOptions {
   color: string;
@@ -35,26 +42,6 @@ const MOVE_SPEED = 0.1;
 const BULLET_SPEED = 0.2;
 
 let playerIdCounter = 0;
-
-const charToTile: { [char: string]: Tile } = {
-  x: 'wall',
-  ' ': null,
-};
-
-function getTilesFromString(str: string): Tile[][] {
-  const tiles: Tile[][] = [];
-  const lines = str.trim().split('\n');
-
-  for (let y = 0; y < lines.length; y += 1) {
-    tiles[y] = [];
-    for (let x = 0; x < lines[y].length; x += 1) {
-      const tile = charToTile[lines[y][x]];
-      tiles[y][x] = tile;
-    }
-  }
-
-  return tiles;
-}
 
 function tilesToCollisionEntities(tiles: Tile[][]): Entity[] {
   const collisionEntities: Entity[] = [];
@@ -151,25 +138,12 @@ function moveEntitiesAndResolveCollisions(state: GameState, dt: number) {
   }
 }
 
-function centerToTile(center: [number, number]): [number, number] {
-  return [
-    (center[0] - TILE_SIZE / 2) / TILE_SIZE,
-    (center[1] - TILE_SIZE / 2) / TILE_SIZE,
-  ];
-}
-
-function tileToCenter(tile: [number, number]): [number, number] {
-  return [
-    tile[0] * TILE_SIZE + TILE_SIZE / 2,
-    tile[1] * TILE_SIZE + TILE_SIZE / 2,
-  ];
-}
-
 export default class HostGame {
   state: GameState;
   hostId: number;
   canvasCtx: CanvasRenderingContext2D;
   playerInputters = new Map<number, PlayerInputter>();
+  timerManager: TimerManager = new TimerManager();
 
   peerToPlayerId = new Map<Peer.Instance, number>();
 
@@ -201,7 +175,11 @@ export default class HostGame {
     loop.start();
   }
 
-  onPeerConnected(peer: Peer.Instance) {
+  /*
+   * External event handlers
+   */
+
+  onPeerConnected(peer: Peer.Instance): void {
     const playerId = this.addPlayer({
       color: 'cyan',
     });
@@ -224,28 +202,66 @@ export default class HostGame {
     });
   }
 
-  sendToPeers(data: {}) {
+  private onClientKeyDown(playerId: number, keyCode: number): void {
+    this.playerInputters.get(playerId)!.onKeyDown(keyCode);
+  }
+
+  private onClientKeyUp(playerId: number, keyCode: number): void {
+    this.playerInputters.get(playerId)!.onKeyUp(keyCode);
+  }
+
+  private addPlayer(opts: PlayerOptions): number {
+    playerIdCounter += 1;
+
+    this.state.players.set(playerIdCounter, {
+      type: 'player',
+
+      // center: [TILE_SIZE * 2 - TILE_SIZE / 2, playerIdCounter * 50],
+      center: [24, 24],
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      angle: 0,
+
+      color: opts.color,
+      vec: [0, 0],
+      facing: [1, 0],
+      isMoving: false,
+    });
+
+    this.playerInputters.set(playerIdCounter, new PlayerInputter());
+
+    return playerIdCounter;
+  }
+
+  private removePlayer(playerId: number): void {
+    this.state.players.delete(playerId);
+    this.playerInputters.delete(playerId);
+  }
+
+  /*
+   * External communication
+   */
+
+  private sendToPeers(data: {}): void {
     const serialized = JSON.stringify(data);
     for (let peer of this.peerToPlayerId.keys()) {
       peer.send(serialized);
     }
   }
 
-  playerShoot(player: Player) {
-    const vec = getVectorComponents(BULLET_SPEED, player.angle);
-
-    this.state.bullets.push({
-      type: 'bullet',
-      // todo: spawn from edge of player instead of center
-      center: [player.center[0], player.center[1]],
-      width: 6,
-      height: 6,
-      angle: player.angle,
-      vec,
-    });
+  private sendSnapshot(): void {
+    /*
+     * TODO: state currently contains shit i ain't wanna serialize
+     */
+    const serialized = ARSON.encode(this.state);
+    this.sendToPeers(serialized);
   }
 
-  onTick(dt: number) {
+  /*
+   * Update loop
+   */
+
+  private onTick(dt: number): void {
     if (dt > MAX_FRAME_MS) {
       const maxFrames = Math.floor(dt / MAX_FRAME_MS);
       for (let i = 0; i < maxFrames; i += 1) {
@@ -262,143 +278,11 @@ export default class HostGame {
     render(this.canvasCtx, this.state);
   }
 
-  getTile(x: number, y: number) {
-    return this.state.level.tiles[this.wrapTileY(y)][this.wrapTileX(x)];
-  }
+  update(dt: number): void {
+    this.timerManager.update(dt);
 
-  wrapTileX(n: number) {
-    if (n < 0) {
-      return WORLD_SIZE_WIDTH - 1;
-    } else if (n >= WORLD_SIZE_WIDTH) {
-      return 0;
-    } else {
-      return n;
-    }
-  }
-
-  wrapTileY(n: number) {
-    if (n < 0) {
-      return WORLD_SIZE_HEIGHT - 1;
-    } else if (n >= WORLD_SIZE_HEIGHT) {
-      return 0;
-    } else {
-      return n;
-    }
-  }
-
-  // TODO: REMOVE THIS THIS IS BAD
-  movementTweensPerPlayer = new Map<number, any>();
-
-  update(dt: number) {
     for (let [playerId, player] of this.state.players.entries()) {
-      const inputter = this.playerInputters.get(playerId)!;
-
-      let inputDirection: [number, number] | null = null;
-
-      if (inputter.keysDown.has(keyCodes.RIGHT_ARROW)) {
-        inputDirection = [1, 0];
-      } else if (inputter.keysDown.has(keyCodes.LEFT_ARROW)) {
-        inputDirection = [-1, 0];
-      } else if (inputter.keysDown.has(keyCodes.UP_ARROW)) {
-        inputDirection = [0, -1];
-      } else if (inputter.keysDown.has(keyCodes.DOWN_ARROW)) {
-        inputDirection = [0, 1];
-      }
-
-      const tween = this.movementTweensPerPlayer.get(playerId);
-      if (tween) {
-        tween.elapsed += dt;
-
-        const lerp = (a: number, b: number, f: number) => a + f * (b - a);
-
-        if (tween.elapsed > tween.ms) {
-          tween.elapsed = tween.ms;
-          this.movementTweensPerPlayer.delete(playerId);
-        }
-
-        player.center[0] = lerp(
-          tween.from[0],
-          tween.to[0],
-          tween.elapsed / tween.ms
-        );
-        player.center[1] = lerp(
-          tween.from[1],
-          tween.to[1],
-          tween.elapsed / tween.ms
-        );
-      }
-
-      // https://www.reddit.com/r/gamedev/comments/4aa5nd/smooth_tile_based_movement_pacman/
-      if (!this.movementTweensPerPlayer.has(playerId)) {
-        // allow the player to start moving in a direction
-        if (inputDirection) {
-          player.vec = inputDirection;
-
-          const playerTile = centerToTile(player.center);
-
-          let destTile = [
-            playerTile[0] + inputDirection[0],
-            playerTile[1] + inputDirection[1],
-          ];
-
-          if (this.getTile(destTile[0], destTile[1]) === 'wall') {
-            // can we continue on towards the direction we were facing instead?
-            destTile = [
-              playerTile[0] + player.facing[0],
-              playerTile[1] + player.facing[1],
-            ];
-          } else {
-            player.facing = inputDirection;
-          }
-
-          if (this.getTile(destTile[0], destTile[1]) !== 'wall') {
-            const wrappedDestTile: [number, number] = [
-              this.wrapTileX(destTile[0]),
-              this.wrapTileY(destTile[1]),
-            ];
-
-            let fromTile = playerTile;
-
-            // TODO: with this wrapping strategy, we can't handle collisions on the side of the
-            // screen we just left
-            // this might be okay idk
-            if (wrappedDestTile[0] !== destTile[0]) {
-              if (wrappedDestTile[0] === 0) {
-                fromTile[0] = -1;
-              } else {
-                fromTile[0] = WORLD_SIZE_WIDTH;
-              }
-            } else if (wrappedDestTile[1] !== destTile[1]) {
-              if (wrappedDestTile[1] === 0) {
-                fromTile[1] = -1;
-              } else {
-                fromTile[1] = WORLD_SIZE_HEIGHT;
-              }
-            }
-
-            const movementTween = {
-              from: tileToCenter(fromTile),
-              to: tileToCenter(wrappedDestTile),
-              ms: 120,
-              elapsed: 0,
-            };
-
-            this.movementTweensPerPlayer.set(playerId, movementTween);
-          }
-        }
-      }
-
-      let angle = Math.atan(player.facing[1] / player.facing[0]);
-      if (player.facing[0] < 0) {
-        angle += Math.PI;
-      }
-
-      player.angle = angle;
-
-      const keysPressed = inputter.getKeysPressedAndClear();
-      if (keysPressed.has(keyCodes.SPACE)) {
-        this.playerShoot(player);
-      }
+      this.updatePlayer(dt, playerId);
     }
 
     // for (let enemy of this.state.enemies) {
@@ -423,47 +307,114 @@ export default class HostGame {
     moveEntitiesAndResolveCollisions(this.state, dt);
   }
 
-  sendSnapshot() {
-    /*
-     * TODO: state currently contains shit i ain't wanna serialize
-     */
-    const serialized = ARSON.encode(this.state);
-    this.sendToPeers(serialized);
+  private updatePlayer(dt: number, playerId: number): void {
+    const inputter = this.playerInputters.get(playerId)!;
+    const player = this.state.players.get(playerId)!;
+
+    let inputDirection: [number, number] | null = null;
+
+    if (inputter.keysDown.has(keyCodes.RIGHT_ARROW)) {
+      inputDirection = [1, 0];
+    } else if (inputter.keysDown.has(keyCodes.LEFT_ARROW)) {
+      inputDirection = [-1, 0];
+    } else if (inputter.keysDown.has(keyCodes.UP_ARROW)) {
+      inputDirection = [0, -1];
+    } else if (inputter.keysDown.has(keyCodes.DOWN_ARROW)) {
+      inputDirection = [0, 1];
+    }
+
+    this.movePlayer(dt, playerId, inputDirection);
+
+    let angle = Math.atan(player.facing[1] / player.facing[0]);
+    if (player.facing[0] < 0) {
+      angle += Math.PI;
+    }
+
+    player.angle = angle;
+
+    const keysPressed = inputter.getKeysPressedAndClear();
+    if (keysPressed.has(keyCodes.SPACE)) {
+      this.playerShoot(player);
+    }
   }
 
-  // TODO: move this elsewhere maybe idk
-  onClientKeyDown(playerId: number, keyCode: number) {
-    this.playerInputters.get(playerId)!.onKeyDown(keyCode);
+  private movePlayer(
+    dt: number,
+    playerId: number,
+    inputDirection: Vec2 | null
+  ): void {
+    const player = this.state.players.get(playerId)!;
+    const tiles = this.state.level.tiles;
+
+    // https://www.reddit.com/r/gamedev/comments/4aa5nd/smooth_tile_based_movement_pacman/
+    if (inputDirection && !player.isMoving) {
+      player.vec = inputDirection;
+
+      const playerTile = centerToTile(player.center);
+
+      let destTile = add2(playerTile, inputDirection);
+
+      if (getTile(tiles, destTile[0], destTile[1]) === 'wall') {
+        // can we continue on towards the direction we were facing instead?
+        destTile = add2(playerTile, player.facing);
+      } else {
+        player.facing = inputDirection;
+      }
+
+      if (getTile(tiles, destTile[0], destTile[1]) !== 'wall') {
+        const wrappedDestTile = wrapTileCoordinates(destTile);
+
+        let fromTile = playerTile;
+
+        // TODO: with this wrapping strategy, we can't handle collisions on the side of the
+        // screen we just left
+        // this might be okay idk
+        if (wrappedDestTile[0] !== destTile[0]) {
+          if (wrappedDestTile[0] === 0) {
+            fromTile[0] = -1;
+          } else {
+            fromTile[0] = WORLD_SIZE_WIDTH;
+          }
+        } else if (wrappedDestTile[1] !== destTile[1]) {
+          if (wrappedDestTile[1] === 0) {
+            fromTile[1] = -1;
+          } else {
+            fromTile[1] = WORLD_SIZE_HEIGHT;
+          }
+        }
+
+        const fromPoint = tileToCenter(fromTile);
+        const toPoint = tileToCenter(wrappedDestTile);
+
+        this.timerManager.create({
+          elapsedMs: 0,
+          timerMs: 120,
+          update: (elapsedMs: number, timerMs: number) => {
+            const f = elapsedMs / timerMs;
+            player.center = lerp2(fromPoint, toPoint, f);
+
+            if (f === 1) {
+              player.isMoving = false;
+            }
+          },
+        });
+
+        player.isMoving = true;
+      }
+    }
   }
 
-  onClientKeyUp(playerId: number, keyCode: number) {
-    this.playerInputters.get(playerId)!.onKeyUp(keyCode);
-  }
+  private playerShoot(player: Player): void {
+    const vec = getVectorComponents(BULLET_SPEED, player.angle);
 
-  addPlayer(opts: PlayerOptions) {
-    playerIdCounter += 1;
-
-    this.state.players.set(playerIdCounter, {
-      type: 'player',
-
-      // center: [TILE_SIZE * 2 - TILE_SIZE / 2, playerIdCounter * 50],
-      center: [24, 24],
-      width: TILE_SIZE,
-      height: TILE_SIZE,
-      angle: 0,
-
-      color: opts.color,
-      vec: [0, 0],
-      facing: [1, 0],
+    this.state.bullets.push({
+      type: 'bullet',
+      // todo: spawn from edge of player instead of center
+      center: [player.center[0], player.center[1]],
+      width: 6,
+      height: 6,
+      angle: player.angle,
+      vec,
     });
-
-    this.playerInputters.set(playerIdCounter, new PlayerInputter());
-
-    return playerIdCounter;
-  }
-
-  removePlayer(playerId: number) {
-    this.state.players.delete(playerId);
-    this.playerInputters.delete(playerId);
   }
 }

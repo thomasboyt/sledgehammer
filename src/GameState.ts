@@ -18,6 +18,7 @@ export interface Player extends Entity {
   vec: [number, number];
   facing: [number, number];
   angle: number;
+  isMoving: boolean;
 }
 
 export interface Bullet extends Entity {
