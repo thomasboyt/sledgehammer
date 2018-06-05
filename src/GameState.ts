@@ -19,6 +19,7 @@ export interface Player extends Entity {
   facing: [number, number];
   angle: number;
   isMoving: boolean;
+  ping?: number;
 }
 
 export interface Bullet extends Entity {

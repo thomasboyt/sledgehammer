@@ -14,9 +14,15 @@ export default class ClientGame {
     this.hostPeer = hostPeer;
 
     hostPeer.on('data', (strData: string) => {
-      const data = JSON.parse(strData);
+      const msg = JSON.parse(strData);
       // TODO: support message types and whatever
-      this.onHostSnapshot(data);
+      if (msg.type === 'snapshot') {
+        this.onHostSnapshot(msg.data);
+      } else if (msg.type === 'ping') {
+        this.sendToHost({
+          type: 'pong',
+        });
+      }
     });
 
     window.addEventListener('keydown', (e) => {

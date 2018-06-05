@@ -127,4 +127,11 @@ export default function render(
   }
 
   ctx.restore();
+
+  ctx.fillStyle = 'white';
+  const pings = [...state.players.values()]
+    .map((player) => player.ping)
+    .filter((ping) => !!ping)
+    .join(', ');
+  ctx.fillText(`pings: ${pings}`, 20, 460);
 }

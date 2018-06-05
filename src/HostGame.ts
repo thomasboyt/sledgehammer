@@ -49,6 +49,7 @@ export default class HostGame {
   wallEntities: BoundingBox[] = [];
 
   peerToPlayerId = new Map<Peer.Instance, number>();
+  lastPingTime: number = Date.now();
 
   constructor() {
     const tiles = getTilesFromString(levelTiles);
@@ -78,6 +79,13 @@ export default class HostGame {
     const loop = new RunLoop();
     loop.onTick(this.onTick.bind(this));
     loop.start();
+
+    setInterval(() => {
+      this.lastPingTime = Date.now();
+      this.sendToPeers({
+        type: 'ping',
+      });
+    }, 2000);
   }
 
   /*
@@ -98,6 +106,9 @@ export default class HostGame {
         this.onClientKeyDown(playerId, msg.data.keyCode);
       } else if (msg.type === 'keyUp') {
         this.onClientKeyUp(playerId, msg.data.keyCode);
+      } else if (msg.type === 'pong') {
+        const ping = Date.now() - this.lastPingTime;
+        this.state.players.get(playerId)!.ping = ping;
       }
     });
 
@@ -159,7 +170,10 @@ export default class HostGame {
      * TODO: state currently contains shit i ain't wanna serialize
      */
     const serialized = ARSON.encode(this.state);
-    this.sendToPeers(serialized);
+    this.sendToPeers({
+      type: 'snapshot',
+      data: serialized,
+    });
   }
 
   /*
@@ -183,7 +197,7 @@ export default class HostGame {
     render(this.canvasCtx, this.state);
   }
 
-  update(dt: number): void {
+  private update(dt: number): void {
     this.timerManager.update(dt);
 
     for (let [playerId, player] of this.state.players.entries()) {
