@@ -1,6 +1,6 @@
 import { Vec2 } from './util/math';
 import { WORLD_SIZE_HEIGHT, WORLD_SIZE_WIDTH, TILE_SIZE } from './constants';
-import { Tile } from './GameState';
+import { Tile, Entity } from './GameState';
 
 export const getTile = (tiles: Tile[][], x: number, y: number) => {
   return tiles[wrapTileY(y)][wrapTileX(x)];
@@ -42,4 +42,28 @@ export function tileToCenter(tile: [number, number]): [number, number] {
     tile[0] * TILE_SIZE + TILE_SIZE / 2,
     tile[1] * TILE_SIZE + TILE_SIZE / 2,
   ];
+}
+
+export function tilesToCollisionEntities(tiles: Tile[][]): Entity[] {
+  const collisionEntities: Entity[] = [];
+
+  for (let y = 0; y < tiles.length; y += 1) {
+    const tileRow = tiles[y];
+    for (let x = 0; x < tileRow.length; x += 1) {
+      const tile = tileRow[x];
+      if (tile === 'wall') {
+        collisionEntities.push({
+          type: 'wall',
+          center: [
+            x * TILE_SIZE + TILE_SIZE / 2,
+            y * TILE_SIZE + TILE_SIZE / 2,
+          ],
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+        });
+      }
+    }
+  }
+
+  return collisionEntities;
 }

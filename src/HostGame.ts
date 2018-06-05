@@ -1,19 +1,6 @@
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
 
-import keyCodes from './util/keyCodes';
-import PlayerInputter from './util/PlayerInputter';
-import RunLoop from './util/RunLoop';
-import {
-  isColliding,
-  getXDepth,
-  getYDepth,
-  getCollisionPairs,
-  BoundingBox,
-} from './util/collision';
-
-import GameState, { Player, Tile, Entity } from './GameState';
-import render from './render';
 import {
   TILE_SIZE,
   WIDTH,
@@ -21,21 +8,27 @@ import {
   WORLD_SIZE_HEIGHT,
   WORLD_SIZE_WIDTH,
 } from './constants';
+
+import keyCodes from './util/keyCodes';
+import PlayerInputter from './util/PlayerInputter';
+import RunLoop from './util/RunLoop';
+import { isColliding, BoundingBox } from './util/collision';
 import { getVectorComponents, lerp2, add2, Vec2 } from './util/math';
-import { isDeepStrictEqual } from 'util';
-import { setupCanvas } from './setupCanvas';
-import { levelTiles, getTilesFromString } from './levels';
 import TimerManager from './util/TimerManager';
+
+import { setupCanvas } from './setupCanvas';
 import {
   getTile,
   wrapTileCoordinates,
   centerToTile,
   tileToCenter,
+  tilesToCollisionEntities,
 } from './tileMap';
 
-interface PlayerOptions {
-  color: string;
-}
+import { levelTiles, getTilesFromString } from './levels';
+import GameState, { Player, Tile, Entity } from './GameState';
+
+import render from './render';
 
 const MAX_FRAME_MS = 50;
 const MOVE_SPEED = 0.1;
@@ -43,99 +36,8 @@ const BULLET_SPEED = 0.2;
 
 let playerIdCounter = 0;
 
-function tilesToCollisionEntities(tiles: Tile[][]): Entity[] {
-  const collisionEntities: Entity[] = [];
-
-  for (let y = 0; y < tiles.length; y += 1) {
-    const tileRow = tiles[y];
-    for (let x = 0; x < tileRow.length; x += 1) {
-      const tile = tileRow[x];
-      if (tile === 'wall') {
-        collisionEntities.push({
-          type: 'wall',
-          center: [
-            x * TILE_SIZE + TILE_SIZE / 2,
-            y * TILE_SIZE + TILE_SIZE / 2,
-          ],
-          width: TILE_SIZE,
-          height: TILE_SIZE,
-        });
-      }
-    }
-  }
-
-  return collisionEntities;
-}
-
-function handleCollision(state: GameState, entity: Entity, other: Entity) {
-  if (entity.type === 'bullet' && other.type === 'wall') {
-    state.bullets = state.bullets.filter((bullet) => entity !== bullet);
-  }
-}
-
-function shouldResolveCollision(entity: Entity, other: Entity): boolean {
-  return (
-    entity.type === 'player' &&
-    (other.type === 'wall' || other.type === 'player')
-  );
-}
-
-function moveEntitiesAndResolveCollisions(state: GameState, dt: number) {
-  // TODO: cache the fuck outta this
-  const tileEntities = tilesToCollisionEntities(state.level.tiles);
-  const entities = [...state.bullets];
-  const collisionTargets = [...entities, ...tileEntities];
-
-  for (let entity of entities) {
-    const vec: [number, number] = [entity.vec[0] * dt, entity.vec[1] * dt];
-
-    const collidedEntities = new Set<Entity>();
-
-    // TODO: need to make sure this is prioritized correctly
-    //
-    // e.g. if player B collides with another, stationary player A, player *B* should get moved back
-    // but if player A comes first in the iteration order, it would be moved back, without a logic
-    // check
-    // ALSO if two players move towards each other at same speed, if this is done in "order" then one will be pushed back while the other moves into them!
-
-    entity.center[0] += vec[0];
-
-    for (let other of collisionTargets) {
-      if (entity === other) {
-        continue;
-      }
-
-      if (isColliding(entity, other)) {
-        if (shouldResolveCollision(entity, other)) {
-          const xDepth = getXDepth(entity, other);
-          entity.center[0] -= xDepth;
-        }
-        collidedEntities.add(other);
-      }
-    }
-
-    entity.center[1] += vec[1];
-
-    for (let other of collisionTargets) {
-      if (entity === other) {
-        continue;
-      }
-
-      if (isColliding(entity, other)) {
-        if (shouldResolveCollision(entity, other)) {
-          const yDepth = getYDepth(entity, other);
-          entity.center[1] -= yDepth;
-        }
-        collidedEntities.add(other);
-      }
-    }
-
-    for (let other of collidedEntities) {
-      // TODO: pass some information about the collision intersection here?
-      // (example use case: reflective bullet)
-      handleCollision(state, entity, other);
-    }
-  }
+interface PlayerOptions {
+  color: string;
 }
 
 export default class HostGame {
@@ -144,6 +46,7 @@ export default class HostGame {
   canvasCtx: CanvasRenderingContext2D;
   playerInputters = new Map<number, PlayerInputter>();
   timerManager: TimerManager = new TimerManager();
+  wallEntities: BoundingBox[] = [];
 
   peerToPlayerId = new Map<Peer.Instance, number>();
 
@@ -157,6 +60,8 @@ export default class HostGame {
       players: new Map(),
       bullets: [],
     };
+
+    this.wallEntities = tilesToCollisionEntities(tiles);
 
     // create a host player
     this.hostId = this.addPlayer({
@@ -289,22 +194,7 @@ export default class HostGame {
     //   // do path finding to player i guess idk
     // }
 
-    this.state.bullets = this.state.bullets.filter((bullet) => {
-      // clean up off screen bullets
-      // (this shouldn't need to happen once collision detection is in obviously)
-      const x = bullet.center[0];
-      const y = bullet.center[1];
-      const w = bullet.width;
-      const h = bullet.height;
-
-      if (x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT) {
-        return false;
-      }
-
-      return true;
-    });
-
-    moveEntitiesAndResolveCollisions(this.state, dt);
+    this.updateBullets(dt);
   }
 
   private updatePlayer(dt: number, playerId: number): void {
@@ -416,5 +306,35 @@ export default class HostGame {
       angle: player.angle,
       vec,
     });
+  }
+
+  private updateBullets(dt: number): void {
+    this.state.bullets = this.state.bullets
+      .map((bullet) => {
+        return {
+          ...bullet,
+          center: add2(bullet.center, [bullet.vec[0] * dt, bullet.vec[1] * dt]),
+        };
+      })
+      .filter((bullet) => {
+        // clean up off screen bullets
+        // (this shouldn't need to happen once wraparound is implemented
+        const x = bullet.center[0];
+        const y = bullet.center[1];
+        const w = bullet.width;
+        const h = bullet.height;
+
+        if (x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT) {
+          return false;
+        }
+
+        for (let wall of this.wallEntities) {
+          if (isColliding(bullet, wall)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
   }
 }
