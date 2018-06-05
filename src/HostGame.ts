@@ -18,6 +18,7 @@ import { TILE_SIZE, WIDTH, HEIGHT } from './constants';
 import { getVectorComponents } from './util/math';
 import { isDeepStrictEqual } from 'util';
 import { setupCanvas } from './setupCanvas';
+import { levelTiles } from './levels';
 
 interface PlayerOptions {
   color: string;
@@ -28,33 +29,6 @@ const MOVE_SPEED = 0.1;
 const BULLET_SPEED = 0.2;
 
 let playerIdCounter = 0;
-
-const tilesString = `
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-x                              x
-x                              x
-x                              x
-x            x x xxx           x
-x            x x  x            x
-x            xxx  x            x
-x            x x  x            x
-x            x x xxx           x
-x                              x
-x                              x
-x      xxx x x xxx xxx xxx     x
-x       x  x x x   x x x       x
-x       x  xxx xxx xx  xxx     x
-x       x  x x x   x x x       x
-x       x  x x xxx x x xxx     x
-x                              x
-x                              x
-x                              x
-x                              x
-x                              x
-x                              x
-x                              x
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-`;
 
 const charToTile: { [char: string]: Tile } = {
   x: 'wall',
@@ -180,7 +154,7 @@ export default class HostGame {
   peerToPlayerId = new Map<Peer.Instance, number>();
 
   constructor() {
-    const tiles = getTilesFromString(tilesString);
+    const tiles = getTilesFromString(levelTiles);
 
     this.state = {
       level: {
@@ -346,8 +320,8 @@ export default class HostGame {
       type: 'player',
 
       center: [50, playerIdCounter * 50],
-      width: 18,
-      height: 18,
+      width: TILE_SIZE - 2,
+      height: TILE_SIZE - 2,
       angle: 0,
 
       color: opts.color,

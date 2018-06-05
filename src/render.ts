@@ -1,5 +1,5 @@
 import GameState, { Player, Bullet, Tile } from './GameState';
-import { WIDTH, HEIGHT, TILE_SIZE } from './constants';
+import { WIDTH, HEIGHT, TILE_SIZE, WORLD_SIZE_WIDTH } from './constants';
 import { stat } from 'fs';
 import createCachedRender from './util/createCachedRender';
 
@@ -59,7 +59,7 @@ const renderTiles = createCachedRender(
       for (let x = 0; x < tileRow.length; x += 1) {
         const tile = tileRow[x];
         if (tile === 'wall') {
-          ctx.fillRect(x * 20, y * 20, TILE_SIZE, TILE_SIZE);
+          ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
       }
     }
@@ -74,6 +74,15 @@ export default function render(
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+  ctx.save();
+
+  // center world
+  const worldWidth = WORLD_SIZE_WIDTH * TILE_SIZE;
+  const leftMargin = (WIDTH - worldWidth) / 2;
+  const topMargin = 10; // arbitrary obvs
+
+  ctx.translate(leftMargin, topMargin);
+
   renderTiles(ctx, 1, state.level.tiles);
 
   for (let player of state.players.values()) {
@@ -83,4 +92,6 @@ export default function render(
   for (let bullet of state.bullets) {
     renderBullet(ctx, bullet);
   }
+
+  ctx.restore();
 }
