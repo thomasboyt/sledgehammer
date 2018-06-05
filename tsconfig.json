@@ -3,6 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "typeRoots": ["node_modules/@types", "typings"],
-        "strict": true
+        "strict": true,
+        "sourceMap": true
     }
 }
