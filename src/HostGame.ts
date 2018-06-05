@@ -90,7 +90,7 @@ function shouldResolveCollision(entity: Entity, other: Entity): boolean {
 function moveEntitiesAndResolveCollisions(state: GameState, dt: number) {
   // TODO: cache the fuck outta this
   const tileEntities = tilesToCollisionEntities(state.level.tiles);
-  const entities = [...state.players.values(), ...state.bullets];
+  const entities = [...state.bullets];
   const collisionTargets = [...entities, ...tileEntities];
 
   for (let entity of entities) {
@@ -242,41 +242,105 @@ export default class HostGame {
     render(this.canvasCtx, this.state);
   }
 
+  // TODO: REMOVE THIS THIS IS BAD
+  movementTweensPerPlayer = new Map<number, any>();
+
   update(dt: number) {
     for (let [playerId, player] of this.state.players.entries()) {
       const inputter = this.playerInputters.get(playerId)!;
 
-      let vec: [number, number] = [0, 0];
+      let inputDirection: [number, number] | null = null;
 
       if (inputter.keysDown.has(keyCodes.RIGHT_ARROW)) {
-        vec[0] += 1;
-      }
-      if (inputter.keysDown.has(keyCodes.LEFT_ARROW)) {
-        vec[0] -= 1;
-      }
-      if (inputter.keysDown.has(keyCodes.UP_ARROW)) {
-        vec[1] -= 1;
-      }
-      if (inputter.keysDown.has(keyCodes.DOWN_ARROW)) {
-        vec[1] += 1;
+        inputDirection = [1, 0];
+      } else if (inputter.keysDown.has(keyCodes.LEFT_ARROW)) {
+        inputDirection = [-1, 0];
+      } else if (inputter.keysDown.has(keyCodes.UP_ARROW)) {
+        inputDirection = [0, -1];
+      } else if (inputter.keysDown.has(keyCodes.DOWN_ARROW)) {
+        inputDirection = [0, 1];
       }
 
-      if (vec[0] !== 0 || vec[1] !== 0) {
-        let angle = Math.atan(player.vec[1] / player.vec[0]);
-        if (player.vec[0] < 0) {
-          angle += Math.PI;
+      const tween = this.movementTweensPerPlayer.get(playerId);
+      if (tween) {
+        tween.elapsed += dt;
+
+        const lerp = (a: number, b: number, f: number) => a + f * (b - a);
+
+        if (tween.elapsed > tween.ms) {
+          tween.elapsed = tween.ms;
+          this.movementTweensPerPlayer.delete(playerId);
         }
 
-        player.angle = angle;
+        player.center[0] = lerp(
+          tween.from[0],
+          tween.to[0],
+          tween.elapsed / tween.ms
+        );
+        player.center[1] = lerp(
+          tween.from[1],
+          tween.to[1],
+          tween.elapsed / tween.ms
+        );
       }
 
-      player.vec = [vec[0] * MOVE_SPEED, vec[1] * MOVE_SPEED];
+      // https://www.reddit.com/r/gamedev/comments/4aa5nd/smooth_tile_based_movement_pacman/
+      if (!this.movementTweensPerPlayer.has(playerId)) {
+        // allow the player to start moving in a direction
+        if (inputDirection) {
+          player.vec = inputDirection;
+
+          const playerTile = [
+            (player.center[0] - TILE_SIZE / 2) / TILE_SIZE,
+            (player.center[1] - TILE_SIZE / 2) / TILE_SIZE,
+          ];
+
+          let destTile = [
+            playerTile[0] + inputDirection[0],
+            playerTile[1] + inputDirection[1],
+          ];
+
+          if (this.state.level.tiles[destTile[1]][destTile[0]] === 'wall') {
+            // can we continue on towards the direction we were facing instead?
+            destTile = [
+              playerTile[0] + player.facing[0],
+              playerTile[1] + player.facing[1],
+            ];
+          } else {
+            player.facing = inputDirection;
+          }
+
+          if (this.state.level.tiles[destTile[1]][destTile[0]] !== 'wall') {
+            const movementTween = {
+              from: [player.center[0], player.center[1]],
+              to: [
+                destTile[0] * TILE_SIZE + TILE_SIZE / 2,
+                destTile[1] * TILE_SIZE + TILE_SIZE / 2,
+              ],
+              ms: 150,
+              elapsed: 0,
+            };
+            this.movementTweensPerPlayer.set(playerId, movementTween);
+          }
+        }
+      }
+
+      let angle = Math.atan(player.facing[1] / player.facing[0]);
+      if (player.facing[0] < 0) {
+        angle += Math.PI;
+      }
+
+      player.angle = angle;
 
       const keysPressed = inputter.getKeysPressedAndClear();
       if (keysPressed.has(keyCodes.SPACE)) {
         this.playerShoot(player);
       }
     }
+
+    // for (let enemy of this.state.enemies) {
+    //   // do path finding to player i guess idk
+    // }
 
     this.state.bullets = this.state.bullets.filter((bullet) => {
       // clean up off screen bullets
@@ -319,13 +383,15 @@ export default class HostGame {
     this.state.players.set(playerIdCounter, {
       type: 'player',
 
-      center: [50, playerIdCounter * 50],
-      width: TILE_SIZE - 2,
-      height: TILE_SIZE - 2,
+      // center: [TILE_SIZE * 2 - TILE_SIZE / 2, playerIdCounter * 50],
+      center: [24, 24],
+      width: TILE_SIZE,
+      height: TILE_SIZE,
       angle: 0,
 
       color: opts.color,
       vec: [0, 0],
+      facing: [1, 0],
     });
 
     this.playerInputters.set(playerIdCounter, new PlayerInputter());

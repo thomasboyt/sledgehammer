@@ -16,6 +16,7 @@ export interface Player extends Entity {
   type: 'player';
   color: string;
   vec: [number, number];
+  facing: [number, number];
   angle: number;
 }
 
