@@ -14,7 +14,13 @@ import {
 
 import GameState, { Player, Tile, Entity } from './GameState';
 import render from './render';
-import { TILE_SIZE, WIDTH, HEIGHT } from './constants';
+import {
+  TILE_SIZE,
+  WIDTH,
+  HEIGHT,
+  WORLD_SIZE_HEIGHT,
+  WORLD_SIZE_WIDTH,
+} from './constants';
 import { getVectorComponents } from './util/math';
 import { isDeepStrictEqual } from 'util';
 import { setupCanvas } from './setupCanvas';
@@ -145,6 +151,20 @@ function moveEntitiesAndResolveCollisions(state: GameState, dt: number) {
   }
 }
 
+function centerToTile(center: [number, number]): [number, number] {
+  return [
+    (center[0] - TILE_SIZE / 2) / TILE_SIZE,
+    (center[1] - TILE_SIZE / 2) / TILE_SIZE,
+  ];
+}
+
+function tileToCenter(tile: [number, number]): [number, number] {
+  return [
+    tile[0] * TILE_SIZE + TILE_SIZE / 2,
+    tile[1] * TILE_SIZE + TILE_SIZE / 2,
+  ];
+}
+
 export default class HostGame {
   state: GameState;
   hostId: number;
@@ -242,6 +262,30 @@ export default class HostGame {
     render(this.canvasCtx, this.state);
   }
 
+  getTile(x: number, y: number) {
+    return this.state.level.tiles[this.wrapTileY(y)][this.wrapTileX(x)];
+  }
+
+  wrapTileX(n: number) {
+    if (n < 0) {
+      return WORLD_SIZE_WIDTH - 1;
+    } else if (n >= WORLD_SIZE_WIDTH) {
+      return 0;
+    } else {
+      return n;
+    }
+  }
+
+  wrapTileY(n: number) {
+    if (n < 0) {
+      return WORLD_SIZE_HEIGHT - 1;
+    } else if (n >= WORLD_SIZE_HEIGHT) {
+      return 0;
+    } else {
+      return n;
+    }
+  }
+
   // TODO: REMOVE THIS THIS IS BAD
   movementTweensPerPlayer = new Map<number, any>();
 
@@ -290,17 +334,14 @@ export default class HostGame {
         if (inputDirection) {
           player.vec = inputDirection;
 
-          const playerTile = [
-            (player.center[0] - TILE_SIZE / 2) / TILE_SIZE,
-            (player.center[1] - TILE_SIZE / 2) / TILE_SIZE,
-          ];
+          const playerTile = centerToTile(player.center);
 
           let destTile = [
             playerTile[0] + inputDirection[0],
             playerTile[1] + inputDirection[1],
           ];
 
-          if (this.state.level.tiles[destTile[1]][destTile[0]] === 'wall') {
+          if (this.getTile(destTile[0], destTile[1]) === 'wall') {
             // can we continue on towards the direction we were facing instead?
             destTile = [
               playerTile[0] + player.facing[0],
@@ -310,16 +351,38 @@ export default class HostGame {
             player.facing = inputDirection;
           }
 
-          if (this.state.level.tiles[destTile[1]][destTile[0]] !== 'wall') {
+          if (this.getTile(destTile[0], destTile[1]) !== 'wall') {
+            const wrappedDestTile: [number, number] = [
+              this.wrapTileX(destTile[0]),
+              this.wrapTileY(destTile[1]),
+            ];
+
+            let fromTile = playerTile;
+
+            // TODO: with this wrapping strategy, we can't handle collisions on the side of the
+            // screen we just left
+            // this might be okay idk
+            if (wrappedDestTile[0] !== destTile[0]) {
+              if (wrappedDestTile[0] === 0) {
+                fromTile[0] = -1;
+              } else {
+                fromTile[0] = WORLD_SIZE_WIDTH;
+              }
+            } else if (wrappedDestTile[1] !== destTile[1]) {
+              if (wrappedDestTile[1] === 0) {
+                fromTile[1] = -1;
+              } else {
+                fromTile[1] = WORLD_SIZE_HEIGHT;
+              }
+            }
+
             const movementTween = {
-              from: [player.center[0], player.center[1]],
-              to: [
-                destTile[0] * TILE_SIZE + TILE_SIZE / 2,
-                destTile[1] * TILE_SIZE + TILE_SIZE / 2,
-              ],
-              ms: 150,
+              from: tileToCenter(fromTile),
+              to: tileToCenter(wrappedDestTile),
+              ms: 120,
               elapsed: 0,
             };
+
             this.movementTweensPerPlayer.set(playerId, movementTween);
           }
         }

@@ -1,5 +1,11 @@
-import GameState, { Player, Bullet, Tile } from './GameState';
-import { WIDTH, HEIGHT, TILE_SIZE, WORLD_SIZE_WIDTH } from './constants';
+import GameState, { Player, Bullet, Tile, Entity } from './GameState';
+import {
+  WIDTH,
+  HEIGHT,
+  TILE_SIZE,
+  WORLD_SIZE_WIDTH,
+  WORLD_SIZE_HEIGHT,
+} from './constants';
 import { stat } from 'fs';
 import createCachedRender from './util/createCachedRender';
 
@@ -10,7 +16,6 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   // 3. rotate by angle based on current vector
 
   ctx.save();
-  ctx.translate(player.center[0], player.center[1]);
   ctx.rotate(player.angle);
 
   ctx.fillStyle = player.color;
@@ -23,14 +28,34 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   ctx.fill();
 
   ctx.restore();
+}
 
-  ctx.strokeStyle = player.color;
-  ctx.strokeRect(
-    player.center[0] - player.width / 2,
-    player.center[1] - player.height / 2,
-    player.width,
-    player.height
-  );
+function renderWrappingEntity(
+  ctx: CanvasRenderingContext2D,
+  entity: Entity,
+  render: () => void
+) {
+  const renderAtCenter = (center: [number, number]) => {
+    ctx.save();
+    ctx.translate(center[0], center[1]);
+    render();
+    ctx.restore();
+  };
+
+  renderAtCenter(entity.center);
+
+  const worldWidth = WORLD_SIZE_WIDTH * TILE_SIZE;
+  const worldHeight = WORLD_SIZE_HEIGHT * TILE_SIZE;
+
+  if (entity.center[0] - entity.width / 2 < 0) {
+    renderAtCenter([entity.center[0] + worldWidth, entity.center[1]]);
+  } else if (entity.center[0] + entity.width / 2 > worldWidth) {
+    renderAtCenter([entity.center[0] - worldWidth, entity.center[1]]);
+  } else if (entity.center[1] - entity.height / 2 < 0) {
+    renderAtCenter([entity.center[0], entity.center[1] + worldHeight]);
+  } else if (entity.center[1] + entity.height / 2 > worldHeight) {
+    renderAtCenter([entity.center[0], entity.center[1] - worldHeight]);
+  }
 }
 
 function renderBullet(ctx: CanvasRenderingContext2D, bullet: Bullet) {
@@ -86,7 +111,15 @@ export default function render(
   renderTiles(ctx, 1, state.level.tiles);
 
   for (let player of state.players.values()) {
-    renderPlayer(ctx, player);
+    renderWrappingEntity(ctx, player, () => renderPlayer(ctx, player));
+
+    ctx.strokeStyle = player.color;
+    ctx.strokeRect(
+      player.center[0] - player.width / 2,
+      player.center[1] - player.height / 2,
+      player.width,
+      player.height
+    );
   }
 
   for (let bullet of state.bullets) {
