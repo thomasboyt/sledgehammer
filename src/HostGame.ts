@@ -145,11 +145,11 @@ export default class HostGame {
   }
 
   private onClientKeyDown(playerId: number, keyCode: number): void {
-    this.playerInputters.get(playerId)!.onKeyDown(keyCode);
+    this.playerInputters.get(playerId)!.handleKeyDown(keyCode);
   }
 
   private onClientKeyUp(playerId: number, keyCode: number): void {
-    this.playerInputters.get(playerId)!.onKeyUp(keyCode);
+    this.playerInputters.get(playerId)!.handleKeyUp(keyCode);
   }
 
   private addPlayer(opts: PlayerOptions): number {

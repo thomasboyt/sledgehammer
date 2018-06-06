@@ -1,12 +1,22 @@
-// inspired, like many bits of code, by coquette.js:
-// https://github.com/maryrosecook/coquette/blob/master/src/inputter.js
-
 import keyCodes, { interruptKeyCodes } from './keyCodes';
+
+interface Options {
+  onKeyDown?: (keyCode: number) => void;
+  onKeyUp?: (keyCode: number) => void;
+}
 
 export default class PlayerInputter {
   keysDown = new Set<number>();
   private newKeysPressed = new Set<number>();
   private allKeysPressed = new Set<number>();
+
+  onKeyDown: (keyCode: number) => void;
+  onKeyUp: (keyCode: number) => void;
+
+  constructor(opts: Options = {}) {
+    this.onKeyDown = opts.onKeyDown || (() => {});
+    this.onKeyUp = opts.onKeyUp || (() => {});
+  }
 
   getKeysPressedAndClear(): Set<number> {
     const pressed = new Set(this.newKeysPressed);
@@ -16,7 +26,7 @@ export default class PlayerInputter {
 
   registerLocalListeners() {
     window.addEventListener('keydown', (e) => {
-      this.onKeyDown(e.keyCode);
+      this.handleKeyDown(e.keyCode);
 
       if (interruptKeyCodes.has(e.keyCode)) {
         e.preventDefault();
@@ -25,21 +35,23 @@ export default class PlayerInputter {
     });
 
     window.addEventListener('keyup', (e) => {
-      this.onKeyUp(e.keyCode);
+      this.handleKeyUp(e.keyCode);
     });
   }
 
-  onKeyDown(keyCode: number) {
+  handleKeyDown(keyCode: number) {
     this.keysDown.add(keyCode);
     if (!this.allKeysPressed.has(keyCode)) {
       this.allKeysPressed.add(keyCode);
       this.newKeysPressed.add(keyCode);
+      this.onKeyDown(keyCode);
     }
   }
 
-  onKeyUp(keyCode: number) {
+  handleKeyUp(keyCode: number) {
     this.keysDown.delete(keyCode);
     this.allKeysPressed.delete(keyCode);
     this.newKeysPressed.delete(keyCode);
+    this.onKeyUp(keyCode);
   }
 }

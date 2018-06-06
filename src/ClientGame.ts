@@ -1,7 +1,6 @@
 import GameState from './GameState';
-import keyCodes from './util/keyCodes';
 import render from './render';
-import { interruptKeyCodes } from './util/keyCodes';
+import PlayerInputter from './util/PlayerInputter';
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
 import { setupCanvas } from './setupCanvas';
@@ -25,28 +24,26 @@ export default class ClientGame {
       }
     });
 
-    window.addEventListener('keydown', (e) => {
-      this.sendToHost({
-        type: 'keyDown',
-        data: {
-          keyCode: e.keyCode,
-        },
-      });
-
-      if (interruptKeyCodes.has(e.keyCode)) {
-        e.preventDefault();
-        return false;
-      }
+    const inputter = new PlayerInputter({
+      onKeyDown: (keyCode) => {
+        this.sendToHost({
+          type: 'keyDown',
+          data: {
+            keyCode,
+          },
+        });
+      },
+      onKeyUp: (keyCode) => {
+        this.sendToHost({
+          type: 'keyUp',
+          data: {
+            keyCode,
+          },
+        });
+      },
     });
 
-    window.addEventListener('keyup', (e) => {
-      this.sendToHost({
-        type: 'keyUp',
-        data: {
-          keyCode: e.keyCode,
-        },
-      });
-    });
+    inputter.registerLocalListeners();
 
     const canvas = setupCanvas('#game');
     this.canvasCtx = canvas.getContext('2d')!;
