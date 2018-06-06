@@ -13,3 +13,19 @@ export const lerp2 = (a: Vec2, b: Vec2, f: number): Vec2 => [
 ];
 
 export const add2 = (a: Vec2, b: Vec2): Vec2 => [a[0] + b[0], a[1] + b[1]];
+
+export function getRandomInt(min: number, max: number): number {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+export function getRandomIntInclusive(min: number, max: number): number {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function randomChoice<T>(arr: T[]) {
+  return arr[getRandomInt(0, arr.length)];
+}

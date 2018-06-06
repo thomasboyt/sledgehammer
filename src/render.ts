@@ -1,4 +1,4 @@
-import GameState, { Player, Bullet, Tile, Entity } from './GameState';
+import GameState, { Player, Bullet, Tile, Entity, Enemy } from './GameState';
 import {
   WIDTH,
   HEIGHT,
@@ -16,7 +16,12 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   // 3. rotate by angle based on current vector
 
   ctx.save();
-  ctx.rotate(player.angle);
+
+  let angle = Math.atan(player.facing[1] / player.facing[0]);
+  if (player.facing[0] < 0) {
+    angle += Math.PI;
+  }
+  ctx.rotate(angle);
 
   ctx.fillStyle = player.color;
 
@@ -61,7 +66,6 @@ function renderWrappingEntity(
 function renderBullet(ctx: CanvasRenderingContext2D, bullet: Bullet) {
   ctx.save();
   ctx.translate(bullet.center[0], bullet.center[1]);
-  ctx.rotate(bullet.angle);
 
   ctx.fillStyle = 'limegreen';
   ctx.fillRect(
@@ -90,6 +94,27 @@ const renderTiles = createCachedRender(
     }
   }
 );
+
+function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy) {
+  ctx.save();
+
+  let angle = Math.atan(enemy.facing[1] / enemy.facing[0]);
+  if (enemy.facing[0] < 0) {
+    angle += Math.PI;
+  }
+  ctx.rotate(angle);
+
+  ctx.fillStyle = 'pink';
+
+  ctx.beginPath();
+  ctx.moveTo(-enemy.width / 2, -enemy.height / 2);
+  ctx.lineTo(-enemy.width / 2, enemy.height / 2);
+  ctx.lineTo(enemy.width / 2, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
 
 export default function render(
   ctx: CanvasRenderingContext2D,
@@ -124,6 +149,10 @@ export default function render(
 
   for (let bullet of state.bullets) {
     renderBullet(ctx, bullet);
+  }
+
+  for (let enemy of state.enemies) {
+    renderWrappingEntity(ctx, enemy, () => renderEnemy(ctx, enemy));
   }
 
   ctx.restore();

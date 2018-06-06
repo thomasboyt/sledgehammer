@@ -2,9 +2,9 @@ import { Vec2 } from './util/math';
 import { WORLD_SIZE_HEIGHT, WORLD_SIZE_WIDTH, TILE_SIZE } from './constants';
 import { Tile, Entity } from './GameState';
 
-export const getTile = (tiles: Tile[][], x: number, y: number) => {
+export function getTile(tiles: Tile[][], [x, y]: Vec2): Tile {
   return tiles[wrapTileY(y)][wrapTileX(x)];
-};
+}
 
 export const wrapTileX = (n: number) => {
   if (n < 0) {

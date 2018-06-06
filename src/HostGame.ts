@@ -13,7 +13,13 @@ import keyCodes from './util/keyCodes';
 import PlayerInputter from './util/PlayerInputter';
 import RunLoop from './util/RunLoop';
 import { isColliding, BoundingBox } from './util/collision';
-import { getVectorComponents, lerp2, add2, Vec2 } from './util/math';
+import {
+  getVectorComponents,
+  lerp2,
+  add2,
+  Vec2,
+  randomChoice,
+} from './util/math';
 import TimerManager from './util/TimerManager';
 
 import { setupCanvas } from './setupCanvas';
@@ -26,12 +32,11 @@ import {
 } from './tileMap';
 
 import { levelTiles, getTilesFromString } from './levels';
-import GameState, { Player, Tile, Entity } from './GameState';
+import GameState, { Player, Tile, Entity, Enemy } from './GameState';
 
 import render from './render';
 
 const MAX_FRAME_MS = 50;
-const MOVE_SPEED = 0.1;
 const BULLET_SPEED = 0.2;
 
 let playerIdCounter = 0;
@@ -60,9 +65,19 @@ export default class HostGame {
       },
       players: new Map(),
       bullets: [],
+      enemies: [],
     };
 
     this.wallEntities = tilesToCollisionEntities(tiles);
+
+    this.state.enemies.push({
+      type: 'enemy',
+      center: [(WORLD_SIZE_WIDTH / 2) * TILE_SIZE, 24],
+      width: TILE_SIZE,
+      height: TILE_SIZE,
+      facing: [-1, 0],
+      isMoving: false,
+    });
 
     // create a host player
     this.hostId = this.addPlayer({
@@ -136,7 +151,6 @@ export default class HostGame {
       center: [24, 24],
       width: TILE_SIZE,
       height: TILE_SIZE,
-      angle: 0,
 
       color: opts.color,
       vec: [0, 0],
@@ -204,9 +218,7 @@ export default class HostGame {
       this.updatePlayer(dt, playerId);
     }
 
-    // for (let enemy of this.state.enemies) {
-    //   // do path finding to player i guess idk
-    // }
+    this.updateEnemies(dt);
 
     this.updateBullets(dt);
   }
@@ -228,13 +240,6 @@ export default class HostGame {
     }
 
     this.movePlayer(dt, playerId, inputDirection);
-
-    let angle = Math.atan(player.facing[1] / player.facing[0]);
-    if (player.facing[0] < 0) {
-      angle += Math.PI;
-    }
-
-    player.angle = angle;
 
     const keysPressed = inputter.getKeysPressedAndClear();
     if (keysPressed.has(keyCodes.SPACE)) {
@@ -258,58 +263,24 @@ export default class HostGame {
 
       let destTile = add2(playerTile, inputDirection);
 
-      if (getTile(tiles, destTile[0], destTile[1]) === 'wall') {
+      if (getTile(tiles, destTile) === 'wall') {
         // can we continue on towards the direction we were facing instead?
         destTile = add2(playerTile, player.facing);
       } else {
         player.facing = inputDirection;
       }
 
-      if (getTile(tiles, destTile[0], destTile[1]) !== 'wall') {
-        const wrappedDestTile = wrapTileCoordinates(destTile);
-
-        let fromTile = playerTile;
-
-        // TODO: with this wrapping strategy, we can't handle collisions on the side of the
-        // screen we just left
-        // this might be okay idk
-        if (wrappedDestTile[0] !== destTile[0]) {
-          if (wrappedDestTile[0] === 0) {
-            fromTile[0] = -1;
-          } else {
-            fromTile[0] = WORLD_SIZE_WIDTH;
-          }
-        } else if (wrappedDestTile[1] !== destTile[1]) {
-          if (wrappedDestTile[1] === 0) {
-            fromTile[1] = -1;
-          } else {
-            fromTile[1] = WORLD_SIZE_HEIGHT;
-          }
-        }
-
-        const fromPoint = tileToCenter(fromTile);
-        const toPoint = tileToCenter(wrappedDestTile);
-
-        this.timerManager.create({
-          elapsedMs: 0,
-          timerMs: 120,
-          update: (elapsedMs: number, timerMs: number) => {
-            const f = elapsedMs / timerMs;
-            player.center = lerp2(fromPoint, toPoint, f);
-
-            if (f === 1) {
-              player.isMoving = false;
-            }
-          },
-        });
-
-        player.isMoving = true;
+      if (getTile(tiles, destTile) !== 'wall') {
+        this.moveGridEntity(player, playerTile, destTile, 120);
       }
     }
   }
 
   private playerShoot(player: Player): void {
-    const vec = getVectorComponents(BULLET_SPEED, player.angle);
+    const vec: Vec2 = [
+      player.facing[0] * BULLET_SPEED,
+      player.facing[1] * BULLET_SPEED,
+    ];
 
     this.state.bullets.push({
       type: 'bullet',
@@ -317,9 +288,103 @@ export default class HostGame {
       center: [player.center[0], player.center[1]],
       width: 6,
       height: 6,
-      angle: player.angle,
       vec,
     });
+  }
+
+  private updateEnemies(dt: number): void {
+    for (let enemy of this.state.enemies) {
+      if (!enemy.isMoving) {
+        const tiles = this.state.level.tiles;
+
+        const currentTilePos = centerToTile(enemy.center);
+        const facingTilePos = add2(currentTilePos, enemy.facing);
+
+        let nextTilePos: Vec2;
+
+        if (getTile(tiles, facingTilePos) === 'wall') {
+          // check left and right
+          const ccwPos = add2(currentTilePos, [
+            enemy.facing[1],
+            -enemy.facing[0],
+          ]);
+          const cwPos = add2(currentTilePos, [
+            -enemy.facing[1],
+            enemy.facing[0],
+          ]);
+
+          const ccwTile = getTile(tiles, ccwPos);
+          const cwTile = getTile(tiles, cwPos);
+
+          if (cwTile !== 'wall' && ccwTile !== 'wall') {
+            nextTilePos = randomChoice([ccwPos, cwPos]);
+          } else if (cwTile !== 'wall') {
+            nextTilePos = cwPos;
+          } else if (ccwTile !== 'wall') {
+            nextTilePos = ccwPos;
+          } else {
+            // go backwards
+            nextTilePos = add2(currentTilePos, [
+              -enemy.facing[0],
+              -enemy.facing[1],
+            ]);
+          }
+        } else {
+          nextTilePos = facingTilePos;
+        }
+
+        enemy.facing = [
+          nextTilePos[0] - currentTilePos[0],
+          nextTilePos[1] - currentTilePos[1],
+        ];
+
+        this.moveGridEntity(enemy, currentTilePos, nextTilePos, 120);
+      }
+    }
+  }
+
+  private moveGridEntity(
+    entity: Player | Enemy,
+    fromTile: Vec2,
+    destTile: Vec2,
+    ms: number
+  ): void {
+    const wrappedDestTile = wrapTileCoordinates(destTile);
+
+    // TODO: with this wrapping strategy, we can't handle collisions on the side of the
+    // screen we just left
+    // this might be okay idk
+    if (wrappedDestTile[0] !== destTile[0]) {
+      if (wrappedDestTile[0] === 0) {
+        fromTile[0] = -1;
+      } else {
+        fromTile[0] = WORLD_SIZE_WIDTH;
+      }
+    } else if (wrappedDestTile[1] !== destTile[1]) {
+      if (wrappedDestTile[1] === 0) {
+        fromTile[1] = -1;
+      } else {
+        fromTile[1] = WORLD_SIZE_HEIGHT;
+      }
+    }
+
+    const fromPoint = tileToCenter(fromTile);
+    const toPoint = tileToCenter(wrappedDestTile);
+
+    this.timerManager.create({
+      elapsedMs: 0,
+      timerMs: ms,
+      update: (elapsedMs: number, timerMs: number) => {
+        const f = elapsedMs / timerMs;
+        entity.center = lerp2(fromPoint, toPoint, f);
+
+        if (f === 1) {
+          entity.isMoving = false;
+        }
+      },
+    });
+
+    entity.isMoving = true;
   }
 
   private updateBullets(dt: number): void {
