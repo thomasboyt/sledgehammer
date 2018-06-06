@@ -1,6 +1,4 @@
-// TODO: this should be an env var or something?
-export const lobbyServer = 'localhost:3000';
-// export const lobbyServer = 'groovejet.disco.zone';
+export const lobbyServer = process.env.LOBBY_SERVER || 'localhost:3000';
 
 export const WIDTH = 640;
 export const HEIGHT = 480;

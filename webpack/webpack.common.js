@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/main.ts',
@@ -18,4 +19,13 @@ module.exports = {
     filename: 'bundle.js',
     path: path.resolve(__dirname, '../dist'),
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        LOBBY_SERVER: JSON.stringify(
+          process.env.LOBBY_SERVER || 'localhost:3000'
+        ),
+      },
+    }),
+  ],
 };
