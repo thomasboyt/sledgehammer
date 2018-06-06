@@ -19,6 +19,7 @@ import {
   add2,
   Vec2,
   randomChoice,
+  getRandomInt,
 } from './util/math';
 import TimerManager from './util/TimerManager';
 
@@ -29,6 +30,7 @@ import {
   centerToTile,
   tileToCenter,
   tilesToCollisionEntities,
+  forEachTile,
 } from './tileMap';
 
 import { levelTiles, getTilesFromString } from './levels';
@@ -38,8 +40,6 @@ import render from './render';
 
 const MAX_FRAME_MS = 50;
 const BULLET_SPEED = 0.2;
-
-let playerIdCounter = 0;
 
 interface PlayerOptions {
   color: string;
@@ -53,6 +53,7 @@ export default class HostGame {
   timerManager: TimerManager = new TimerManager();
   wallEntities: BoundingBox[] = [];
 
+  playerIdCounter = 0;
   peerToPlayerId = new Map<Peer.Instance, number>();
   lastPingTime: number = Date.now();
 
@@ -64,19 +65,29 @@ export default class HostGame {
         tiles,
       },
       players: new Map(),
-      bullets: [],
-      enemies: [],
+      bullets: new Set(),
+      enemies: new Set(),
     };
 
     this.wallEntities = tilesToCollisionEntities(tiles);
 
-    this.state.enemies.push({
-      type: 'enemy',
-      center: [(WORLD_SIZE_WIDTH / 2) * TILE_SIZE, 24],
-      width: TILE_SIZE,
-      height: TILE_SIZE,
-      facing: [-1, 0],
-      isMoving: false,
+    // spawn enemies at random places
+    forEachTile(tiles, ([x, y], tile) => {
+      if (tile !== 'wall') {
+        if (getRandomInt(0, 30) <= 1) {
+          const choices: Vec2[] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+          const facing = randomChoice(choices);
+
+          this.state.enemies.add({
+            type: 'enemy',
+            center: tileToCenter([x, y]),
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            facing,
+            isMoving: false,
+          });
+        }
+      }
     });
 
     // create a host player
@@ -142,9 +153,10 @@ export default class HostGame {
   }
 
   private addPlayer(opts: PlayerOptions): number {
-    playerIdCounter += 1;
+    const playerId = this.playerIdCounter;
+    this.playerIdCounter += 1;
 
-    this.state.players.set(playerIdCounter, {
+    this.state.players.set(playerId, {
       type: 'player',
 
       // center: [TILE_SIZE * 2 - TILE_SIZE / 2, playerIdCounter * 50],
@@ -158,9 +170,9 @@ export default class HostGame {
       isMoving: false,
     });
 
-    this.playerInputters.set(playerIdCounter, new PlayerInputter());
+    this.playerInputters.set(playerId, new PlayerInputter());
 
-    return playerIdCounter;
+    return playerId;
   }
 
   private removePlayer(playerId: number): void {
@@ -282,7 +294,7 @@ export default class HostGame {
       player.facing[1] * BULLET_SPEED,
     ];
 
-    this.state.bullets.push({
+    this.state.bullets.add({
       type: 'bullet',
       // todo: spawn from edge of player instead of center
       center: [player.center[0], player.center[1]],
@@ -298,39 +310,58 @@ export default class HostGame {
         const tiles = this.state.level.tiles;
 
         const currentTilePos = centerToTile(enemy.center);
-        const facingTilePos = add2(currentTilePos, enemy.facing);
+
+        const forwardPos = add2(currentTilePos, enemy.facing);
+        const ccwPos = add2(currentTilePos, [
+          enemy.facing[1],
+          -enemy.facing[0],
+        ]);
+        const cwPos = add2(currentTilePos, [-enemy.facing[1], enemy.facing[0]]);
 
         let nextTilePos: Vec2;
 
-        if (getTile(tiles, facingTilePos) === 'wall') {
-          // check left and right
-          const ccwPos = add2(currentTilePos, [
-            enemy.facing[1],
-            -enemy.facing[0],
-          ]);
-          const cwPos = add2(currentTilePos, [
-            -enemy.facing[1],
-            enemy.facing[0],
-          ]);
+        /*
+          this is gross and can maybe be refactored but the tl;dr is
 
-          const ccwTile = getTile(tiles, ccwPos);
-          const cwTile = getTile(tiles, cwPos);
+          if we can go forward
+            there's a 1 in 5 chance of trying to turn
+            if rand(0, 5) == 0
+              turn in a random open direction
+              if no open turn directions, just go forward
+            else
+              go forward
+          else
+            turn in a random open direction
+            if no open turn directions, go backwards
+        */
 
-          if (cwTile !== 'wall' && ccwTile !== 'wall') {
-            nextTilePos = randomChoice([ccwPos, cwPos]);
-          } else if (cwTile !== 'wall') {
-            nextTilePos = cwPos;
-          } else if (ccwTile !== 'wall') {
-            nextTilePos = ccwPos;
+        if (getTile(tiles, forwardPos) !== 'wall') {
+          if (getRandomInt(0, 5) === 0) {
+            const candidates = [ccwPos, cwPos].filter((pos) => {
+              return getTile(tiles, pos) !== 'wall';
+            });
+
+            if (candidates.length === 0) {
+              nextTilePos = forwardPos;
+            } else {
+              nextTilePos = randomChoice(candidates);
+            }
           } else {
-            // go backwards
+            nextTilePos = forwardPos;
+          }
+        } else {
+          const candidates = [ccwPos, cwPos].filter((pos) => {
+            return getTile(tiles, pos) !== 'wall';
+          });
+
+          if (candidates.length === 0) {
             nextTilePos = add2(currentTilePos, [
               -enemy.facing[0],
               -enemy.facing[1],
             ]);
+          } else {
+            nextTilePos = randomChoice(candidates);
           }
-        } else {
-          nextTilePos = facingTilePos;
         }
 
         enemy.facing = [
@@ -338,11 +369,15 @@ export default class HostGame {
           nextTilePos[1] - currentTilePos[1],
         ];
 
-        this.moveGridEntity(enemy, currentTilePos, nextTilePos, 120);
+        this.moveGridEntity(enemy, currentTilePos, nextTilePos, 240);
       }
     }
   }
 
+  /**
+   * move a grid-aligned entity from a specific tile, to another tile, over `ms` amount of time
+   * also handle wrapping around edges of the world
+   */
   private moveGridEntity(
     entity: Player | Enemy,
     fromTile: Vec2,
@@ -388,32 +423,38 @@ export default class HostGame {
   }
 
   private updateBullets(dt: number): void {
-    this.state.bullets = this.state.bullets
-      .map((bullet) => {
-        return {
-          ...bullet,
-          center: add2(bullet.center, [bullet.vec[0] * dt, bullet.vec[1] * dt]),
-        };
-      })
-      .filter((bullet) => {
-        // clean up off screen bullets
-        // (this shouldn't need to happen once wraparound is implemented
-        const x = bullet.center[0];
-        const y = bullet.center[1];
-        const w = bullet.width;
-        const h = bullet.height;
+    for (let bullet of this.state.bullets) {
+      bullet.center = add2(bullet.center, [
+        bullet.vec[0] * dt,
+        bullet.vec[1] * dt,
+      ]);
 
-        if (x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT) {
-          return false;
+      // clean up off screen bullets
+      // (this shouldn't need to happen once wraparound is implemented
+      const x = bullet.center[0];
+      const y = bullet.center[1];
+      const w = bullet.width;
+      const h = bullet.height;
+
+      if (x + w < 0 || x - w > WIDTH || y + h < 0 || y - h > HEIGHT) {
+        this.state.bullets.delete(bullet);
+        continue;
+      }
+
+      for (let wall of this.wallEntities) {
+        if (isColliding(bullet, wall)) {
+          this.state.bullets.delete(bullet);
+          continue;
         }
+      }
 
-        for (let wall of this.wallEntities) {
-          if (isColliding(bullet, wall)) {
-            return false;
-          }
+      for (let enemy of this.state.enemies) {
+        if (isColliding(bullet, enemy)) {
+          this.state.enemies.delete(enemy);
+          this.state.bullets.delete(bullet);
+          continue;
         }
-
-        return true;
-      });
+      }
+    }
   }
 }

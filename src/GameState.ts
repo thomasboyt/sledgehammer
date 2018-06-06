@@ -35,6 +35,6 @@ export interface Enemy extends Entity {
 export default interface GameState {
   level: Level;
   players: Map<number, Player>;
-  bullets: Bullet[];
-  enemies: Enemy[];
+  bullets: Set<Bullet>;
+  enemies: Set<Enemy>;
 }

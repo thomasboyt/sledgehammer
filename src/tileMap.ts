@@ -67,3 +67,14 @@ export function tilesToCollisionEntities(tiles: Tile[][]): Entity[] {
 
   return collisionEntities;
 }
+
+export function forEachTile(
+  tiles: Tile[][],
+  cb: (coords: Vec2, tile: Tile) => void
+): void {
+  for (let y = 0; y < tiles.length; y += 1) {
+    for (let x = 0; x < tiles[y].length; x += 1) {
+      cb([x, y], tiles[y][x]);
+    }
+  }
+}
