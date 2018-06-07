@@ -7,8 +7,33 @@ import showRoomLink from './roomLink';
 
 const peers = new Set<Peer.Instance>();
 
-let game: HostGame;
 export default async function initializeHost() {
+  function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
+    const p = new Peer({
+      initiator: false,
+      trickle: false,
+      objectMode: true,
+    });
+
+    p.on('error', (err) => {
+      console.log('error', err);
+    });
+
+    p.on('signal', (signalData) => {
+      // signaling data has been created for the host, so it needs to be passed back to the server
+      console.log('SIGNAL', JSON.stringify(signalData));
+      onSignal(signalData);
+    });
+
+    p.on('connect', () => {
+      console.log('CONNECT');
+      peers.add(p);
+      game.onPeerConnected(p);
+    });
+
+    return p;
+  }
+
   const code = await createRoom(lobbyServer);
   console.log('Created room with code', code);
   console.log(`${window.location.origin}/?game=${code}`);
@@ -39,35 +64,7 @@ export default async function initializeHost() {
     },
   });
 
-  game = new HostGame();
+  const game = new HostGame();
 
   (window as any).game = game;
-}
-
-// Host flow
-
-function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
-  const p = new Peer({
-    initiator: false,
-    trickle: false,
-    objectMode: true,
-  });
-
-  p.on('error', (err) => {
-    console.log('error', err);
-  });
-
-  p.on('signal', (signalData) => {
-    // signaling data has been created for the host, so it needs to be passed back to the server
-    console.log('SIGNAL', JSON.stringify(signalData));
-    onSignal(signalData);
-  });
-
-  p.on('connect', () => {
-    console.log('CONNECT');
-    peers.add(p);
-    game.onPeerConnected(p);
-  });
-
-  return p;
 }

@@ -1,5 +1,4 @@
 import * as Peer from 'simple-peer';
-import axios from 'axios';
 import { lobbyServer } from './constants';
 import ClientGame from './ClientGame';
 import GroovejetClient from './groovejet/GroovejetClient';

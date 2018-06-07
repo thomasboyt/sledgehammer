@@ -6,7 +6,6 @@ import {
   WORLD_SIZE_WIDTH,
   WORLD_SIZE_HEIGHT,
 } from './constants';
-import { stat } from 'fs';
 import createCachedRender from './util/createCachedRender';
 
 function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {

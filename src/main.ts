@@ -1,4 +1,3 @@
-import * as Peer from 'simple-peer';
 import * as queryString from 'query-string';
 
 import initializeClient from './client';

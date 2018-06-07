@@ -13,14 +13,7 @@ import keyCodes from './util/keyCodes';
 import PlayerInputter from './util/PlayerInputter';
 import RunLoop from './util/RunLoop';
 import { isColliding, BoundingBox } from './util/collision';
-import {
-  getVectorComponents,
-  lerp2,
-  add2,
-  Vec2,
-  randomChoice,
-  getRandomInt,
-} from './util/math';
+import { lerp2, add2, Vec2, randomChoice, getRandomInt } from './util/math';
 import TimerManager from './util/TimerManager';
 
 import { setupCanvas } from './setupCanvas';
@@ -34,7 +27,7 @@ import {
 } from './tileMap';
 
 import { levelTiles, getTilesFromString } from './levels';
-import GameState, { Player, Tile, Entity, Enemy } from './GameState';
+import GameState, { Player, Enemy } from './GameState';
 
 import render from './render';
 
@@ -226,11 +219,11 @@ export default class HostGame {
   private update(dt: number): void {
     this.timerManager.update(dt);
 
-    for (let [playerId, player] of this.state.players.entries()) {
+    for (let playerId of this.state.players.keys()) {
       this.updatePlayer(dt, playerId);
     }
 
-    this.updateEnemies(dt);
+    this.updateEnemies();
 
     this.updateBullets(dt);
   }
@@ -251,7 +244,7 @@ export default class HostGame {
       inputDirection = [0, 1];
     }
 
-    this.movePlayer(dt, playerId, inputDirection);
+    this.movePlayer(playerId, inputDirection);
 
     const keysPressed = inputter.getKeysPressedAndClear();
     if (keysPressed.has(keyCodes.SPACE)) {
@@ -259,11 +252,7 @@ export default class HostGame {
     }
   }
 
-  private movePlayer(
-    dt: number,
-    playerId: number,
-    inputDirection: Vec2 | null
-  ): void {
+  private movePlayer(playerId: number, inputDirection: Vec2 | null): void {
     const player = this.state.players.get(playerId)!;
     const tiles = this.state.level.tiles;
 
@@ -304,7 +293,7 @@ export default class HostGame {
     });
   }
 
-  private updateEnemies(dt: number): void {
+  private updateEnemies(): void {
     for (let enemy of this.state.enemies) {
       if (!enemy.isMoving) {
         const tiles = this.state.level.tiles;
@@ -452,6 +441,7 @@ export default class HostGame {
         if (isColliding(bullet, enemy)) {
           this.state.enemies.delete(enemy);
           this.state.bullets.delete(bullet);
+          // TODO: particle explosion goes here? unless it's in the render logic...
           continue;
         }
       }

@@ -1,4 +1,4 @@
-import keyCodes, { interruptKeyCodes } from './keyCodes';
+import { interruptKeyCodes } from './keyCodes';
 
 interface Options {
   onKeyDown?: (keyCode: number) => void;
