@@ -112,6 +112,15 @@ export default class HostGame {
       this.peerToPlayerId.delete(peer);
       this.removePlayer(playerId);
     });
+
+    peer.send(
+      JSON.stringify({
+        type: 'identity',
+        data: {
+          id: playerId,
+        },
+      })
+    );
   }
 
   private onClientKeyDown(playerId: number, keyCode: number): void {
@@ -183,7 +192,12 @@ export default class HostGame {
 
     this.sendSnapshot();
 
-    render(this.canvasCtx, this.getSnapshotState(), true);
+    render({
+      ctx: this.canvasCtx,
+      state: this.getSnapshotState(),
+      localPlayerId: this.hostId,
+      isHost: true,
+    });
   }
 
   private update(dt: number) {

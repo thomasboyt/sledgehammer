@@ -164,6 +164,13 @@ export default class Stage {
 
     this.movePlayer(playerId, inputDirection);
 
+    for (let enemy of this.state.enemies) {
+      if (isColliding(player, enemy)) {
+        player.status = 'dead';
+        return;
+      }
+    }
+
     const keysPressed = inputter.getKeysPressedAndClear();
     if (keysPressed.has(keyCodes.SPACE)) {
       this.playerShoot(player);

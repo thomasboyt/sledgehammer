@@ -15,7 +15,11 @@ import {
 } from './constants';
 import createCachedRender from './util/createCachedRender';
 
-function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
+function renderPlayer(
+  ctx: CanvasRenderingContext2D,
+  player: Player,
+  isLocalPlayer: boolean
+) {
   // drawing the player works like this:
   // 1. move to center of player
   // 2. draw equillateral triangle around center
@@ -29,7 +33,7 @@ function renderPlayer(ctx: CanvasRenderingContext2D, player: Player) {
   }
   ctx.rotate(angle);
 
-  ctx.fillStyle = player.color;
+  ctx.fillStyle = isLocalPlayer ? 'red' : 'cyan';
 
   ctx.beginPath();
   ctx.moveTo(-player.width / 2, -player.height / 2);
@@ -122,11 +126,16 @@ function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy) {
   ctx.restore();
 }
 
-export default function render(
-  ctx: CanvasRenderingContext2D,
-  state: SnapshotState,
-  isHost: boolean
-) {
+interface RenderOptions {
+  ctx: CanvasRenderingContext2D;
+  state: SnapshotState;
+  localPlayerId: number;
+  isHost: boolean;
+}
+
+export default function render(opts: RenderOptions) {
+  const { ctx, state, localPlayerId, isHost } = opts;
+
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -142,15 +151,10 @@ export default function render(
 
   renderTiles(ctx, 1, state.level.tiles);
 
-  for (let player of state.players.values()) {
-    renderWrappingEntity(ctx, player, () => renderPlayer(ctx, player));
-
-    ctx.strokeStyle = player.color;
-    ctx.strokeRect(
-      player.center[0] - player.width / 2,
-      player.center[1] - player.height / 2,
-      player.width,
-      player.height
+  for (let [playerId, player] of state.players.entries()) {
+    const isLocalPlayer = playerId === localPlayerId;
+    renderWrappingEntity(ctx, player, () =>
+      renderPlayer(ctx, player, isLocalPlayer)
     );
   }
 

@@ -8,6 +8,7 @@ import { setupCanvas } from './setupCanvas';
 export default class ClientGame {
   hostPeer: Peer.Instance;
   canvasCtx: CanvasRenderingContext2D;
+  playerId?: number;
 
   constructor(hostPeer: Peer.Instance) {
     this.hostPeer = hostPeer;
@@ -17,6 +18,8 @@ export default class ClientGame {
       // TODO: support message types and whatever
       if (msg.type === 'snapshot') {
         this.onHostSnapshot(msg.data);
+      } else if (msg.type === 'identity') {
+        this.playerId = msg.data.id;
       } else if (msg.type === 'ping') {
         this.sendToHost({
           type: 'pong',
@@ -56,6 +59,11 @@ export default class ClientGame {
 
   onHostSnapshot(snapshot: string) {
     const state = ARSON.decode(snapshot) as SnapshotState;
-    render(this.canvasCtx, state, false);
+    render({
+      ctx: this.canvasCtx,
+      state,
+      localPlayerId: this.playerId || -1,
+      isHost: false,
+    });
   }
 }
