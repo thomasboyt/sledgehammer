@@ -1,22 +1,30 @@
 <html>
-<body>
-  <canvas id="game" width="640" height="480"></canvas>
+  <head>
+    <title>sledgehammer</title>
+    <style>
+      canvas#game {
+        width: 640;
+        height: 480;
+      }
 
-  <p id="room-link" style="display:none">
-    room link: <a></a>
-  </p>
+      body {
+        text-align: center;
+      }
+    </style>
+  </head>
 
-  <p>
-    controls: arrow keys to move, space to shoot
-  </p>
+  <body>
+    <canvas id="game" width="640" height="480"></canvas>
 
-  <script src="/bundle.js"></script>
+    <p id="room-link" style="display:none">
+      room link: <a></a>
+    </p>
 
-  <style>
-    canvas#game {
-      width: 640;
-      height: 480;
-    }
-  </style>
-</body>
+    <p>
+      you are the <strong style="color: red">red</strong> triangle. your friends are the <strong style="color: cyan">blue</strong> triangles. defeat all the <strong style="color: pink">pink</strong> triangles to win.<br/>
+      controls: arrow keys to move, space to shoot
+    </p>
+
+    <script src="/bundle.js"></script>
+  </body>
 </html>
