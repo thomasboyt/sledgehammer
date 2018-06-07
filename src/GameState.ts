@@ -42,12 +42,16 @@ export type GameStatus =
   | 'cleared'
   | 'gameOver';
 
-export default interface GameState {
+export interface GameState {
   status: GameStatus;
   startTime?: number;
+}
 
+export interface StageState {
   level: Level;
   players: Map<number, Player>;
   bullets: Set<Bullet>;
   enemies: Set<Enemy>;
 }
+
+export interface SnapshotState extends StageState, GameState {}

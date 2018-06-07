@@ -42,8 +42,4 @@ export default class TimerManager {
       }
     }
   }
-
-  clear() {
-    this.timers = new Set();
-  }
 }

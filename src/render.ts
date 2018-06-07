@@ -1,4 +1,11 @@
-import GameState, { Player, Bullet, Tile, Entity, Enemy } from './GameState';
+import {
+  SnapshotState,
+  Player,
+  Bullet,
+  Tile,
+  Entity,
+  Enemy,
+} from './GameState';
 import {
   WIDTH,
   HEIGHT,
@@ -117,7 +124,7 @@ function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy) {
 
 export default function render(
   ctx: CanvasRenderingContext2D,
-  state: GameState,
+  state: SnapshotState,
   isHost: boolean
 ) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);

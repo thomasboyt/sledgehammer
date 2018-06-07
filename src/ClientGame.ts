@@ -1,4 +1,4 @@
-import GameState from './GameState';
+import { SnapshotState } from './GameState';
 import render from './render';
 import PlayerInputter from './util/PlayerInputter';
 import * as Peer from 'simple-peer';
@@ -55,7 +55,7 @@ export default class ClientGame {
   }
 
   onHostSnapshot(snapshot: string) {
-    const state = ARSON.decode(snapshot) as GameState;
+    const state = ARSON.decode(snapshot) as SnapshotState;
     render(this.canvasCtx, state, false);
   }
 }
