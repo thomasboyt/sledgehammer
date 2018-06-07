@@ -34,13 +34,30 @@ function renderPlayer(
   ctx.rotate(angle);
 
   ctx.fillStyle = isLocalPlayer ? 'red' : 'cyan';
+  ctx.strokeStyle = isLocalPlayer ? 'red' : 'cyan';
 
-  ctx.beginPath();
-  ctx.moveTo(-player.width / 2, -player.height / 2);
-  ctx.lineTo(-player.width / 2, player.height / 2);
-  ctx.lineTo(player.width / 2, 0);
-  ctx.closePath();
-  ctx.fill();
+  if (player.status === 'alive') {
+    ctx.beginPath();
+    ctx.moveTo(-player.width / 2, -player.height / 2);
+    ctx.lineTo(-player.width / 2, player.height / 2);
+    ctx.lineTo(player.width / 2, 0);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    // draw an x
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(-player.width / 2 + 3, -player.height / 2 + 3);
+    ctx.lineTo(player.width / 2 - 3, player.height / 2 - 3);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-player.width / 2 + 3, player.height / 2 - 3);
+    ctx.lineTo(player.width / 2 - 3, -player.height / 2 + 3);
+    ctx.closePath();
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
