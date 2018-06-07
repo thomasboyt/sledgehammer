@@ -45,6 +45,7 @@ export type GameStatus =
 export interface GameState {
   status: GameStatus;
   startTime?: number;
+  pings: Map<number, number>;
 }
 
 export interface StageState {

@@ -231,6 +231,7 @@ export default class HostGame {
       ...stageState,
       status: this.status,
       startTime: this.startTime,
+      pings: this.pings,
     };
   }
 }

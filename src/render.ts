@@ -189,9 +189,6 @@ export default function render(opts: RenderOptions) {
   }
 
   ctx.textAlign = 'left';
-  const pings = [...state.players.values()]
-    .map((player) => player.ping)
-    .filter((ping) => !!ping)
-    .join(', ');
+  const pings = [...state.pings.values()].filter((ping) => !!ping).join(', ');
   ctx.fillText(`pings: ${pings}`, 20, 460);
 }
