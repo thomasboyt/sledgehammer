@@ -78,3 +78,17 @@ export function forEachTile(
     }
   }
 }
+
+export function getTilesOfType(tiles: Tile[][], type: Tile): Vec2[] {
+  const result: Vec2[] = [];
+
+  for (let y = 0; y < tiles.length; y += 1) {
+    for (let x = 0; x < tiles[y].length; x += 1) {
+      if (tiles[y][x] === type) {
+        result.push([x, y]);
+      }
+    }
+  }
+
+  return result;
+}

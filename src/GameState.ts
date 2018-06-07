@@ -1,6 +1,7 @@
 import { BoundingBox } from './util/collision';
+import { Vec2 } from './util/math';
 
-export type Tile = 'wall' | null;
+export type Tile = 'wall' | 'spawn' | null;
 
 export type EntityType = Tile | 'bullet' | 'player' | 'enemy';
 
@@ -10,10 +11,12 @@ export interface Entity extends BoundingBox {
 
 export interface Level {
   tiles: Tile[][];
+  spawns: Vec2[];
 }
 
 export interface Player extends Entity {
   type: 'player';
+  status: 'alive' | 'dead';
   color: string;
   vec: [number, number];
   facing: [number, number];
@@ -32,7 +35,17 @@ export interface Enemy extends Entity {
   isMoving: boolean;
 }
 
+export type GameStatus =
+  | 'waiting'
+  | 'starting'
+  | 'playing'
+  | 'cleared'
+  | 'gameOver';
+
 export default interface GameState {
+  status: GameStatus;
+  startTime?: number;
+
   level: Level;
   players: Map<number, Player>;
   bullets: Set<Bullet>;

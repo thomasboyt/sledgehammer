@@ -56,6 +56,6 @@ export default class ClientGame {
 
   onHostSnapshot(snapshot: string) {
     const state = ARSON.decode(snapshot) as GameState;
-    render(this.canvasCtx, state);
+    render(this.canvasCtx, state, false);
   }
 }

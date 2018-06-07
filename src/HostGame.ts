@@ -26,7 +26,7 @@ import {
   forEachTile,
 } from './tileMap';
 
-import { levelTiles, getTilesFromString } from './levels';
+import { levelTiles, getLevelFromString } from './levels';
 import GameState, { Player, Enemy } from './GameState';
 
 import render from './render';
@@ -38,8 +38,17 @@ interface PlayerOptions {
   color: string;
 }
 
+// class Stage {
+//   nextSpawnIndex = 0;
+//   game: HostGame;
+
+//   constructor(game: HostGame) {
+//     this.game = game;
+//   }
+// }
+
 export default class HostGame {
-  state: GameState;
+  state!: GameState;
   hostId: number;
   canvasCtx: CanvasRenderingContext2D;
   playerInputters = new Map<number, PlayerInputter>();
@@ -47,41 +56,12 @@ export default class HostGame {
   wallEntities: BoundingBox[] = [];
 
   playerIdCounter = 0;
+  nextSpawnIndex = 0;
   peerToPlayerId = new Map<Peer.Instance, number>();
   lastPingTime: number = Date.now();
 
   constructor() {
-    const tiles = getTilesFromString(levelTiles);
-
-    this.state = {
-      level: {
-        tiles,
-      },
-      players: new Map(),
-      bullets: new Set(),
-      enemies: new Set(),
-    };
-
-    this.wallEntities = tilesToCollisionEntities(tiles);
-
-    // spawn enemies at random places
-    forEachTile(tiles, ([x, y], tile) => {
-      if (tile !== 'wall') {
-        if (getRandomInt(0, 30) <= 1) {
-          const choices: Vec2[] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-          const facing = randomChoice(choices);
-
-          this.state.enemies.add({
-            type: 'enemy',
-            center: tileToCenter([x, y]),
-            width: TILE_SIZE,
-            height: TILE_SIZE,
-            facing,
-            isMoving: false,
-          });
-        }
-      }
-    });
+    this.resetGame();
 
     // create a host player
     this.hostId = this.addPlayer({
@@ -105,6 +85,62 @@ export default class HostGame {
         type: 'ping',
       });
     }, 2000);
+  }
+
+  resetGame() {
+    this.timerManager.clear();
+
+    const level = getLevelFromString(levelTiles);
+
+    const players = new Map();
+
+    this.nextSpawnIndex = 0;
+    if (this.state) {
+      for (let [playerId, player] of this.state.players.entries()) {
+        players.set(playerId, this.createPlayer({ color: player.color }));
+      }
+    }
+
+    this.state = {
+      status: 'waiting',
+      level,
+      players,
+      bullets: new Set(),
+      enemies: new Set(),
+    };
+
+    this.wallEntities = tilesToCollisionEntities(level.tiles);
+  }
+
+  startGame() {
+    this.state.status = 'starting';
+    this.state.startTime = Date.now() + 3000;
+
+    this.timerManager.create({
+      timerMs: 3000,
+      onComplete: () => {
+        this.state.status = 'playing';
+
+        // spawn enemies at random places
+        forEachTile(this.state.level.tiles, ([x, y], tile) => {
+          if (tile !== 'wall') {
+            if (getRandomInt(0, 100) <= 1) {
+              const choices: Vec2[] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+              const facing = randomChoice(choices);
+
+              this.state.enemies.add({
+                type: 'enemy',
+                center: tileToCenter([x, y]),
+                width: TILE_SIZE,
+                height: TILE_SIZE,
+                facing,
+                isMoving: false,
+              });
+            }
+          }
+        });
+      },
+    });
   }
 
   /*
@@ -149,23 +185,41 @@ export default class HostGame {
     const playerId = this.playerIdCounter;
     this.playerIdCounter += 1;
 
-    this.state.players.set(playerId, {
-      type: 'player',
+    const player = this.createPlayer(opts);
+    this.state.players.set(playerId, player);
 
-      // center: [TILE_SIZE * 2 - TILE_SIZE / 2, playerIdCounter * 50],
-      center: [24, 24],
+    this.playerInputters.set(playerId, new PlayerInputter());
+
+    return playerId;
+  }
+
+  private createPlayer(opts: PlayerOptions): Player {
+    const spawn = this.getNextPlayerSpawn();
+    const center = tileToCenter(spawn);
+
+    // always start facing the middle of the screen
+    const facing: Vec2 = spawn[0] > WORLD_SIZE_WIDTH / 2 ? [-1, 0] : [1, 0];
+
+    return {
+      type: 'player',
+      status: 'alive',
+
+      center,
       width: TILE_SIZE,
       height: TILE_SIZE,
 
       color: opts.color,
       vec: [0, 0],
-      facing: [1, 0],
+      facing,
       isMoving: false,
-    });
+    };
+  }
 
-    this.playerInputters.set(playerId, new PlayerInputter());
-
-    return playerId;
+  private getNextPlayerSpawn(): Vec2 {
+    const spawns = this.state.level.spawns;
+    const idx = this.nextSpawnIndex % spawns.length;
+    this.nextSpawnIndex += 1;
+    return this.state.level.spawns[idx];
   }
 
   private removePlayer(playerId: number): void {
@@ -213,11 +267,33 @@ export default class HostGame {
     }
 
     this.sendSnapshot();
-    render(this.canvasCtx, this.state);
+    render(this.canvasCtx, this.state, true);
   }
 
   private update(dt: number): void {
     this.timerManager.update(dt);
+
+    const hostInputter = this.playerInputters.get(this.hostId)!;
+
+    if (this.state.status === 'waiting') {
+      if (hostInputter.keysDown.has(keyCodes.SPACE)) {
+        this.startGame();
+      }
+    } else if (this.state.status === 'gameOver') {
+      if (hostInputter.keysDown.has(keyCodes.SPACE)) {
+        this.resetGame();
+        this.startGame();
+      }
+    } else if (this.state.status === 'cleared') {
+      if (hostInputter.keysDown.has(keyCodes.SPACE)) {
+        this.resetGame();
+        this.startGame();
+      }
+    }
+
+    if (this.state.status !== 'playing') {
+      return;
+    }
 
     for (let playerId of this.state.players.keys()) {
       this.updatePlayer(dt, playerId);
@@ -226,11 +302,29 @@ export default class HostGame {
     this.updateEnemies();
 
     this.updateBullets(dt);
+
+    if (this.state.enemies.size === 0) {
+      // you done won
+      this.state.status = 'cleared';
+    }
+
+    const allPlayersDead = [...this.state.players.values()].every(
+      (player) => player.status === 'dead'
+    );
+
+    if (allPlayersDead) {
+      this.state.status = 'gameOver';
+    }
   }
 
   private updatePlayer(dt: number, playerId: number): void {
-    const inputter = this.playerInputters.get(playerId)!;
     const player = this.state.players.get(playerId)!;
+
+    if (player.status === 'dead') {
+      return;
+    }
+
+    const inputter = this.playerInputters.get(playerId)!;
 
     let inputDirection: [number, number] | null = null;
 
@@ -396,7 +490,6 @@ export default class HostGame {
     const toPoint = tileToCenter(wrappedDestTile);
 
     this.timerManager.create({
-      elapsedMs: 0,
       timerMs: ms,
       update: (elapsedMs: number, timerMs: number) => {
         const f = elapsedMs / timerMs;

@@ -1,7 +1,11 @@
-interface Timer {
-  elapsedMs: number;
+interface TimerOptions {
   timerMs: number;
-  update: (elapsedMs: number, timerMs: number) => void;
+  update?: (elapsedMs: number, timerMs: number) => void;
+  onComplete?: () => void;
+}
+
+interface Timer extends TimerOptions {
+  elapsedMs: number;
 }
 
 /**
@@ -13,8 +17,11 @@ interface Timer {
 export default class TimerManager {
   timers = new Set<Timer>();
 
-  create(timer: Timer) {
-    this.timers.add(timer);
+  create(timer: TimerOptions) {
+    this.timers.add({
+      ...timer,
+      elapsedMs: 0,
+    });
   }
 
   update(dt: number) {
@@ -26,7 +33,17 @@ export default class TimerManager {
         this.timers.delete(timer);
       }
 
-      timer.update(timer.elapsedMs, timer.timerMs);
+      if (timer.update) {
+        timer.update(timer.elapsedMs, timer.timerMs);
+      }
+
+      if (timer.elapsedMs === timer.timerMs && timer.onComplete) {
+        timer.onComplete();
+      }
     }
+  }
+
+  clear() {
+    this.timers = new Set();
   }
 }

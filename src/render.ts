@@ -117,7 +117,8 @@ function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy) {
 
 export default function render(
   ctx: CanvasRenderingContext2D,
-  state: GameState
+  state: GameState,
+  isHost: boolean
 ) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   ctx.fillStyle = 'black';
@@ -157,6 +158,26 @@ export default function render(
   ctx.restore();
 
   ctx.fillStyle = 'white';
+  ctx.font = '16px monospace';
+  ctx.textAlign = 'center';
+
+  if (state.status === 'waiting') {
+    const text = isHost
+      ? 'press space to start'
+      : 'waiting for host to start game...';
+    ctx.fillText(text, WIDTH / 2, 420);
+  } else if (state.status === 'starting') {
+    const text = `${Math.ceil((state.startTime! - Date.now()) / 1000)}...`;
+    ctx.fillText(text, WIDTH / 2, 420);
+  } else if (state.status === 'cleared') {
+    const text = 'you won!';
+    ctx.fillText(text, WIDTH / 2, 420);
+  } else if (state.status === 'gameOver') {
+    const text = isHost ? 'game over :( press R to retry' : 'game over :(';
+    ctx.fillText(text, WIDTH / 2, 420);
+  }
+
+  ctx.textAlign = 'left';
   const pings = [...state.players.values()]
     .map((player) => player.ping)
     .filter((ping) => !!ping)
