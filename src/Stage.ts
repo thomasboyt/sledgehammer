@@ -19,7 +19,7 @@ import {
   forEachTile,
 } from './tileMap';
 
-import { StageState, Player, Enemy } from './GameState';
+import { StageState, PlayerEntity, Enemy } from './GameState';
 import HostGame from './HostGame';
 import TimerManager from './util/TimerManager';
 import keyCodes from './util/keyCodes';
@@ -92,7 +92,7 @@ export default class Stage {
     // always start facing the middle of the screen
     const facing: Vec2 = spawn[0] > WORLD_SIZE_WIDTH / 2 ? [-1, 0] : [1, 0];
 
-    const player: Player = {
+    const player: PlayerEntity = {
       type: 'player',
       status: 'alive',
 
@@ -202,7 +202,7 @@ export default class Stage {
     }
   }
 
-  private playerShoot(player: Player): void {
+  private playerShoot(player: PlayerEntity): void {
     const vec: Vec2 = [
       player.facing[0] * BULLET_SPEED,
       player.facing[1] * BULLET_SPEED,
@@ -293,7 +293,7 @@ export default class Stage {
    * also handle wrapping around edges of the world
    */
   private moveGridEntity(
-    entity: Player | Enemy,
+    entity: PlayerEntity | Enemy,
     fromTile: Vec2,
     destTile: Vec2,
     ms: number

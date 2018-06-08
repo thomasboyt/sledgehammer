@@ -1,6 +1,6 @@
 import {
   SnapshotState,
-  Player,
+  PlayerEntity,
   Bullet,
   Tile,
   Entity,
@@ -17,7 +17,7 @@ import createCachedRender from './util/createCachedRender';
 
 function renderPlayer(
   ctx: CanvasRenderingContext2D,
-  player: Player,
+  player: PlayerEntity,
   isLocalPlayer: boolean
 ) {
   // drawing the player works like this:

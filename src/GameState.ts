@@ -14,7 +14,7 @@ export interface Level {
   spawns: Vec2[];
 }
 
-export interface Player extends Entity {
+export interface PlayerEntity extends Entity {
   type: 'player';
   status: 'alive' | 'dead';
   color: string;
@@ -50,7 +50,7 @@ export interface GameState {
 
 export interface StageState {
   level: Level;
-  players: Map<number, Player>;
+  players: Map<number, PlayerEntity>;
   bullets: Set<Bullet>;
   enemies: Set<Enemy>;
 }
