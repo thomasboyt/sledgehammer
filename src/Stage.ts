@@ -94,14 +94,12 @@ export default class Stage {
 
     const player: PlayerEntity = {
       type: 'player',
-      status: 'alive',
 
       center,
       width: TILE_SIZE,
       height: TILE_SIZE,
 
-      color: opts.color,
-      vec: [0, 0],
+      status: 'alive',
       facing,
       isMoving: false,
     };

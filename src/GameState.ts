@@ -17,11 +17,8 @@ export interface Level {
 export interface PlayerEntity extends Entity {
   type: 'player';
   status: 'alive' | 'dead';
-  color: string;
-  vec: [number, number];
   facing: [number, number];
   isMoving: boolean;
-  ping?: number;
 }
 
 export interface Bullet extends Entity {
