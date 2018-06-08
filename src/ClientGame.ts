@@ -20,7 +20,7 @@ export default class ClientGame {
 
     hostPeer.on('data', (strData: string) => {
       const msg = deserializeMessage('host', strData);
-      // TODO: support message types and whatever
+
       if (msg.type === 'snapshot') {
         this.onHostSnapshot(msg.data);
       } else if (msg.type === 'identity') {
