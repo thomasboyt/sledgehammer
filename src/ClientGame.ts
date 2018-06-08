@@ -4,6 +4,11 @@ import PlayerInputter from './util/PlayerInputter';
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
 import { setupCanvas } from './setupCanvas';
+import {
+  serializeMessage,
+  deserializeMessage,
+  ClientMessage,
+} from './messages';
 
 export default class ClientGame {
   hostPeer: Peer.Instance;
@@ -14,7 +19,7 @@ export default class ClientGame {
     this.hostPeer = hostPeer;
 
     hostPeer.on('data', (strData: string) => {
-      const msg = JSON.parse(strData);
+      const msg = deserializeMessage('host', strData);
       // TODO: support message types and whatever
       if (msg.type === 'snapshot') {
         this.onHostSnapshot(msg.data);
@@ -52,9 +57,8 @@ export default class ClientGame {
     this.canvasCtx = canvas.getContext('2d')!;
   }
 
-  sendToHost(data: {}) {
-    const serialized = JSON.stringify(data);
-    this.hostPeer.send(serialized);
+  sendToHost(msg: ClientMessage) {
+    this.hostPeer.send(serializeMessage('client', msg));
   }
 
   onHostSnapshot(snapshot: string) {

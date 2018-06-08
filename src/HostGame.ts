@@ -10,6 +10,7 @@ import { setupCanvas } from './setupCanvas';
 import { SnapshotState, GameStatus } from './GameState';
 import Stage from './Stage';
 import render from './render';
+import { serializeMessage, deserializeMessage, HostMessage } from './messages';
 
 const MAX_FRAME_MS = 50;
 
@@ -96,7 +97,7 @@ export default class HostGame {
     this.peerToPlayerId.set(peer, playerId);
 
     peer.on('data', (data: string) => {
-      const msg = JSON.parse(data);
+      const msg = deserializeMessage('client', data);
 
       if (msg.type === 'keyDown') {
         this.onClientKeyDown(playerId, msg.data.keyCode);
@@ -155,24 +156,34 @@ export default class HostGame {
    * External communication
    */
 
-  private sendToPeers(data: {}): void {
-    const serialized = JSON.stringify(data);
+  private sendToPeers(msg: HostMessage): void {
+    const serialized = serializeMessage('host', msg);
     for (let peer of this.peerToPlayerId.keys()) {
       peer.send(serialized);
     }
   }
 
-  private sendSnapshot(): void {
+  private sendSnapshot(snapshotState: SnapshotState): void {
     /*
      * TODO: state currently contains shit i ain't wanna serialize
      */
-    const serialized = ARSON.encode(this.getSnapshotState());
+    const serialized = ARSON.encode(snapshotState);
     this.sendToPeers({
       type: 'snapshot',
       data: serialized,
     });
   }
 
+  private getSnapshotState(): SnapshotState {
+    const stageState = this.stage.state;
+
+    return {
+      ...stageState,
+      status: this.status,
+      startTime: this.startTime,
+      pings: this.pings,
+    };
+  }
   /*
    * Update loop
    */
@@ -190,11 +201,13 @@ export default class HostGame {
       this.update(dt);
     }
 
-    this.sendSnapshot();
+    const snapshot = this.getSnapshotState();
+
+    this.sendSnapshot(snapshot);
 
     render({
       ctx: this.canvasCtx,
-      state: this.getSnapshotState(),
+      state: snapshot,
       localPlayerId: this.hostId,
       isHost: true,
     });
@@ -222,16 +235,5 @@ export default class HostGame {
     } else if (this.status === 'playing') {
       this.stage.update(dt);
     }
-  }
-
-  getSnapshotState(): SnapshotState {
-    const stageState = this.stage.state;
-
-    return {
-      ...stageState,
-      status: this.status,
-      startTime: this.startTime,
-      pings: this.pings,
-    };
   }
 }
