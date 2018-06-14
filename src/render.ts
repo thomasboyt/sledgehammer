@@ -148,6 +148,7 @@ interface RenderOptions {
   state: SnapshotState;
   localPlayerId: number;
   isHost: boolean;
+  time: number;
 }
 
 export default function render(opts: RenderOptions) {

@@ -210,6 +210,7 @@ export default class HostGame {
       state: snapshot,
       localPlayerId: this.hostId,
       isHost: true,
+      time: Date.now(),
     });
   }
 

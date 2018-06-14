@@ -1,9 +1,12 @@
-import { SnapshotState } from './GameState';
-import render from './render';
-import PlayerInputter from './util/PlayerInputter';
 import * as Peer from 'simple-peer';
 import * as ARSON from 'arson';
+
+import PlayerInputter from './util/PlayerInputter';
+import RunLoop from './util/RunLoop';
 import { setupCanvas } from './setupCanvas';
+
+import render from './render';
+import { SnapshotState } from './GameState';
 import {
   serializeMessage,
   deserializeMessage,
@@ -13,6 +16,7 @@ import {
 export default class ClientGame {
   hostPeer: Peer.Instance;
   canvasCtx: CanvasRenderingContext2D;
+  lastState?: SnapshotState;
   playerId?: number;
 
   constructor(hostPeer: Peer.Instance) {
@@ -55,6 +59,10 @@ export default class ClientGame {
 
     const canvas = setupCanvas('#game');
     this.canvasCtx = canvas.getContext('2d')!;
+
+    const loop = new RunLoop();
+    loop.onTick(this.onTick.bind(this));
+    loop.start();
   }
 
   sendToHost(msg: ClientMessage) {
@@ -63,11 +71,20 @@ export default class ClientGame {
 
   onHostSnapshot(snapshot: string) {
     const state = ARSON.decode(snapshot) as SnapshotState;
+    this.lastState = state;
+  }
+
+  private onTick(dt: number): void {
+    if (!this.lastState) {
+      return;
+    }
+
     render({
       ctx: this.canvasCtx,
-      state,
+      state: this.lastState,
       localPlayerId: this.playerId || -1,
       isHost: false,
+      time: Date.now(),
     });
   }
 }
