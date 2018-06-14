@@ -72,6 +72,8 @@ steps to make game
 3. host does things
 4. render things...
 
+it's worth noting that the renderer should probably maintain some of its own state, to handle things like particle effects or whatever. this way the clients can compute all that stuff client-side without needing to duplicate code between host game logic and client game logic, i think? if not in the actual render hook maybe somewhere else
+
 ### resources
 
 - https://github.com/feross/simple-peer
