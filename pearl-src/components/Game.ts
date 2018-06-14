@@ -1,28 +1,35 @@
-import {
-  Component,
-  GameObject,
-  PolygonRenderer,
-  PolygonCollider,
-  Physical,
-} from 'pearl';
-
+import { Component } from 'pearl';
+import NetworkingHost from './NetworkingHost';
+import networkedObjects from '../networkedObjects';
 import Player from './Player';
 
-export default class Game extends Component<null> {
-  init() {
-    const player = new GameObject({
-      name: 'player',
-      components: [
-        new Player(),
-        new Physical({
-          center: { x: 120, y: 120 },
-        }),
-        new PolygonRenderer({ fillStyle: 'cyan' }),
-        PolygonCollider.createBox({ width: 16, height: 16 }),
-      ],
+interface Options {
+  isHost: boolean;
+}
+
+export default class Game extends Component<Options> {
+  isHost!: boolean;
+
+  init(opts: Options) {
+    this.isHost = opts.isHost;
+
+    if (this.isHost) {
+      this.initializeHost();
+    }
+  }
+
+  initializeHost() {
+    const networkingHost = this.getComponent(NetworkingHost);
+
+    networkingHost.onPlayerAdded.add(({ networkingPlayer }) => {
+      const playerObject = networkedObjects.player.create();
+      playerObject.getComponent(Player).playerId = networkingPlayer.id;
+      networkingHost.registerNetworkedObject('player', playerObject);
+      this.pearl.entities.add(playerObject);
     });
 
-    this.pearl.entities.add(player);
+    // create local player
+    networkingHost.addLocalPlayer();
   }
 
   render(ctx: CanvasRenderingContext2D) {

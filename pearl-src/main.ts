@@ -1,11 +1,14 @@
-import { createPearl } from 'pearl';
+import * as queryString from 'query-string';
 
-import { WIDTH, HEIGHT } from '../src/constants';
-import Game from './components/Game';
+import initializeClient from './initializeClient';
+import initializeHost from './initializeHost';
 
-createPearl({
-  rootComponents: [new Game()],
-  width: WIDTH,
-  height: HEIGHT,
-  canvas: document.getElementById('game') as HTMLCanvasElement,
-});
+const query = queryString.parse(location.search);
+
+const roomCode = query.game;
+
+if (roomCode) {
+  initializeClient(roomCode);
+} else {
+  initializeHost();
+}
