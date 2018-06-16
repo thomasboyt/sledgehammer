@@ -20,15 +20,19 @@
   },
   "dependencies": {
     "@types/axios": "^0.14.0",
+    "@types/lodash-es": "^4.17.0",
     "@types/query-string": "^5.1.0",
     "@types/simple-peer": "^6.1.4",
+    "@types/uuid": "^3.4.3",
     "arson": "^0.2.6",
     "axios": "^0.18.0",
     "immer": "^1.3.1",
+    "lodash-es": "^4.17.10",
     "pearl": "0.0.3",
     "query-string": "^6.1.0",
     "runtypes": "^2.0.6",
     "simple-peer": "^9.1.2",
+    "uuid": "^3.2.1",
     "webpack-cli": "^2.1.4",
     "webpack-merge": "^4.1.2"
   }

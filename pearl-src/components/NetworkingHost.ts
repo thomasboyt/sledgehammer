@@ -3,6 +3,7 @@ import { Component, GameObject } from 'pearl';
 import * as Peer from 'simple-peer';
 import Networking, { Snapshot, SnapshotObject } from './Networking';
 import Delegate from '../util/Delegate';
+import NetworkedObject from './NetworkedObject';
 
 let playerIdCounter = 0;
 
@@ -132,13 +133,14 @@ export default class NetworkingHost extends Networking {
 
     const serializedObjects: SnapshotObject[] = networkedObjects.map(
       (networkedObject) => {
-        const { type, object } = networkedObject;
-        const { serialize } = this.types[networkedObject.type];
+        const { id, type, serialize } = networkedObject.getComponent(
+          NetworkedObject
+        );
 
         return {
-          id: object.id,
+          id,
           type,
-          state: serialize(object),
+          state: serialize(networkedObject),
         };
       }
     );

@@ -1,4 +1,4 @@
-[ ] sync two games together
+[x] sync two games together
   - mvp of this: just players moving around
   - NetworkingHost component
     - handles incoming connections
@@ -13,10 +13,26 @@
       - maybe a list, like `new Sync(['Physical.center', 'Player.isMoving'])`
       - maybe some sort of annotation?
   - NetworkingHost/NetworkingClient get passed `peer` and use it directly
+[x] handle destroying networked objects
+  - need to remove from map of networked objects
+  - scenarios: pearl.entities.destroy() called...
+    - inject component with onDestroy hook?
+    - alternatively in serialize(): if object.isDestroyed...
+[ ] improve prefab system
+  - pass arguments to prefab constructor?
+[ ] how will we serialize references between components or objects
+  - ID?
+  - (de)serialize() can sorta handle this for now
+    - e.g. if Bullet has a reference to Player to see who created...
+    - just serialize player ID or object ID, and deserialize manually
+[ ] handle parent/child relationships on networked objects
+  - also probably just use object ID
 [ ] port over tile map system
-  - TileMap component on session
+  - TileMap component on world or session object
+    - also have a separate World or Session object
   - TileMapEntity component? maybe? should have ref to TileMap either way
   - handling tweens between tiles
+  - child objects of world will ref parent by 
 
 how do we sync GameObjects??
 

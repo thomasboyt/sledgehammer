@@ -1,14 +1,5 @@
 import { Component, GameObject } from 'pearl';
-
-interface NetworkedObjectType<T> {
-  create: () => GameObject;
-  serialize: (obj: GameObject) => T;
-  deserialize: (obj: GameObject, state: T) => void;
-}
-
-interface Opts {
-  types: { [_: string]: NetworkedObjectType<any> };
-}
+import NetworkedObject from './NetworkedObject';
 
 export interface SnapshotObject {
   id: string;
@@ -20,46 +11,60 @@ export interface Snapshot {
   objects: SnapshotObject[];
 }
 
-interface NetworkedObject {
+export interface NetworkedPrefab<Snapshot> {
   type: string;
-  object: GameObject;
+  createComponents: () => Component<any>[];
+  serialize: (obj: GameObject) => Snapshot;
+  deserialize: (obj: GameObject, snapshot: Snapshot) => void;
+}
+
+interface Opts {
+  prefabs: { [_: string]: NetworkedPrefab<any> };
 }
 
 export default abstract class Networking extends Component<Opts> {
-  types!: { [_: string]: NetworkedObjectType<any> };
+  prefabs!: { [_: string]: NetworkedPrefab<any> };
 
-  networkedObjects = new Map<string, NetworkedObject>();
+  networkedObjects = new Map<string, GameObject>();
 
   init(opts: Opts) {
-    this.types = opts.types;
+    this.prefabs = opts.prefabs;
   }
 
-  createNetworkedObject(typeName: string, id?: string): GameObject {
-    const type = this.types[typeName];
+  createNetworkedPrefab(prefabName: string, id?: string): GameObject {
+    const prefab = this.prefabs[prefabName];
 
-    if (!type) {
-      throw new Error(
-        `no registered networked object type with name ${typeName}`
-      );
+    if (!prefabName) {
+      throw new Error(`no registered networked prefab with name ${prefabName}`);
     }
 
-    const obj = type.create();
+    const components = prefab.createComponents();
 
-    if (id) {
-      obj.id = id;
-    }
-
-    this.registerNetworkedObject(typeName, obj);
+    const obj = new GameObject({
+      name: 'player',
+      components: [
+        ...components,
+        new NetworkedObject({
+          networking: this,
+          type: prefabName,
+          serialize: prefab.serialize,
+          deserialize: prefab.deserialize,
+          id,
+        }),
+      ],
+    });
 
     this.pearl.entities.add(obj);
+
+    const networked = obj.getComponent(NetworkedObject);
+
+    this.networkedObjects.set(networked.id, obj);
 
     return obj;
   }
 
-  registerNetworkedObject(typeName: string, obj: GameObject) {
-    this.networkedObjects.set(obj.id, {
-      type: typeName,
-      object: obj,
-    });
+  deregisterNetworkedObject(obj: GameObject) {
+    const networked = obj.getComponent(NetworkedObject);
+    this.networkedObjects.delete(networked.id);
   }
 }

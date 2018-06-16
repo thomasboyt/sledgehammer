@@ -4,6 +4,7 @@ import Networking, { Snapshot } from './Networking';
 
 // TODO: replace this with something better
 import PlayerInputter from '../../src/util/PlayerInputter';
+import NetworkedObject from './NetworkedObject';
 
 export default class NetworkingClient extends Networking {
   hostPeer!: Peer.Instance;
@@ -56,21 +57,23 @@ export default class NetworkingClient extends Networking {
   private onSnapshot(snapshot: Snapshot) {
     // TODO: destroy objects that are missing in snapshot
     for (let snapshotObject of snapshot.objects) {
-      const type = this.types[snapshotObject.type];
+      const prefab = this.prefabs[snapshotObject.type];
 
-      if (!type) {
+      if (!prefab) {
         throw new Error(
-          `unrecognized networked object type ${snapshotObject.type}`
+          `unrecognized networked object prefab ${snapshotObject.type}`
         );
       }
 
       const networkedObject = this.networkedObjects.get(snapshotObject.id);
 
-      const object = networkedObject
-        ? networkedObject.object
-        : this.createNetworkedObject(snapshotObject.type, snapshotObject.id);
+      const object =
+        networkedObject ||
+        this.createNetworkedPrefab(snapshotObject.type, snapshotObject.id);
 
-      type.deserialize(object, snapshotObject.state);
+      object
+        .getComponent(NetworkedObject)
+        .deserialize(object, snapshotObject.state);
     }
   }
 }

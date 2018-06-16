@@ -6,21 +6,22 @@ import {
   Physical,
 } from 'pearl';
 
+import { NetworkedPrefab } from './components/Networking';
+
 import Player, { PlayerSnapshot } from './components/Player';
 
-const networkedPlayer = {
-  create: () => {
-    return new GameObject({
-      name: 'player',
-      components: [
-        new Player(),
-        new Physical({
-          center: { x: 120, y: 120 },
-        }),
-        new PolygonRenderer({ fillStyle: 'cyan' }),
-        PolygonCollider.createBox({ width: 16, height: 16 }),
-      ],
-    });
+const player: NetworkedPrefab<PlayerSnapshot> = {
+  type: 'player',
+
+  createComponents: () => {
+    return [
+      new Player(),
+      new Physical({
+        center: { x: 120, y: 120 },
+      }),
+      new PolygonRenderer({ fillStyle: 'cyan' }),
+      PolygonCollider.createBox({ width: 16, height: 16 }),
+    ];
   },
 
   serialize: (obj: GameObject): PlayerSnapshot => {
@@ -36,5 +37,5 @@ const networkedPlayer = {
 };
 
 export default {
-  player: networkedPlayer,
+  player,
 };

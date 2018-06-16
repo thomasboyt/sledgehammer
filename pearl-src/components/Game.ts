@@ -1,6 +1,6 @@
 import { Component } from 'pearl';
 import NetworkingHost from './NetworkingHost';
-import networkedObjects from '../networkedObjects';
+import networkedObjects from '../networkedPrefabs';
 import Player from './Player';
 
 interface Options {
@@ -22,14 +22,19 @@ export default class Game extends Component<Options> {
     const networkingHost = this.getComponent(NetworkingHost);
 
     networkingHost.onPlayerAdded.add(({ networkingPlayer }) => {
-      const playerObject = networkedObjects.player.create();
+      const playerObject = networkingHost.createNetworkedPrefab('player');
       playerObject.getComponent(Player).playerId = networkingPlayer.id;
-      networkingHost.registerNetworkedObject('player', playerObject);
-      this.pearl.entities.add(playerObject);
     });
 
     // create local player
     networkingHost.addLocalPlayer();
+
+    // TODO: HOW CAN I SET DEFAULT STUFF ON A PREFAB
+    // will this be safe to sync...?
+    // networkingHost.createNetworkedPrefab('wall', {
+    //   center: { x: 100, y: 100 },
+    //   size: { x: 100, y: 100 },
+    // });
   }
 
   render(ctx: CanvasRenderingContext2D) {
