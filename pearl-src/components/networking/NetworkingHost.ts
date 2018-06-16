@@ -2,7 +2,7 @@ import { Component, GameObject } from 'pearl';
 
 import * as Peer from 'simple-peer';
 import Networking, { Snapshot, SnapshotObject } from './Networking';
-import Delegate from '../util/Delegate';
+import Delegate from '../../util/Delegate';
 import NetworkedObject from './NetworkedObject';
 
 let playerIdCounter = 0;

@@ -3,8 +3,8 @@ import * as Peer from 'simple-peer';
 
 import { WIDTH, HEIGHT } from '../src/constants';
 import Game from './components/Game';
-import NetworkingHost from './components/NetworkingHost';
-import NetworkingClient from './components/NetworkingClient';
+import NetworkingHost from './components/networking/NetworkingHost';
+import NetworkingClient from './components/networking/NetworkingClient';
 import networkedPrefabs from './networkedPrefabs';
 
 interface Options {

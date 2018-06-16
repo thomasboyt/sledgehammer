@@ -1,6 +1,6 @@
 import { Component, Physical, Keys, Coordinates } from 'pearl';
 import Game from './Game';
-import NetworkingHost from './NetworkingHost';
+import NetworkingHost from './networking/NetworkingHost';
 
 const MOVE_SPEED = 0.1;
 

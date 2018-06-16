@@ -3,7 +3,7 @@ import * as Peer from 'simple-peer';
 import Networking, { Snapshot } from './Networking';
 
 // TODO: replace this with something better
-import PlayerInputter from '../../src/util/PlayerInputter';
+import PlayerInputter from '../../../src/util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 
 export default class NetworkingClient extends Networking {

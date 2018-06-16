@@ -4,7 +4,7 @@ import GroovejetClient from '../src/groovejet/GroovejetClient';
 import { createRoom } from '../src/groovejet/GroovejetHTTP';
 import showRoomLink from '../src/roomLink';
 import createGame from './createGame';
-import NetworkingHost from './components/NetworkingHost';
+import NetworkingHost from './components/networking/NetworkingHost';
 
 const peers = new Set<Peer.Instance>();
 

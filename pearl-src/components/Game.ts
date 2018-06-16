@@ -1,5 +1,5 @@
 import { Component } from 'pearl';
-import NetworkingHost from './NetworkingHost';
+import NetworkingHost from './networking/NetworkingHost';
 import networkedObjects from '../networkedPrefabs';
 import Player from './Player';
 
