@@ -55,7 +55,8 @@ export default class NetworkingClient extends Networking {
   }
 
   private onSnapshot(snapshot: Snapshot) {
-    // TODO: destroy objects that are missing in snapshot
+    const unseenIds = new Set(this.networkedObjects.keys());
+
     for (let snapshotObject of snapshot.objects) {
       const prefab = this.prefabs[snapshotObject.type];
 
@@ -74,6 +75,12 @@ export default class NetworkingClient extends Networking {
       object
         .getComponent(NetworkedObject)
         .deserialize(object, snapshotObject.state, this.networkedObjects);
+
+      unseenIds.delete(snapshotObject.id);
+    }
+
+    for (let unseenId of unseenIds) {
+      this.pearl.entities.destroy(this.networkedObjects.get(unseenId)!);
     }
   }
 }

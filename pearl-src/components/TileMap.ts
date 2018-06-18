@@ -84,15 +84,15 @@ export default class TileMap<T> extends Component<Options> {
       const center = this.tileCoordinatesToCenter(tilePos);
 
       const tilePoly = new SAT.Box(
-        new SAT.Vector(center.x, center.y),
+        new SAT.Vector(
+          center.x - this.tileSize / 2,
+          center.y - this.tileSize / 2
+        ),
         this.tileSize,
         this.tileSize
       ).toPolygon();
 
-      const resp = new SAT.Response();
-      const collided = SAT.testPolygonPolygon(poly, tilePoly, resp);
-
-      if (collided) {
+      if (SAT.testPolygonPolygon(poly, tilePoly)) {
         isColliding = true;
       }
     });

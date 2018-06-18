@@ -13,13 +13,19 @@ interface OnPlayerAddedMsg {
 
 interface Inputter {
   isKeyDown(keyCode: number): boolean;
+  isKeyPressed(keyCode: number): boolean;
 }
 
 class NetworkedInputter implements Inputter {
   keysDown = new Set<number>();
+  keysPressed = new Set<number>();
 
   isKeyDown(keyCode: number): boolean {
     return this.keysDown.has(keyCode);
+  }
+
+  isKeyPressed(keyCode: number): boolean {
+    return this.keysPressed.has(keyCode);
   }
 }
 
@@ -105,11 +111,25 @@ export default class NetworkingHost extends Networking {
       type: 'snapshot',
       data: snapshot,
     });
+
+    // TODO: This is wrapped in setImmediate() so that keys aren't unset before everything else's
+    // update() hook is called
+    // This is a decent argument for adding a lateUpdate() hook that happens after update()
+    setImmediate(() => {
+      for (let player of this.players.values()) {
+        if (player.inputter instanceof NetworkedInputter) {
+          player.inputter.keysPressed = new Set();
+        }
+      }
+    });
   }
 
   onClientKeyDown(player: NetworkingPlayer, keyCode: number) {
     if (player.inputter instanceof NetworkedInputter) {
-      player.inputter.keysDown.add(keyCode);
+      if (!player.inputter.keysDown.has(keyCode)) {
+        player.inputter.keysDown.add(keyCode);
+        player.inputter.keysPressed.add(keyCode);
+      }
     }
   }
 

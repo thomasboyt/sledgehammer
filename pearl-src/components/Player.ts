@@ -3,8 +3,14 @@ import Game from './Game';
 import NetworkingHost from './networking/NetworkingHost';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
+import Bullet from './Bullet';
 
 const MOVE_TIME_MS = 120;
+const BULLET_SPEED = 0.2;
+
+const addVector = (vec1: Coordinates, vec2: Coordinates): Coordinates => {
+  return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
+};
 
 export interface PlayerSnapshot {
   center: Coordinates;
@@ -58,10 +64,9 @@ export default class Player extends Component<Options> {
     //   }
     // }
 
-    // const keysPressed = inputter.getKeysPressedAndClear();
-    // if (keysPressed.has(keyCodes.SPACE)) {
-    //   this.playerShoot(player);
-    // }
+    if (inputter.isKeyPressed(Keys.space)) {
+      this.playerShoot();
+    }
   }
 
   private movePlayer(inputDirection: Coordinates) {
@@ -87,8 +92,24 @@ export default class Player extends Component<Options> {
       tileEntity.move(destTilePosition, MOVE_TIME_MS);
     }
   }
-}
 
-const addVector = (vec1: Coordinates, vec2: Coordinates): Coordinates => {
-  return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
-};
+  private playerShoot() {
+    const bullet = this.pearl.obj
+      .getComponent(NetworkingHost)
+      .createNetworkedPrefab('bullet');
+
+    bullet.getComponent(Bullet).worldObject = this.getComponent(
+      TileEntity
+    ).world;
+
+    const phys = this.getComponent(Physical);
+    const bulletPhys = bullet.getComponent(Physical);
+
+    bulletPhys.center = { x: phys.center.x, y: phys.center.y };
+
+    bulletPhys.vel = {
+      x: this.facing.x * BULLET_SPEED,
+      y: this.facing.y * BULLET_SPEED,
+    };
+  }
+}

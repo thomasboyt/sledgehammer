@@ -38,7 +38,7 @@ export default abstract class Networking extends Component<Opts> {
   createNetworkedPrefab(prefabName: string, id?: string): GameObject {
     const prefab = this.prefabs[prefabName];
 
-    if (!prefabName) {
+    if (!prefab) {
       throw new Error(`no registered networked prefab with name ${prefabName}`);
     }
 
