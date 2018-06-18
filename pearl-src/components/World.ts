@@ -7,10 +7,45 @@ import TileMap from './TileMap';
 import { getTilesFromString } from '../levels';
 import Game from './Game';
 import Bullet from './Bullet';
+import { getRandomInt, randomChoice } from '../util/math';
+import Enemy from './Enemy';
 
 export default class World extends Component<null> {
   spawns: Coordinates[] = [];
   nextSpawnIndex = 0;
+
+  loadTileMap(levelTiles: string) {
+    const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
+    const tiles = getTilesFromString(levelTiles);
+    tileMap.setTiles(tiles);
+
+    tileMap.forEachTile(({ x, y }, value) => {
+      if (value === Tile.Spawn) {
+        this.spawns.push({ x, y });
+      }
+    });
+
+    // generate enemies
+    tileMap.forEachTile(({ x, y }, value) => {
+      if (value === Tile.Empty) {
+        if (getRandomInt(0, 100) <= 1) {
+          const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+          const facing = randomChoice(choices);
+
+          const enemyObj = this.pearl.obj
+            .getComponent(NetworkingHost)
+            .createNetworkedPrefab('enemy');
+
+          const tileEntity = enemyObj.getComponent(TileEntity);
+          tileEntity.world = this.gameObject;
+          tileEntity.setPosition({ x, y });
+
+          const enemy = enemyObj.getComponent(Enemy);
+          enemy.facing = { x: facing[0], y: facing[1] };
+        }
+      }
+    });
+  }
 
   addPlayer(networkingPlayer: NetworkingPlayer) {
     const networkingHost = this.pearl.obj.getComponent(NetworkingHost);
@@ -21,18 +56,6 @@ export default class World extends Component<null> {
     const tileEntity = playerObject.getComponent(TileEntity);
     tileEntity.world = this.gameObject;
     tileEntity.setPosition(this.getNextSpawn());
-  }
-
-  loadTileMap(levelTiles: string) {
-    const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
-    const tiles = getTilesFromString(levelTiles);
-    tileMap.tiles = tiles;
-
-    tileMap.forEachTile(({ x, y }, value) => {
-      if (value === Tile.Spawn) {
-        this.spawns.push({ x, y });
-      }
-    });
   }
 
   update(dt: number) {

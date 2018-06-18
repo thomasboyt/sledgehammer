@@ -6,12 +6,6 @@ interface Options {
   tileSize: number;
 }
 
-// interface Tile<T> {
-//   pos: Coordinates;
-//   center: Coordinates;
-//   type: T;
-// }
-
 /**
  * Accepts
  */
@@ -22,6 +16,7 @@ export default class TileMap<T> extends Component<Options> {
   tiles?: T[][];
 
   tileSize!: number;
+  worldSize?: Coordinates;
 
   /**
    * which tiles are considered "collision"
@@ -30,8 +25,18 @@ export default class TileMap<T> extends Component<Options> {
     this.tileSize = opts.tileSize;
   }
 
+  setTiles(tiles: T[][]) {
+    this.tiles = tiles;
+
+    this.worldSize = {
+      x: this.tiles[0].length,
+      y: this.tiles.length,
+    };
+  }
+
   getTile(position: Coordinates): T {
-    const tile = this.tiles![position.y][position.x];
+    const wrapped = this.wrapTilePosition(position);
+    const tile = this.tiles![wrapped.y][wrapped.x];
     return tile;
   }
 
@@ -98,5 +103,22 @@ export default class TileMap<T> extends Component<Options> {
     });
 
     return isColliding;
+  }
+
+  wrapTilePosition(position: Coordinates): Coordinates {
+    const wrap = (n: number, bound: number): number => {
+      if (n < 0) {
+        return bound - 1;
+      } else if (n >= bound) {
+        return 0;
+      } else {
+        return n;
+      }
+    };
+
+    return {
+      x: wrap(position.x, this.worldSize!.x),
+      y: wrap(position.y, this.worldSize!.y),
+    };
   }
 }

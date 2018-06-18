@@ -102,17 +102,32 @@ export default class TileEntity extends Component<null> {
   /**
    * Move spaces in the grid over some number of milliseconds
    */
-  move(destinationTileCoordinates: Coordinates, timeMs: number): void {
+  move(endTilePos: Coordinates, timeMs: number): void {
     if (this.isMoving) {
       throw new Error('already moving; cannot move again');
     }
 
-    const phys = this.getComponent(Physical);
-    const start = { x: phys.center.x, y: phys.center.y };
-    const end = this.tileMap.tileCoordinatesToCenter(
-      destinationTileCoordinates
-    );
+    const startTilePos = this.tilePosition;
+    const wrappedEndPos = this.tileMap.wrapTilePosition(endTilePos);
 
+    if (wrappedEndPos.x !== endTilePos.x) {
+      if (wrappedEndPos.x === 0) {
+        startTilePos.x = -1;
+      } else {
+        startTilePos.x = this.tileMap.worldSize!.x;
+      }
+    } else if (wrappedEndPos.y !== endTilePos.y) {
+      if (wrappedEndPos.y === 0) {
+        startTilePos.y = -1;
+      } else {
+        startTilePos.y = this.tileMap.worldSize!.y;
+      }
+    }
+
+    const start = this.tileMap.tileCoordinatesToCenter(startTilePos);
+    const end = this.tileMap.tileCoordinatesToCenter(wrappedEndPos);
+
+    const phys = this.getComponent(Physical);
     this.moveTween = new MoveTween(phys, start, end, timeMs);
   }
 }

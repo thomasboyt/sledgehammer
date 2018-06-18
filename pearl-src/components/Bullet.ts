@@ -1,5 +1,4 @@
 import { Component, Physical } from 'pearl';
-import Game from './Game';
 import NetworkingHost from './networking/NetworkingHost';
 import BulletExplosion from './BulletExplosion';
 
@@ -8,7 +7,6 @@ export default class Bullet extends Component<null> {
     this.pearl.entities.destroy(this.gameObject);
 
     const explosionObj = this.pearl.obj
-      .getComponent(Game)
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('bulletExplosion');
 
