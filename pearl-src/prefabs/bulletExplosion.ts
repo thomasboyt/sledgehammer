@@ -7,7 +7,7 @@ interface BulletExplosionSnapshot {
 }
 
 const bulletExplosion: NetworkedPrefab<BulletExplosionSnapshot> = {
-  type: 'bullet',
+  type: 'bulletExplosion',
 
   zIndex: 1,
 
