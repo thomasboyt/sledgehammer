@@ -18,7 +18,7 @@ interface EnemySnapshot {
 }
 
 const enemy: NetworkedPrefab<EnemySnapshot> = {
-  type: 'player',
+  type: 'enemy',
 
   createComponents: () => {
     return [
