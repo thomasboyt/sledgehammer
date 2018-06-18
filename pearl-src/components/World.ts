@@ -1,4 +1,4 @@
-import { Component, Coordinates } from 'pearl';
+import { Component, Coordinates, PolygonCollider } from 'pearl';
 import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
 import Player from './Player';
 import TileEntity from './TileEntity';
@@ -6,6 +6,7 @@ import { Tile } from '../types';
 import TileMap from './TileMap';
 import { getTilesFromString } from '../levels';
 import Game from './Game';
+import Bullet from './Bullet';
 
 export default class World extends Component<null> {
   spawns: Coordinates[] = [];
@@ -39,10 +40,51 @@ export default class World extends Component<null> {
       return;
     }
 
-    // test player-enemy collisions
-    // test bullet-enemy collisions
-    // test bullet-player collisions
-    // test bullet-tile collisions? or maybe handle this in bullet update
+    // TODO: maybe do this via parent-child relationships if i can figure out how to implement
+    // with networking
+    const entities = [...this.pearl.entities.all().values()];
+    const players = entities.filter((obj) => obj.hasTag('player'));
+    const enemies = entities.filter((obj) => obj.hasTag('enemy'));
+    const bullets = entities.filter((obj) => obj.hasTag('bullet'));
+
+    const tileMap = this.getComponent(TileMap);
+
+    for (let bullet of bullets) {
+      const bulletCollider = bullet.getComponent(PolygonCollider);
+
+      if (tileMap.isColliding(bulletCollider, [Tile.Wall])) {
+        bullet.getComponent(Bullet).explode();
+        continue;
+      }
+
+      for (let enemy of enemies) {
+        if (bulletCollider.isColliding(enemy.getComponent(PolygonCollider))) {
+          // destroy enemy
+          bullet.getComponent(Bullet).explode();
+          continue;
+        }
+      }
+
+      for (let player of players) {
+        if (bulletCollider.isColliding(player.getComponent(PolygonCollider))) {
+          // set player to dead
+          bullet.getComponent(Bullet).explode();
+          continue;
+        }
+      }
+    }
+
+    for (let player of players) {
+      for (let enemy of enemies) {
+        if (
+          player
+            .getComponent(PolygonCollider)
+            .isColliding(enemy.getComponent(PolygonCollider))
+        ) {
+          // set player to dead
+        }
+      }
+    }
   }
 
   private getNextSpawn() {

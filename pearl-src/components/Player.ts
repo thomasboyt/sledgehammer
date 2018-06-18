@@ -1,4 +1,4 @@
-import { Component, Physical, Keys, Coordinates } from 'pearl';
+import { Component, Physical, Keys, Coordinates, PolygonCollider } from 'pearl';
 import Game from './Game';
 import NetworkingHost from './networking/NetworkingHost';
 import TileEntity from './TileEntity';
@@ -98,14 +98,24 @@ export default class Player extends Component<Options> {
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('bullet');
 
-    bullet.getComponent(Bullet).worldObject = this.getComponent(
-      TileEntity
-    ).world;
-
     const phys = this.getComponent(Physical);
+    const collider = this.getComponent(PolygonCollider);
     const bulletPhys = bullet.getComponent(Physical);
+    const bulletCollider = bullet.getComponent(PolygonCollider);
 
-    bulletPhys.center = { x: phys.center.x, y: phys.center.y };
+    // spawn bullet directly in front of where player's facing, offset so that it's in front of
+    // player + padding so there's no intersecting
+    // (padding is kinda arbitrary and may need to be shifted if velocities of players or bullets
+    // are changed since it's possible for a player to "catch up" if they shoot in direction they
+    // are moving)
+    bulletPhys.center = {
+      x:
+        phys.center.x +
+        this.facing.x * (collider.width! / 2 + bulletCollider.width! / 2 + 3),
+      y:
+        phys.center.y +
+        this.facing.y * (collider.height! / 2 + bulletCollider.height! / 2 + 3),
+    };
 
     bulletPhys.vel = {
       x: this.facing.x * BULLET_SPEED,

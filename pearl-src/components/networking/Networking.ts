@@ -13,6 +13,7 @@ export interface Snapshot {
 
 export interface NetworkedPrefab<Snapshot> {
   type: string;
+  zIndex?: number;
   createComponents: () => Component<any>[];
   serialize: (obj: GameObject) => Snapshot;
   deserialize: (
@@ -45,7 +46,9 @@ export default abstract class Networking extends Component<Opts> {
     const components = prefab.createComponents();
 
     const obj = new GameObject({
-      name: 'player',
+      name: prefabName,
+      tags: [prefabName],
+      zIndex: prefab.zIndex || 0,
       components: [
         ...components,
         new NetworkedObject({

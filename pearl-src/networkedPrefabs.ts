@@ -16,6 +16,7 @@ import NetworkedObject from './components/networking/NetworkedObject';
 import TileMapRenderer from './components/TileMapRenderer';
 import World from './components/World';
 import Bullet from './components/Bullet';
+import BulletExplosion from './components/BulletExplosion';
 
 const player: NetworkedPrefab<PlayerSnapshot> = {
   type: 'player',
@@ -123,8 +124,43 @@ const bullet: NetworkedPrefab<BulletSnapshot> = {
   },
 };
 
+interface BulletExplosionSnapshot {
+  center: Coordinates;
+}
+
+const bulletExplosion: NetworkedPrefab<BulletExplosionSnapshot> = {
+  type: 'bullet',
+
+  zIndex: 1,
+
+  createComponents: () => {
+    return [
+      new BulletExplosion(),
+      new Physical({
+        center: { x: 0, y: 0 },
+      }),
+    ];
+  },
+
+  serialize(obj) {
+    const phys = obj.getComponent(Physical);
+    return { center: phys.center };
+  },
+
+  deserialize(obj, snapshot) {
+    const phys = obj.getComponent(Physical);
+    phys.center = snapshot.center;
+    const explosion = obj.getComponent(BulletExplosion);
+
+    if (!explosion.initialized) {
+      explosion.start();
+    }
+  },
+};
+
 export default {
   player,
   world,
   bullet,
+  bulletExplosion,
 };

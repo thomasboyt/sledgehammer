@@ -1,15 +1,6 @@
 import { Physical, Component, Coordinates, GameObject } from 'pearl';
 import TileMap from './TileMap';
-
-export const lerp = (a: number, b: number, f: number) => a + f * (b - a);
-export const lerp2 = (
-  a: Coordinates,
-  b: Coordinates,
-  f: number
-): Coordinates => ({
-  x: lerp(a.x, b.x, f),
-  y: lerp(a.y, b.y, f),
-});
+import { lerpVector } from '../util/math';
 
 class MoveTween {
   elapsedMs: number = 0;
@@ -38,7 +29,7 @@ class MoveTween {
     }
 
     const f = this.elapsedMs / this.targetMs;
-    this.phys.center = lerp2(this.start, this.end, f);
+    this.phys.center = lerpVector(this.start, this.end, f);
 
     if (f === 1) {
       return true;

@@ -1,27 +1,23 @@
-import { Component, PolygonCollider, GameObject } from 'pearl';
-import TileMap from './TileMap';
+import { Component, Physical } from 'pearl';
 import Game from './Game';
-import World from './World';
-import { Tile } from '../types';
+import NetworkingHost from './networking/NetworkingHost';
+import BulletExplosion from './BulletExplosion';
 
 export default class Bullet extends Component<null> {
-  worldObject?: GameObject;
+  explode() {
+    this.pearl.entities.destroy(this.gameObject);
 
-  update(dt: number) {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
-      return;
-    }
+    const explosionObj = this.pearl.obj
+      .getComponent(Game)
+      .getComponent(NetworkingHost)
+      .createNetworkedPrefab('bulletExplosion');
 
-    if (!this.worldObject) {
-      throw new Error('missing world object in bullet');
-    }
+    const phys = this.getComponent(Physical);
+    explosionObj.getComponent(Physical).center = {
+      x: phys.center.x,
+      y: phys.center.y,
+    };
 
-    // TODO: this sucks lmfao
-    const tileMap = this.worldObject.getComponent(TileMap) as TileMap<Tile>;
-    const collider = this.getComponent(PolygonCollider);
-
-    if (tileMap.isColliding(collider, [Tile.Wall])) {
-      this.pearl.entities.destroy(this.gameObject);
-    }
+    explosionObj.getComponent(BulletExplosion).start();
   }
 }
