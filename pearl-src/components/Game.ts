@@ -1,7 +1,7 @@
 import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
-import networkedObjects from '../networkedPrefabs';
-import Player from './Player';
+import { getTilesFromString, levelTiles } from '../levels';
+import World from './World';
 
 interface Options {
   isHost: boolean;
@@ -21,10 +21,15 @@ export default class Game extends Component<Options> {
   initializeHost() {
     const networkingHost = this.getComponent(NetworkingHost);
 
-    networkingHost.onPlayerAdded.add(({ networkingPlayer }) => {
-      const playerObject = networkingHost.createNetworkedPrefab('player');
-      playerObject.getComponent(Player).playerId = networkingPlayer.id;
-    });
+    const worldObject = networkingHost.createNetworkedPrefab('world');
+    const world = worldObject.getComponent(World);
+
+    world.loadTileMap(levelTiles);
+
+    // TODO: update this if world changes
+    networkingHost.onPlayerAdded.add(({ networkingPlayer }) =>
+      world.addPlayer(networkingPlayer)
+    );
 
     // create local player
     networkingHost.addLocalPlayer();

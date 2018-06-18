@@ -1,12 +1,15 @@
 import { Component, Physical, Keys, Coordinates } from 'pearl';
 import Game from './Game';
 import NetworkingHost from './networking/NetworkingHost';
+import TileEntity from './TileEntity';
+import { Tile } from '../types';
 
-const MOVE_SPEED = 0.1;
+const MOVE_TIME_MS = 120;
 
 export interface PlayerSnapshot {
   center: Coordinates;
   vel: Coordinates;
+  worldId: string;
 }
 
 export interface Options {
@@ -15,6 +18,7 @@ export interface Options {
 
 export default class Player extends Component<Options> {
   playerId!: number;
+  facing: Coordinates = { x: 1, y: 0 };
 
   init(opts: Options) {
     if (opts) {
@@ -31,17 +35,60 @@ export default class Player extends Component<Options> {
     const networkedPlayer = players.get(this.playerId)!;
     const inputter = networkedPlayer.inputter;
 
-    const phys = this.getComponent(Physical);
-    phys.vel = { x: 0, y: 0 };
+    let inputDirection: Coordinates | null = null;
 
     if (inputter.isKeyDown(Keys.rightArrow)) {
-      phys.vel.x = 1 * MOVE_SPEED;
+      inputDirection = { x: 1, y: 0 };
     } else if (inputter.isKeyDown(Keys.leftArrow)) {
-      phys.vel.x = -1 * MOVE_SPEED;
+      inputDirection = { x: -1, y: 0 };
     } else if (inputter.isKeyDown(Keys.upArrow)) {
-      phys.vel.y = -1 * MOVE_SPEED;
+      inputDirection = { x: 0, y: -1 };
     } else if (inputter.isKeyDown(Keys.downArrow)) {
-      phys.vel.y = 1 * MOVE_SPEED;
+      inputDirection = { x: 0, y: 1 };
+    }
+
+    if (inputDirection) {
+      this.movePlayer(inputDirection);
+    }
+
+    // for (let enemy of this.state.enemies) {
+    //   if (isColliding(player, enemy)) {
+    //     player.status = 'dead';
+    //     return;
+    //   }
+    // }
+
+    // const keysPressed = inputter.getKeysPressedAndClear();
+    // if (keysPressed.has(keyCodes.SPACE)) {
+    //   this.playerShoot(player);
+    // }
+  }
+
+  private movePlayer(inputDirection: Coordinates) {
+    const tileEntity = this.getComponent(TileEntity);
+    const tileMap = tileEntity.tileMap;
+
+    if (tileEntity.isMoving) {
+      return;
+    }
+
+    const currentTilePosition = tileEntity.tilePosition;
+
+    let destTilePosition = addVector(currentTilePosition, inputDirection);
+
+    if (tileMap.getTile(destTilePosition) === Tile.Wall) {
+      // can we continue on towards the direction we were facing instead?
+      destTilePosition = addVector(currentTilePosition, this.facing);
+    } else {
+      this.facing = inputDirection;
+    }
+
+    if (tileMap.getTile(destTilePosition) !== Tile.Wall) {
+      tileEntity.move(destTilePosition, MOVE_TIME_MS);
     }
   }
 }
+
+const addVector = (vec1: Coordinates, vec2: Coordinates): Coordinates => {
+  return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
+};

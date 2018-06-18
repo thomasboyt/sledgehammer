@@ -73,7 +73,7 @@ export default class NetworkingClient extends Networking {
 
       object
         .getComponent(NetworkedObject)
-        .deserialize(object, snapshotObject.state);
+        .deserialize(object, snapshotObject.state, this.networkedObjects);
     }
   }
 }

@@ -25,14 +25,20 @@
   - (de)serialize() can sorta handle this for now
     - e.g. if Bullet has a reference to Player to see who created...
     - just serialize player ID or object ID, and deserialize manually
-[ ] handle parent/child relationships on networked objects
-  - also probably just use object ID
 [ ] port over tile map system
   - TileMap component on world or session object
     - also have a separate World or Session object
   - TileMapEntity component? maybe? should have ref to TileMap either way
   - handling tweens between tiles
   - child objects of world will ref parent by 
+
+
+[ ] handle parent/child relationships on networked objects
+  - also probably just use object ID
+  - update pearl to allow setting a child/parent relationship without addChild()?
+  - but also update createNetworkedPrefab() to accept a parent object
+  - cases i'm worried about
+    - when a parent is deleted, and then snapshot sync happens, will there be any issues if delete happens out of order? couldn't onDestroy() end up called twice??? :(
 
 how do we sync GameObjects??
 

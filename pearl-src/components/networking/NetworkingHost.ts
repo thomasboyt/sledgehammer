@@ -23,7 +23,7 @@ class NetworkedInputter implements Inputter {
   }
 }
 
-class NetworkingPlayer {
+export class NetworkingPlayer {
   id: number;
   inputter: Inputter;
 

@@ -15,7 +15,11 @@ export interface NetworkedPrefab<Snapshot> {
   type: string;
   createComponents: () => Component<any>[];
   serialize: (obj: GameObject) => Snapshot;
-  deserialize: (obj: GameObject, snapshot: Snapshot) => void;
+  deserialize: (
+    obj: GameObject,
+    snapshot: Snapshot,
+    objectsById: Map<string, GameObject>
+  ) => void;
 }
 
 interface Opts {

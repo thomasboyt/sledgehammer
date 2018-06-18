@@ -4,11 +4,17 @@ import {
   PolygonRenderer,
   PolygonCollider,
   Physical,
+  Coordinates,
 } from 'pearl';
 
-import { NetworkedPrefab } from './components/Networking';
+import { NetworkedPrefab } from './components/networking/Networking';
 
 import Player, { PlayerSnapshot } from './components/Player';
+import TileMap from './components/TileMap';
+import TileEntity from './components/TileEntity';
+import NetworkedObject from './components/networking/NetworkedObject';
+import TileMapRenderer from './components/TileMapRenderer';
+import World from './components/World';
 
 const player: NetworkedPrefab<PlayerSnapshot> = {
   type: 'player',
@@ -21,21 +27,71 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       }),
       new PolygonRenderer({ fillStyle: 'cyan' }),
       PolygonCollider.createBox({ width: 16, height: 16 }),
+      new TileEntity(),
     ];
   },
 
   serialize: (obj: GameObject): PlayerSnapshot => {
     const phys = obj.getComponent(Physical);
-    return { center: phys.center, vel: phys.vel };
+    const tileEntity = obj.getComponent(TileEntity);
+    const world = tileEntity.tileMap.gameObject.getComponent(NetworkedObject);
+    return { center: phys.center, vel: phys.vel, worldId: world.id };
   },
 
-  deserialize: (obj: GameObject, snapshot: PlayerSnapshot) => {
+  deserialize: (
+    obj: GameObject,
+    snapshot: PlayerSnapshot,
+    objectsById: Map<string, GameObject>
+  ) => {
     const phys = obj.getComponent(Physical);
     phys.center = snapshot.center;
     phys.vel = snapshot.vel;
+
+    const world = objectsById.get(snapshot.worldId);
+
+    if (!world) {
+      throw new Error('missing world object');
+    }
+
+    const tileEntity = obj.getComponent(TileEntity);
+    tileEntity.world = world;
+  },
+};
+
+interface WorldSnapshot {
+  tiles: string[][];
+}
+
+const world: NetworkedPrefab<WorldSnapshot> = {
+  type: 'world',
+
+  createComponents: () => {
+    return [
+      new TileMap({
+        tileSize: 16,
+      }),
+      new TileMapRenderer(),
+      new World(),
+    ];
+  },
+
+  serialize(obj: GameObject): WorldSnapshot {
+    const map: TileMap<any> = obj.getComponent(TileMap);
+    return { tiles: map.tiles! };
+  },
+
+  deserialize(obj: GameObject, snapshot: WorldSnapshot) {
+    const map = obj.getComponent(TileMap);
+
+    if (map.tiles) {
+      return;
+    } else {
+      map.tiles = snapshot.tiles;
+    }
   },
 };
 
 export default {
   player,
+  world,
 };

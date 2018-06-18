@@ -6,7 +6,11 @@ interface Opts<T> {
   type: string;
   networking: Networking;
   serialize: (obj: GameObject) => T;
-  deserialize: (obj: GameObject, snapshot: T) => void;
+  deserialize: (
+    obj: GameObject,
+    snapshot: T,
+    objectsById: Map<string, GameObject>
+  ) => void;
   id?: string;
 }
 
@@ -16,7 +20,11 @@ export default class NetworkedObject<T> extends Component<Opts<T>> {
   id = uuidv4();
   type!: string;
   serialize!: (obj: GameObject) => T;
-  deserialize!: (obj: GameObject, snapshot: T) => void;
+  deserialize!: (
+    obj: GameObject,
+    snapshot: T,
+    objectsById: Map<string, GameObject>
+  ) => void;
 
   init(opts: Opts<T>) {
     this.networking = opts.networking;
