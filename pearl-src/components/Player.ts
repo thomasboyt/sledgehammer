@@ -4,19 +4,10 @@ import NetworkingHost from './networking/NetworkingHost';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
 import Bullet from './Bullet';
+import { addVector } from '../util/math';
 
 const MOVE_TIME_MS = 120;
 const BULLET_SPEED = 0.2;
-
-const addVector = (vec1: Coordinates, vec2: Coordinates): Coordinates => {
-  return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
-};
-
-export interface PlayerSnapshot {
-  center: Coordinates;
-  vel: Coordinates;
-  worldId: string;
-}
 
 export interface Options {
   playerId: number;
