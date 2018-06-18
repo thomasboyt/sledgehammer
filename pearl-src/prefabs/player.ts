@@ -10,6 +10,8 @@ import { NetworkedPrefab } from '../components/networking/Networking';
 import Player from '../components/Player';
 import TileEntity from '../components/TileEntity';
 import NetworkedObject from '../components/networking/NetworkedObject';
+import WrappedEntityRenderer from '../components/WrappedEntityRenderer';
+import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 
 interface PlayerSnapshot {
   center: Coordinates;
@@ -29,6 +31,11 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       new PolygonRenderer({ fillStyle: 'cyan' }),
       PolygonCollider.createBox({ width: 16, height: 16 }),
       new TileEntity(),
+      new WrappedEntityRenderer({
+        // TODO: would be nice if this came from TileMap or world somehow...
+        worldWidth: TILE_SIZE * WORLD_SIZE_WIDTH,
+        worldHeight: TILE_SIZE * WORLD_SIZE_HEIGHT,
+      }),
     ];
   },
 

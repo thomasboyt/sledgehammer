@@ -1,5 +1,5 @@
 import * as Peer from 'simple-peer';
-import { lobbyServer } from '../src/constants';
+import { lobbyServer } from './constants';
 import GroovejetClient from '../src/groovejet/GroovejetClient';
 import { createRoom } from '../src/groovejet/GroovejetHTTP';
 import showRoomLink from '../src/roomLink';

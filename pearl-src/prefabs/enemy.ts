@@ -9,6 +9,7 @@ import { NetworkedPrefab } from '../components/networking/Networking';
 
 import Enemy from '../components/Enemy';
 import TileEntity from '../components/TileEntity';
+import WrappedEntityRenderer from '../components/WrappedEntityRenderer';
 
 interface EnemySnapshot {
   center: Coordinates;
@@ -27,6 +28,12 @@ const enemy: NetworkedPrefab<EnemySnapshot> = {
       new PolygonRenderer({ fillStyle: 'red' }),
       PolygonCollider.createBox({ width: 16, height: 16 }),
       new TileEntity(),
+      new WrappedEntityRenderer({
+        // TODO: DON'T HARDCODE THIS :|
+        // tiles * tileSize
+        worldWidth: 39 * 16,
+        worldHeight: 23 * 16,
+      }),
     ];
   },
 

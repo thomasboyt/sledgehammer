@@ -2,7 +2,7 @@ import { Component } from 'pearl';
 import TileMap from './TileMap';
 import createCachedRender from '../../src/util/createCachedRender';
 import { Tile } from '../types';
-import { WIDTH, HEIGHT } from '../../src/constants';
+import { WIDTH, HEIGHT } from '../constants';
 
 export default class TileMapRenderer extends Component<null> {
   get tileMap(): TileMap<Tile> {

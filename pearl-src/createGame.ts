@@ -1,7 +1,7 @@
 import { createPearl } from 'pearl';
 import * as Peer from 'simple-peer';
 
-import { WIDTH, HEIGHT } from '../src/constants';
+import { WIDTH, HEIGHT } from './constants';
 import Game from './components/Game';
 import NetworkingHost from './components/networking/NetworkingHost';
 import NetworkingClient from './components/networking/NetworkingClient';

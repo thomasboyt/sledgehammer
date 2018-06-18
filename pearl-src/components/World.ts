@@ -84,6 +84,7 @@ export default class World extends Component<null> {
         if (bulletCollider.isColliding(enemy.getComponent(PolygonCollider))) {
           // destroy enemy
           bullet.getComponent(Bullet).explode();
+          this.pearl.entities.destroy(enemy);
           continue;
         }
       }
