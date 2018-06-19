@@ -4,12 +4,18 @@ import { levelTiles } from '../levels';
 import Game from './Game';
 import World from './World';
 
-export type GameState = 'waiting' | 'gameOver' | 'cleared' | 'playing';
+export type GameState =
+  | 'waiting'
+  | 'starting'
+  | 'gameOver'
+  | 'cleared'
+  | 'playing';
 
 export default class Session extends Component<null> {
   worldObj!: GameObject;
 
   gameState: GameState = 'waiting';
+  startTime?: number;
 
   init() {
     if (!this.pearl.obj.getComponent(Game).isHost) {
@@ -34,10 +40,19 @@ export default class Session extends Component<null> {
   }
 
   startGame() {
-    this.gameState = 'playing';
+    this.gameState = 'starting';
+    this.startTime = Date.now() + 3000;
     this.createWorld();
-    const world = this.worldObj.getComponent(World);
-    world.start();
+
+    this.pearl.async.schedule(
+      function*(this: Session) {
+        yield this.pearl.async.waitMs(3000);
+
+        this.gameState = 'playing';
+        const world = this.worldObj.getComponent(World);
+        world.start();
+      }.bind(this)
+    );
   }
 
   addPlayer(networkingPlayer: NetworkingPlayer) {
@@ -79,13 +94,20 @@ export default class Session extends Component<null> {
     ctx.textAlign = 'center';
 
     if (gameState === 'waiting') {
-      const text = isHost
-        ? 'press space to start'
-        : 'waiting for host to start game...';
+      let text: string;
+
+      if (isHost) {
+        const connected = this.pearl.obj.getComponent(NetworkingHost).players
+          .size;
+        text = `press space to start (${connected} connected)`;
+      } else {
+        text = 'waiting for host to start game...';
+      }
+
       ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
-      // } else if (gameState === 'starting') {
-      //   const text = `${Math.ceil((state.startTime! - Date.now()) / 1000)}...`;
-      //   ctx.fillText(text, WIDTH / 2, 420);
+    } else if (gameState === 'starting') {
+      const text = `${Math.ceil((this.startTime! - Date.now()) / 1000)}...`;
+      ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
     } else if (gameState === 'cleared') {
       const text = 'you won!';
       ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
