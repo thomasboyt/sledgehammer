@@ -58,7 +58,10 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
         center: { x: 120, y: 120 },
       }),
       new PolygonRenderer({ strokeStyle: 'cyan' }),
-      PolygonCollider.createBox({ width: 16, height: 16 }),
+      PolygonCollider.createBox({
+        width: TILE_SIZE - 2,
+        height: TILE_SIZE - 2,
+      }),
       new TileEntity(),
       new WrappedEntityRenderer({
         // TODO: would be nice if this came from TileMap or world somehow...

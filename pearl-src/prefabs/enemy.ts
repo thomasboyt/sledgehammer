@@ -27,7 +27,10 @@ const enemy: NetworkedPrefab<EnemySnapshot> = {
         center: { x: 120, y: 120 },
       }),
       new PolygonRenderer({ fillStyle: 'red' }),
-      PolygonCollider.createBox({ width: 16, height: 16 }),
+      PolygonCollider.createBox({
+        width: TILE_SIZE - 2,
+        height: TILE_SIZE - 2,
+      }),
       new TileEntity(),
       new WrappedEntityRenderer({
         // TODO: would be nice if this came from TileMap or world somehow...
