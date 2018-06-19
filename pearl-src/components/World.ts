@@ -42,6 +42,7 @@ export default class World extends Component<null> {
 
           const enemy = enemyObj.getComponent(Enemy);
           enemy.facing = { x: facing[0], y: facing[1] };
+          // enemy.setFacing({ x: facing[0], y: facing[1] });
         }
       }
     });

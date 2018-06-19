@@ -1,4 +1,4 @@
-import { Component, GameObject } from 'pearl';
+import { Component, GameObject, PearlInstance } from 'pearl';
 import NetworkedObject from './NetworkedObject';
 
 export interface SnapshotObject {
@@ -14,7 +14,7 @@ export interface Snapshot {
 export interface NetworkedPrefab<Snapshot> {
   type: string;
   zIndex?: number;
-  createComponents: () => Component<any>[];
+  createComponents: (pearl: PearlInstance) => Component<any>[];
   serialize: (obj: GameObject) => Snapshot;
   deserialize: (
     obj: GameObject,
@@ -43,7 +43,7 @@ export default abstract class Networking extends Component<Opts> {
       throw new Error(`no registered networked prefab with name ${prefabName}`);
     }
 
-    const components = prefab.createComponents();
+    const components = prefab.createComponents(this.pearl);
 
     const obj = new GameObject({
       name: prefabName,

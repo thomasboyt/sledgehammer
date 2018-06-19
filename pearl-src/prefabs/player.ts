@@ -4,6 +4,9 @@ import {
   PolygonCollider,
   Coordinates,
   GameObject,
+  AnimationManager,
+  AssetManager,
+  SpriteSheet,
 } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 
@@ -16,19 +19,24 @@ import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 interface PlayerSnapshot {
   center: Coordinates;
   vel: Coordinates;
+  angle: number;
+
   worldId: string;
+
+  animationState: string;
+  animationScaleX: number;
+  animationScaleY: number;
 }
 
 const player: NetworkedPrefab<PlayerSnapshot> = {
   type: 'player',
 
-  createComponents: () => {
+  createComponents(pearl) {
     return [
-      new Player(),
       new Physical({
         center: { x: 120, y: 120 },
       }),
-      new PolygonRenderer({ fillStyle: 'cyan' }),
+      new PolygonRenderer({ strokeStyle: 'cyan' }),
       PolygonCollider.createBox({ width: 16, height: 16 }),
       new TileEntity(),
       new WrappedEntityRenderer({
@@ -36,6 +44,30 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
         worldWidth: TILE_SIZE * WORLD_SIZE_WIDTH,
         worldHeight: TILE_SIZE * WORLD_SIZE_HEIGHT,
       }),
+
+      new AnimationManager({
+        // TODO: cache this?
+        sheet: new SpriteSheet(
+          pearl.obj.getComponent(AssetManager).getImage('player'),
+          TILE_SIZE,
+          TILE_SIZE
+        ),
+
+        initialState: 'idle',
+
+        animations: {
+          idle: {
+            frames: [0],
+            frameLengthMs: null,
+          },
+          walking: {
+            frames: [0, 1],
+            frameLengthMs: 200,
+          },
+        },
+      }),
+
+      new Player(),
     ];
   },
 
@@ -43,7 +75,18 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
     const phys = obj.getComponent(Physical);
     const tileEntity = obj.getComponent(TileEntity);
     const world = tileEntity.tileMap.gameObject.getComponent(NetworkedObject);
-    return { center: phys.center, vel: phys.vel, worldId: world.id };
+    const anim = obj.getComponent(AnimationManager);
+    return {
+      center: phys.center,
+      vel: phys.vel,
+      angle: phys.angle,
+
+      worldId: world.id,
+
+      animationState: anim.current,
+      animationScaleX: anim.scaleX,
+      animationScaleY: anim.scaleY,
+    };
   },
 
   deserialize: (
@@ -54,6 +97,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
     const phys = obj.getComponent(Physical);
     phys.center = snapshot.center;
     phys.vel = snapshot.vel;
+    phys.angle = snapshot.angle;
 
     const world = objectsById.get(snapshot.worldId);
 
@@ -63,6 +107,11 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
 
     const tileEntity = obj.getComponent(TileEntity);
     tileEntity.world = world;
+
+    const anim = obj.getComponent(AnimationManager);
+    anim.set(snapshot.animationState);
+    anim.scaleX = snapshot.animationScaleX;
+    anim.scaleY = snapshot.animationScaleY;
   },
 };
 

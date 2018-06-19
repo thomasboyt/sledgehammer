@@ -1,4 +1,4 @@
-import { createPearl } from 'pearl';
+import { createPearl, AssetManager, AudioManager } from 'pearl';
 import * as Peer from 'simple-peer';
 
 import { WIDTH, HEIGHT } from './constants';
@@ -11,6 +11,13 @@ interface Options {
   isHost: boolean;
   hostPeer?: Peer.Instance;
 }
+
+const assets = {
+  images: {
+    player: require('../assets/player-sheet.png'),
+  },
+  audio: {},
+};
 
 export default function createGame(opts: Options) {
   const { isHost, hostPeer } = opts;
@@ -25,7 +32,14 @@ export default function createGame(opts: Options) {
   }
 
   return createPearl({
-    rootComponents: [networkingComponent, new Game({ isHost })],
+    rootComponents: [
+      networkingComponent,
+      new AudioManager({
+        defaultGain: 0.5,
+      }),
+      new AssetManager(assets),
+      new Game({ isHost }),
+    ],
     width: WIDTH,
     height: HEIGHT,
     canvas: document.getElementById('game') as HTMLCanvasElement,

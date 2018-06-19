@@ -73,3 +73,9 @@ CREATION IS DUUUMB RIGHT NOW
 
 what it does currently is sync the whole object over and instantiate if it's missing, but this is really awkward if you have data you want to set once and not sync every frame
 would be nicer to instead send a `created` message with `creationOptions`
+
+# animations
+
+- texturepacker spritesheets https://github.com/thomasboyt/two-minute-triathlon/blob/master/src/client/util/TexturePackerSpriteSheet.ts
+- new SpriteSheet(loadedImage, jsonAtlas)
+- can load images through AssetManager but it feels kinda wonky

@@ -1,10 +1,20 @@
-import { Component, Physical, Keys, Coordinates, PolygonCollider } from 'pearl';
+import {
+  Component,
+  Physical,
+  Keys,
+  Coordinates,
+  PolygonCollider,
+  AnimationManager,
+  Sprite,
+} from 'pearl';
 import Game from './Game';
 import NetworkingHost from './networking/NetworkingHost';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
 import Bullet from './Bullet';
 import { addVector } from '../util/math';
+import createCachedRender from '../../src/util/createCachedRender';
+import { WIDTH, HEIGHT } from '../constants';
 
 const MOVE_TIME_MS = 120;
 const BULLET_SPEED = 0.2;
@@ -21,6 +31,23 @@ export default class Player extends Component<Options> {
     if (opts) {
       this.playerId = opts.playerId;
     }
+
+    this.getComponent(AnimationManager).mask([0, 0, 0], [255, 255, 255]);
+  }
+
+  setFacing(coordinates: Coordinates) {
+    this.facing = coordinates;
+
+    let angle = Math.atan(this.facing.y / this.facing.x);
+
+    // mirror the X direction if we're going left
+    if (this.facing.x < 0) {
+      this.getComponent(AnimationManager).setScale(-1, 1);
+    } else {
+      this.getComponent(AnimationManager).setScale(1, 1);
+    }
+
+    this.getComponent(Physical).angle = angle;
   }
 
   update(dt: number) {
@@ -45,7 +72,10 @@ export default class Player extends Component<Options> {
     }
 
     if (inputDirection) {
+      this.getComponent(AnimationManager).set('walking');
       this.movePlayer(inputDirection);
+    } else {
+      this.getComponent(AnimationManager).set('idle');
     }
 
     // for (let enemy of this.state.enemies) {
@@ -76,7 +106,7 @@ export default class Player extends Component<Options> {
       // can we continue on towards the direction we were facing instead?
       destTilePosition = addVector(currentTilePosition, this.facing);
     } else {
-      this.facing = inputDirection;
+      this.setFacing(inputDirection);
     }
 
     if (tileMap.getTile(destTilePosition) !== Tile.Wall) {
