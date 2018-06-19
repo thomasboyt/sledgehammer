@@ -5,11 +5,11 @@ import {
   Coordinates,
   GameObject,
   AnimationManager,
-  AssetManager,
   SpriteSheet,
 } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 
+import AssetManager from '../components/AssetManager';
 import Player from '../components/Player';
 import TileEntity from '../components/TileEntity';
 import NetworkedObject from '../components/networking/NetworkedObject';
@@ -47,11 +47,9 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
 
       new AnimationManager({
         // TODO: cache this?
-        sheet: new SpriteSheet(
-          pearl.obj.getComponent(AssetManager).getImage('player'),
-          TILE_SIZE,
-          TILE_SIZE
-        ),
+        sheet: pearl.obj
+          .getComponent(AssetManager)
+          .getSpriteSheet('player', TILE_SIZE, TILE_SIZE),
 
         initialState: 'idle',
 

@@ -9,6 +9,9 @@ import NetworkingHost from './components/networking/NetworkingHost';
 const peers = new Set<Peer.Instance>();
 
 export default async function initializeHost() {
+  const game = await createGame({ isHost: true });
+  (window as any).game = game;
+
   function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
     const p = new Peer({
       initiator: false,
@@ -64,10 +67,4 @@ export default async function initializeHost() {
       peer.signal(offerSignal);
     },
   });
-
-  const game = createGame({
-    isHost: true,
-  });
-
-  (window as any).game = game;
 }

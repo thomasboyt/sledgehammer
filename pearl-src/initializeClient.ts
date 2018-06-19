@@ -23,7 +23,7 @@ export default async function initializeClient(roomCode: string) {
 
     p.on('connect', () => {
       console.log('CONNECT');
-      const game = createGame({ isHost: false, hostPeer: p });
+      createGame({ isHost: false, hostPeer: p });
     });
 
     return p;

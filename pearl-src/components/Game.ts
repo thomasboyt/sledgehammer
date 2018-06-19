@@ -1,4 +1,4 @@
-import { Component, AssetManager } from 'pearl';
+import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import { getTilesFromString, levelTiles } from '../levels';
 import World from './World';
@@ -13,13 +13,9 @@ export default class Game extends Component<Options> {
   init(opts: Options) {
     this.isHost = opts.isHost;
 
-    this.getComponent(AssetManager)
-      .load()
-      .then(() => {
-        if (this.isHost) {
-          this.initializeHost();
-        }
-      });
+    if (this.isHost) {
+      this.initializeHost();
+    }
   }
 
   initializeHost() {

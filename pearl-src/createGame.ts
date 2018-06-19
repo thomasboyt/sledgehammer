@@ -1,4 +1,4 @@
-import { createPearl, AssetManager, AudioManager } from 'pearl';
+import { createPearl, AudioManager } from 'pearl';
 import * as Peer from 'simple-peer';
 
 import { WIDTH, HEIGHT } from './constants';
@@ -6,20 +6,24 @@ import Game from './components/Game';
 import NetworkingHost from './components/networking/NetworkingHost';
 import NetworkingClient from './components/networking/NetworkingClient';
 import networkedPrefabs from './networkedPrefabs';
+import { loadAssets } from './assets';
+import AssetManager from './components/AssetManager';
 
 interface Options {
   isHost: boolean;
   hostPeer?: Peer.Instance;
 }
 
-const assets = {
+const assetPaths = {
   images: {
     player: require('../assets/player-sheet.png'),
   },
   audio: {},
 };
 
-export default function createGame(opts: Options) {
+export default async function createGame(opts: Options) {
+  const assets = await loadAssets(assetPaths);
+
   const { isHost, hostPeer } = opts;
 
   let networkingComponent;
