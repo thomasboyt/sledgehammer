@@ -40,7 +40,12 @@
   - cases i'm worried about
     - when a parent is deleted, and then snapshot sync happens, will there be any issues if delete happens out of order? couldn't onDestroy() end up called twice??? :(
 
-how do we sync GameObjects??
+[ ] todo refactors
+  - need to clarify Game/Session/World relationships
+  - really would like parent-child relationships
+    - world -> {enemy, player, bullet}
+    - session -> world
+    - synced on client!!
 
 ## fancy version:
 
