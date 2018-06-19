@@ -31,6 +31,10 @@ export default class Game extends Component<Options> {
       world.addPlayer(networkingPlayer)
     );
 
+    networkingHost.onPlayerRemoved.add(({ networkingPlayer }) => {
+      world.removePlayer(networkingPlayer);
+    });
+
     // create local player
     networkingHost.addLocalPlayer();
 

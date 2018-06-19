@@ -1,4 +1,4 @@
-import { Component, Coordinates, PolygonCollider } from 'pearl';
+import { Component, Coordinates, PolygonCollider, GameObject } from 'pearl';
 import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
 import Player from './Player';
 import TileEntity from './TileEntity';
@@ -13,6 +13,8 @@ import Enemy from './Enemy';
 export default class World extends Component<null> {
   spawns: Coordinates[] = [];
   nextSpawnIndex = 0;
+
+  players = new Map<number, GameObject>();
 
   loadTileMap(levelTiles: string) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
@@ -57,6 +59,13 @@ export default class World extends Component<null> {
     const tileEntity = playerObject.getComponent(TileEntity);
     tileEntity.world = this.gameObject;
     tileEntity.setPosition(this.getNextSpawn());
+
+    this.players.set(networkingPlayer.id, playerObject);
+  }
+
+  removePlayer(networkingPlayer: NetworkingPlayer) {
+    const player = this.players.get(networkingPlayer.id)!;
+    this.pearl.entities.destroy(player);
   }
 
   update(dt: number) {

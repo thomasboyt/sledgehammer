@@ -48,12 +48,9 @@ export default class NetworkingHost extends Networking {
   players = new Map<number, NetworkingPlayer>();
 
   onPlayerAdded = new Delegate<OnPlayerAddedMsg>();
+  onPlayerRemoved = new Delegate<OnPlayerAddedMsg>();
 
   onPeerConnected(peer: Peer.Instance) {
-    // const playerId = this.addPlayer({
-    //   color: 'cyan',
-    // });
-
     const player = this.addPlayer({ inputter: new NetworkedInputter() });
 
     this.peerToPlayerId.set(peer, player.id);
@@ -72,10 +69,11 @@ export default class NetworkingHost extends Networking {
       }
     });
 
-    // peer.on('close', () => {
-    //   this.peerToPlayerId.delete(peer);
-    //   this.removePlayer(playerId);
-    // });
+    peer.on('close', () => {
+      this.peerToPlayerId.delete(peer);
+      this.players.delete(player.id);
+      this.removePlayer(player);
+    });
 
     peer.send(
       JSON.stringify({
@@ -102,6 +100,10 @@ export default class NetworkingHost extends Networking {
     this.addPlayer({
       inputter: this.pearl.inputter,
     });
+  }
+
+  removePlayer(player: NetworkingPlayer): void {
+    this.onPlayerRemoved.call({ networkingPlayer: player });
   }
 
   update(dt: number) {
