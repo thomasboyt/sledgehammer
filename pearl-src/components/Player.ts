@@ -19,6 +19,8 @@ import { WIDTH, HEIGHT } from '../constants';
 const MOVE_TIME_MS = 120;
 const BULLET_SPEED = 0.2;
 
+type PlayerState = 'alive' | 'dead';
+
 export interface Options {
   playerId: number;
 }
@@ -26,6 +28,7 @@ export interface Options {
 export default class Player extends Component<Options> {
   playerId!: number;
   facing: Coordinates = { x: 1, y: 0 };
+  playerState = 'alive';
 
   init(opts: Options) {
     if (opts) {
@@ -33,6 +36,12 @@ export default class Player extends Component<Options> {
     }
 
     this.getComponent(AnimationManager).mask([0, 0, 0], [255, 255, 255]);
+  }
+
+  die() {
+    this.playerState = 'dead';
+    this.getComponent(TileEntity).cancelMove();
+    this.getComponent(AnimationManager).visible = false;
   }
 
   setFacing(coordinates: Coordinates) {
@@ -52,6 +61,10 @@ export default class Player extends Component<Options> {
 
   update(dt: number) {
     if (!this.pearl.obj.getComponent(Game).isHost) {
+      return;
+    }
+
+    if (this.playerState === 'dead') {
       return;
     }
 
@@ -77,13 +90,6 @@ export default class Player extends Component<Options> {
     } else {
       this.getComponent(AnimationManager).set('idle');
     }
-
-    // for (let enemy of this.state.enemies) {
-    //   if (isColliding(player, enemy)) {
-    //     player.status = 'dead';
-    //     return;
-    //   }
-    // }
 
     if (inputter.isKeyPressed(Keys.space)) {
       this.playerShoot();
@@ -142,5 +148,31 @@ export default class Player extends Component<Options> {
       x: this.facing.x * BULLET_SPEED,
       y: this.facing.y * BULLET_SPEED,
     };
+  }
+
+  render(ctx: CanvasRenderingContext2D) {
+    if (this.playerState === 'dead') {
+      const phys = this.getComponent(Physical);
+      const collider = this.getComponent(PolygonCollider);
+      const width = collider.width!;
+      const height = collider.height!;
+
+      ctx.strokeStyle = 'white';
+      ctx.translate(phys.center.x, phys.center.y);
+
+      // draw an x
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-width / 2 + 3, -height / 2 + 3);
+      ctx.lineTo(width / 2 - 3, height / 2 - 3);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(-width / 2 + 3, height / 2 - 3);
+      ctx.lineTo(width / 2 - 3, -height / 2 + 3);
+      ctx.closePath();
+      ctx.stroke();
+    }
   }
 }

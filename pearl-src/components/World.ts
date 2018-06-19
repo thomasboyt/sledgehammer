@@ -1,4 +1,10 @@
-import { Component, Coordinates, PolygonCollider, GameObject } from 'pearl';
+import {
+  Component,
+  Coordinates,
+  PolygonCollider,
+  GameObject,
+  Keys,
+} from 'pearl';
 import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
 import Player from './Player';
 import TileEntity from './TileEntity';
@@ -9,23 +15,25 @@ import Game from './Game';
 import Bullet from './Bullet';
 import { getRandomInt, randomChoice } from '../util/math';
 import Enemy from './Enemy';
+import Session from './Session';
 
 export default class World extends Component<null> {
+  sessionObj?: GameObject;
+
   spawns: Coordinates[] = [];
   nextSpawnIndex = 0;
 
   players = new Map<number, GameObject>();
 
-  loadTileMap(levelTiles: string) {
-    const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
-    const tiles = getTilesFromString(levelTiles);
-    tileMap.setTiles(tiles);
+  start() {
+    this.players = new Map();
 
-    tileMap.forEachTile(({ x, y }, value) => {
-      if (value === Tile.Spawn) {
-        this.spawns.push({ x, y });
-      }
-    });
+    const players = this.pearl.obj.getComponent(NetworkingHost).players;
+    for (let player of players.values()) {
+      this.addPlayer(player);
+    }
+
+    const tileMap = this.getComponent(TileMap);
 
     // generate enemies
     tileMap.forEachTile(({ x, y }, value) => {
@@ -50,7 +58,23 @@ export default class World extends Component<null> {
     });
   }
 
+  loadTileMap(levelTiles: string) {
+    const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
+    const tiles = getTilesFromString(levelTiles);
+    tileMap.setTiles(tiles);
+
+    tileMap.forEachTile(({ x, y }, value) => {
+      if (value === Tile.Spawn) {
+        this.spawns.push({ x, y });
+      }
+    });
+  }
+
   addPlayer(networkingPlayer: NetworkingPlayer) {
+    if (this.sessionObj!.getComponent(Session).gameState !== 'playing') {
+      return;
+    }
+
     const networkingHost = this.pearl.obj.getComponent(NetworkingHost);
 
     const playerObject = networkingHost.createNetworkedPrefab('player');
@@ -64,12 +88,22 @@ export default class World extends Component<null> {
   }
 
   removePlayer(networkingPlayer: NetworkingPlayer) {
-    const player = this.players.get(networkingPlayer.id)!;
-    this.pearl.entities.destroy(player);
+    if (this.sessionObj!.getComponent(Session).gameState !== 'playing') {
+      return;
+    }
+
+    const player = this.players.get(networkingPlayer.id);
+    if (player) {
+      this.pearl.entities.destroy(player);
+    }
   }
 
   update(dt: number) {
     if (!this.pearl.obj.getComponent(Game).isHost) {
+      return;
+    }
+
+    if (this.sessionObj!.getComponent(Session).gameState !== 'playing') {
       return;
     }
 
@@ -99,13 +133,12 @@ export default class World extends Component<null> {
         }
       }
 
-      for (let player of players) {
-        if (bulletCollider.isColliding(player.getComponent(PolygonCollider))) {
-          // set player to dead
-          bullet.getComponent(Bullet).explode();
-          continue;
-        }
-      }
+      // for (let player of players) {
+      //   if (bulletCollider.isColliding(player.getComponent(PolygonCollider))) {
+      //     bullet.getComponent(Bullet).explode();
+      //     continue;
+      //   }
+      // }
     }
 
     for (let player of players) {
@@ -115,9 +148,22 @@ export default class World extends Component<null> {
             .getComponent(PolygonCollider)
             .isColliding(enemy.getComponent(PolygonCollider))
         ) {
-          // set player to dead
+          player.getComponent(Player).die();
         }
       }
+    }
+
+    if (enemies.length === 0) {
+      // you done won
+      this.sessionObj!.getComponent(Session).gameState = 'cleared';
+    }
+
+    const allPlayersDead = players.every(
+      (player) => player.getComponent(Player).playerState === 'dead'
+    );
+
+    if (allPlayersDead) {
+      this.sessionObj!.getComponent(Session).gameState = 'gameOver';
     }
   }
 
@@ -125,5 +171,20 @@ export default class World extends Component<null> {
     const spawn = this.spawns[this.nextSpawnIndex % this.spawns.length];
     this.nextSpawnIndex += 1;
     return spawn;
+  }
+
+  onDestroy() {
+    if (!this.pearl.obj.getComponent(Game).isHost) {
+      return;
+    }
+
+    const entityTags = ['player', 'enemy', 'bullet'];
+    const worldEntities = [...this.pearl.entities.all().values()].filter(
+      (obj) => entityTags.some((tag) => obj.hasTag(tag))
+    );
+
+    for (let entity of worldEntities) {
+      this.pearl.entities.destroy(entity);
+    }
   }
 }

@@ -1,7 +1,6 @@
-import { Component } from 'pearl';
+import { Component, Keys } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
-import { getTilesFromString, levelTiles } from '../levels';
-import World from './World';
+import Session from './Session';
 
 interface Options {
   isHost: boolean;
@@ -21,29 +20,18 @@ export default class Game extends Component<Options> {
   initializeHost() {
     const networkingHost = this.getComponent(NetworkingHost);
 
-    const worldObject = networkingHost.createNetworkedPrefab('world');
-    const world = worldObject.getComponent(World);
+    const sessionObject = networkingHost.createNetworkedPrefab('session');
+    const session = sessionObject.getComponent(Session);
 
-    world.loadTileMap(levelTiles);
-
-    // TODO: update this if world changes
     networkingHost.onPlayerAdded.add(({ networkingPlayer }) =>
-      world.addPlayer(networkingPlayer)
+      session.addPlayer(networkingPlayer)
     );
 
     networkingHost.onPlayerRemoved.add(({ networkingPlayer }) => {
-      world.removePlayer(networkingPlayer);
+      session.removePlayer(networkingPlayer);
     });
 
-    // create local player
     networkingHost.addLocalPlayer();
-
-    // TODO: HOW CAN I SET DEFAULT STUFF ON A PREFAB
-    // will this be safe to sync...?
-    // networkingHost.createNetworkedPrefab('wall', {
-    //   center: { x: 100, y: 100 },
-    //   size: { x: 100, y: 100 },
-    // });
   }
 
   render(ctx: CanvasRenderingContext2D) {
