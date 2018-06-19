@@ -1,6 +1,5 @@
 import { Component, Physical, PolygonCollider, Coordinates } from 'pearl';
 import * as SAT from 'sat';
-import createCachedRender from '../../src/util/createCachedRender';
 
 interface Options {
   tileSize: number;

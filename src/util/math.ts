@@ -1,18 +1,28 @@
-export type Vec2 = [number, number];
+import { Coordinates } from 'pearl';
 
-export function getVectorComponents(magnitude: number, rad: number): Vec2 {
+export function getVectorComponents(
+  magnitude: number,
+  rad: number
+): Coordinates {
   const x = magnitude * Math.cos(rad);
   const y = magnitude * Math.sin(rad);
-  return [x, y];
+  return { x, y };
 }
 
 export const lerp = (a: number, b: number, f: number) => a + f * (b - a);
-export const lerp2 = (a: Vec2, b: Vec2, f: number): Vec2 => [
-  lerp(a[0], b[0], f),
-  lerp(a[1], b[1], f),
-];
+export const lerpVector = (
+  a: Coordinates,
+  b: Coordinates,
+  f: number
+): Coordinates => ({
+  x: lerp(a.x, b.x, f),
+  y: lerp(a.y, b.y, f),
+});
 
-export const add2 = (a: Vec2, b: Vec2): Vec2 => [a[0] + b[0], a[1] + b[1]];
+export const addVector = (a: Coordinates, b: Coordinates): Coordinates => ({
+  x: a.x + b.x,
+  y: a.y + b.y,
+});
 
 export function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);

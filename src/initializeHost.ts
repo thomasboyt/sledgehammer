@@ -1,13 +1,17 @@
 import * as Peer from 'simple-peer';
 import { lobbyServer } from './constants';
-import HostGame from './HostGame';
 import GroovejetClient from './groovejet/GroovejetClient';
 import { createRoom } from './groovejet/GroovejetHTTP';
 import showRoomLink from './roomLink';
+import createGame from './createGame';
+import NetworkingHost from './components/networking/NetworkingHost';
 
 const peers = new Set<Peer.Instance>();
 
 export default async function initializeHost() {
+  const game = await createGame({ isHost: true });
+  (window as any).game = game;
+
   function createPeer(onSignal: (signalData: any) => void): Peer.Instance {
     const p = new Peer({
       initiator: false,
@@ -28,7 +32,7 @@ export default async function initializeHost() {
     p.on('connect', () => {
       console.log('CONNECT');
       peers.add(p);
-      game.onPeerConnected(p);
+      game.obj.getComponent(NetworkingHost).onPeerConnected(p);
     });
 
     return p;
@@ -63,8 +67,4 @@ export default async function initializeHost() {
       peer.signal(offerSignal);
     },
   });
-
-  const game = new HostGame();
-
-  (window as any).game = game;
 }

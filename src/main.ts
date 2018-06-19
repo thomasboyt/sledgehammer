@@ -1,7 +1,7 @@
 import * as queryString from 'query-string';
 
-import initializeClient from './client';
-import initializeHost from './host';
+import initializeClient from './initializeClient';
+import initializeHost from './initializeHost';
 
 const query = queryString.parse(location.search);
 

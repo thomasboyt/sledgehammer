@@ -1,6 +1,6 @@
 import { Component } from 'pearl';
 import TileMap from './TileMap';
-import createCachedRender from '../../src/util/createCachedRender';
+import createCachedRender from '../util/createCachedRender';
 import { Tile } from '../types';
 import { WIDTH, HEIGHT } from '../constants';
 

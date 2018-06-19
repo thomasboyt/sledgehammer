@@ -1,4 +1,12 @@
-import { interruptKeyCodes } from './keyCodes';
+import { Keys } from 'pearl';
+
+const interruptKeyCodes = new Set([
+  Keys.leftArrow,
+  Keys.rightArrow,
+  Keys.upArrow,
+  Keys.downArrow,
+  Keys.space,
+]);
 
 interface Options {
   onKeyDown?: (keyCode: number) => void;

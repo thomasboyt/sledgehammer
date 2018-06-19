@@ -2,7 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: './pearl-src/main.ts',
+  entry: './src/main.ts',
   module: {
     rules: [
       {

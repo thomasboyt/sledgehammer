@@ -2,8 +2,8 @@ import { Component, GameObject, Keys } from 'pearl';
 import * as Peer from 'simple-peer';
 import Networking, { Snapshot } from './Networking';
 
-// TODO: replace this with something better
-import PlayerInputter from '../../../src/util/PlayerInputter';
+// TODO: replace this with something better?
+import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 
 export default class NetworkingClient extends Networking {

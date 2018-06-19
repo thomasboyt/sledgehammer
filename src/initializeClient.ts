@@ -1,6 +1,6 @@
 import * as Peer from 'simple-peer';
 import { lobbyServer } from './constants';
-import GroovejetClient from '../src/groovejet/GroovejetClient';
+import GroovejetClient from './groovejet/GroovejetClient';
 import createGame from './createGame';
 
 export default async function initializeClient(roomCode: string) {

@@ -1,5 +1,4 @@
-import { Level, Tile } from './GameState';
-import { getTilesOfType } from './tileMap';
+import { Tile } from './types';
 
 export const levelTiles = `
 xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
@@ -28,12 +27,12 @@ xxxxxxxxx xxxxxxxxx xxxxxxxxx xxxxxxxxx
 `;
 
 const charToTile: { [char: string]: Tile } = {
-  x: 'wall',
-  o: 'spawn',
-  ' ': null,
+  x: Tile.Wall,
+  o: Tile.Spawn,
+  ' ': Tile.Empty,
 };
 
-export function getLevelFromString(str: string): Level {
+export function getTilesFromString(str: string): Tile[][] {
   const tiles: Tile[][] = [];
   const lines = str.trim().split('\n');
 
@@ -45,9 +44,7 @@ export function getLevelFromString(str: string): Level {
     }
   }
 
-  const spawns = getTilesOfType(tiles, 'spawn');
-
-  return { tiles, spawns };
+  return tiles;
 }
 
 function mirrorLevel(halfString: string): string {
