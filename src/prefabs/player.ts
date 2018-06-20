@@ -16,27 +16,11 @@ import NetworkedObject from '../components/networking/NetworkedObject';
 import WrappedEntityRenderer from '../components/WrappedEntityRenderer';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 
-interface AnimationSnapshot {
-  current: string;
-  scaleX: number;
-  scaleY: number;
-  visible: boolean;
-}
-
-function serializeAnimationManager(anim: AnimationManager): AnimationSnapshot {
-  const { current, scaleX, scaleY, visible } = anim;
-  return { current, scaleX, scaleY, visible };
-}
-
-function deserializeAnimationManager(
-  anim: AnimationManager,
-  snapshot: AnimationSnapshot
-) {
-  const { current, scaleX, scaleY, visible } = snapshot;
-  anim.set(current);
-  anim.setScale(scaleX, scaleY);
-  anim.visible = visible;
-}
+import {
+  serializeAnimationManager,
+  deserializeAnimationManager,
+  AnimationSnapshot,
+} from '../serializers/serializeAnimationManager';
 
 interface PlayerSnapshot {
   center: Coordinates;

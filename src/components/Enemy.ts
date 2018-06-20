@@ -1,4 +1,11 @@
-import { Component, Physical, Keys, Coordinates, PolygonCollider } from 'pearl';
+import {
+  Component,
+  Physical,
+  Keys,
+  Coordinates,
+  PolygonCollider,
+  AnimationManager,
+} from 'pearl';
 import Game from './Game';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
@@ -10,6 +17,28 @@ const MOVE_TIME_MS = 240;
 
 export default class Enemy extends Component<null> {
   facing: Coordinates = { x: 1, y: 0 };
+
+  init() {
+    const anim = this.getComponent(AnimationManager);
+    anim.set('walking');
+    anim.setScale(2, 2);
+  }
+
+  // TODO: dedupe this from Player
+  setFacing(coordinates: Coordinates) {
+    this.facing = coordinates;
+
+    let angle = Math.atan(this.facing.y / this.facing.x);
+
+    // mirror the X direction if we're going left
+    if (this.facing.x < 0) {
+      this.getComponent(AnimationManager).setScale(-2, 2);
+    } else {
+      this.getComponent(AnimationManager).setScale(2, 2);
+    }
+
+    this.getComponent(Physical).angle = angle;
+  }
 
   update(dt: number) {
     if (!this.pearl.obj.getComponent(Game).isHost) {
@@ -78,10 +107,10 @@ export default class Enemy extends Component<null> {
         }
       }
 
-      this.facing = {
+      this.setFacing({
         x: nextTilePos.x - currentTilePos.x,
         y: nextTilePos.y - currentTilePos.y,
-      };
+      });
 
       tileEntity.move(nextTilePos, MOVE_TIME_MS);
     }

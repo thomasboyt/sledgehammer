@@ -17,6 +17,7 @@ interface Options {
 const assetPaths = {
   images: {
     player: require('../assets/player-sheet.png'),
+    lemonShark: require('../assets/lemon-shark.png'),
   },
   audio: {},
 };
@@ -34,6 +35,8 @@ export default async function createGame(opts: Options) {
     networkingComponent = new NetworkingClient({ prefabs: networkedPrefabs });
     networkingComponent.registerHostPeer(hostPeer!);
   }
+
+  const canvas = document.getElementById('game') as HTMLCanvasElement;
 
   return createPearl({
     rootComponents: [
