@@ -8,7 +8,11 @@ sledgehammer ([working title](https://www.youtube.com/watch?v=OJWJE0x7T4Q)) is a
 
 originally i was building it with no framework, trying to use a redux-ish control flow, but eventually i got really frustrated with how difficult i was finding that to architect, and instead rebuilt it in [pearl](https://github.com/thomasboyt/pearl), a [component-entity](http://gameprogrammingpatterns.com/component.html) game framework. this has been going okay, but has involved building a lot of scaffolding on top of pearl to support online networking, and it's currently pretty hacky.
 
-it uses 
+it uses webrtc for networking, powered by [simple-peer](https://github.com/feross/simple-peer) and a lobby server i wrote called [groovejet](https://github.com/thomasboyt/groovejet).
+
+## how do i play it
+
+it's currently live at [http://sledgehammer.surge.sh/](http://sledgehammer.surge.sh/).
 
 ### how do i run it
 

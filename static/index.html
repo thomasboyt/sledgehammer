@@ -3,12 +3,15 @@
     <title>sledgehammer</title>
     <style>
       canvas#game {
-        width: 640;
-        height: 480;
+        width: 640px;
+        height: 480px;
       }
 
       body {
         text-align: center;
+        max-width: 700px;
+        margin: 0 auto;
+        font-family: monospace;
       }
     </style>
   </head>
@@ -16,13 +19,20 @@
   <body>
     <canvas id="game" width="640" height="480"></canvas>
 
-    <p id="room-link" style="display:none">
-      room link: <a></a>
+    <div id="room-link" style="display:none">
+      <h2>
+        room link: <a></a><br/>
+        share this with your friends to play!
+      </h2>
+    </div>
+
+    <p>
+      you are the <strong style="color: red">red</strong> player. your friends are the <strong style="color: cyan">white</strong> players. defeat all the enemies to win.<br/>
+      controls: arrow keys to move, space to shoot
     </p>
 
     <p>
-      you are the <strong style="color: red">red</strong> triangle. your friends are the <strong style="color: cyan">blue</strong> triangles. defeat all the <strong style="color: pink">pink</strong> triangles to win.<br/>
-      controls: arrow keys to move, space to shoot
+      if you're having trouble connecting to friends, you may need to disable adblock (on this page only). this is because the lobby server is hosted on a <fixed>.zone</fixed> domain, and for some reason  (apparently related to bitcoin mining scripts???), connections to websocket servers on that TLD are blocked outright in a lot of default blocking lists, including easyprivacy.
     </p>
 
     <script src="/bundle.js"></script>
