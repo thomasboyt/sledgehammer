@@ -11,7 +11,7 @@ export default class WrappedEntityRenderer extends Component<Opts> {
 
   private renderingAtCenter = false;
 
-  init(opts: Opts) {
+  create(opts: Opts) {
     this.worldWidth = opts.worldWidth;
     this.worldHeight = opts.worldHeight;
   }

@@ -11,14 +11,11 @@ interface Particle {
 const PARTICLE_SPEED_BASE = 1.35;
 
 export default class BulletExplosion extends Component<null> {
-  initialized = false;
   vanishMs = 500;
   timeElapsed = 0;
   particles: Particle[] = [];
 
-  // some day I would like this to be part of init() but init sucks right now because you can't
-  // like set properties _then_ init so idk
-  start() {
+  init() {
     const numParticles = getRandomInt(10, 16);
 
     for (let i = 0; i < numParticles; i += 1) {
@@ -31,8 +28,6 @@ export default class BulletExplosion extends Component<null> {
         speed: PARTICLE_SPEED_BASE + Math.random() * PARTICLE_SPEED_BASE,
       });
     }
-
-    this.initialized = true;
   }
 
   update(dt: number) {

@@ -17,10 +17,7 @@ export default class TileMap<T> extends Component<Options> {
   tileSize!: number;
   worldSize?: Coordinates;
 
-  /**
-   * which tiles are considered "collision"
-   */
-  init(opts: Options) {
+  create(opts: Options) {
     this.tileSize = opts.tileSize;
   }
 

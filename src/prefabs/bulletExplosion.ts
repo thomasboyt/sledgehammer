@@ -28,11 +28,6 @@ const bulletExplosion: NetworkedPrefab<BulletExplosionSnapshot> = {
   deserialize(obj, snapshot) {
     const phys = obj.getComponent(Physical);
     phys.center = snapshot.center;
-    const explosion = obj.getComponent(BulletExplosion);
-
-    if (!explosion.initialized) {
-      explosion.start();
-    }
   },
 };
 

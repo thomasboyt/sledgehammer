@@ -32,7 +32,7 @@ export default abstract class Networking extends Component<Opts> {
 
   networkedObjects = new Map<string, GameObject>();
 
-  init(opts: Opts) {
+  create(opts: Opts) {
     this.prefabs = opts.prefabs;
   }
 

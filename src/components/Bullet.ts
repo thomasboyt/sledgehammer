@@ -39,7 +39,5 @@ export default class Bullet extends Component<null> {
       x: phys.center.x,
       y: phys.center.y,
     };
-
-    explosionObj.getComponent(BulletExplosion).start();
   }
 }

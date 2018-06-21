@@ -66,10 +66,8 @@ export default class NetworkingClient extends Networking {
         );
       }
 
-      const networkedObject = this.networkedObjects.get(snapshotObject.id);
-
       const object =
-        networkedObject ||
+        this.networkedObjects.get(snapshotObject.id) ||
         this.createNetworkedPrefab(snapshotObject.type, snapshotObject.id);
 
       object

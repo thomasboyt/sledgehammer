@@ -26,7 +26,7 @@ export default class NetworkedObject<T> extends Component<Opts<T>> {
     objectsById: Map<string, GameObject>
   ) => void;
 
-  init(opts: Opts<T>) {
+  create(opts: Opts<T>) {
     this.networking = opts.networking;
     this.type = opts.type;
     this.serialize = opts.serialize;

@@ -18,7 +18,7 @@ export default class Session extends Component<null> {
   gameState: GameState = 'waiting';
   startTime?: number;
 
-  init() {
+  create() {
     if (!this.pearl.obj.getComponent(Game).isHost) {
       return;
     }
@@ -50,6 +50,7 @@ export default class Session extends Component<null> {
         yield this.pearl.async.waitMs(START_COUNTDOWN_MS);
 
         this.gameState = 'playing';
+
         const world = this.worldObj.getComponent(World);
         world.start();
       }.bind(this)
