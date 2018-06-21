@@ -41,6 +41,7 @@ export class NetworkingPlayer {
 
 interface AddPlayerOpts {
   inputter: Inputter;
+  isLocal?: boolean;
 }
 
 export default class NetworkingHost extends Networking {
@@ -91,15 +92,23 @@ export default class NetworkingHost extends Networking {
 
     const player = new NetworkingPlayer(playerId, opts.inputter);
     this.players.set(playerId, player);
+
+    if (opts.isLocal) {
+      this.setIdentity(player.id);
+    }
+
     this.onPlayerAdded.call({ networkingPlayer: player });
 
     return player;
   }
 
   addLocalPlayer() {
-    this.addPlayer({
+    const player = this.addPlayer({
       inputter: this.pearl.inputter,
+      isLocal: true,
     });
+
+    this.setIdentity(player.id);
   }
 
   removePlayer(player: NetworkingPlayer): void {

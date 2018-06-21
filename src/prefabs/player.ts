@@ -29,6 +29,7 @@ interface PlayerSnapshot {
 
   worldId: string;
   playerState: string;
+  playerId?: number;
 
   animation: AnimationSnapshot;
 }
@@ -92,6 +93,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       worldId: world.id,
 
       playerState: player.playerState,
+      playerId: player.playerId,
 
       animation: serializeAnimationManager(anim),
     };
@@ -118,6 +120,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
 
     const player = obj.getComponent(Player);
     player.playerState = snapshot.playerState;
+    player.playerId = snapshot.playerId;
 
     const anim = obj.getComponent(AnimationManager);
     deserializeAnimationManager(anim, snapshot.animation);

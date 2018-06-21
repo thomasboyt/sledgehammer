@@ -19,7 +19,7 @@ export default class NetworkingClient extends Networking {
       if (msg.type === 'snapshot') {
         this.onSnapshot(msg.data);
       } else if (msg.type === 'identity') {
-        // this.playerId = msg.data.id;
+        this.setIdentity(msg.data.id);
       } else if (msg.type === 'ping') {
         // this.sendToHost({
         //   type: 'pong',

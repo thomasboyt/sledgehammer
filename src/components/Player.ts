@@ -15,6 +15,8 @@ import Bullet from './Bullet';
 import { addVector } from '../util/math';
 import createCachedRender from '../../src/util/createCachedRender';
 import { WIDTH, HEIGHT } from '../constants';
+import NetworkingClient from './networking/NetworkingClient';
+import Networking from './networking/Networking';
 
 const MOVE_TIME_MS = 120;
 const BULLET_SPEED = 0.2;
@@ -26,16 +28,36 @@ export interface Options {
 }
 
 export default class Player extends Component<Options> {
-  playerId!: number;
   facing: Coordinates = { x: 1, y: 0 };
   playerState = 'alive';
 
-  init(opts: Options) {
-    if (opts) {
-      this.playerId = opts.playerId;
+  color!: [number, number, number];
+  playerId?: number;
+
+  init() {
+    if (this.playerId === undefined) {
+      throw new Error('no playerId set on player');
     }
 
-    this.getComponent(AnimationManager).mask([0, 0, 0], [255, 255, 255]);
+    const cyan: [number, number, number] = [0, 255, 255];
+    const red: [number, number, number] = [255, 0, 0];
+    const networking: Networking = this.getNetworking()!;
+
+    if (networking.localPlayerId === this.playerId) {
+      this.color = red;
+    } else {
+      this.color = cyan;
+    }
+
+    this.getComponent(AnimationManager).mask([0, 0, 0], this.color);
+  }
+
+  private getNetworking() {
+    // TODO: make this a generic util that lives on... idk, game?
+    return (
+      this.pearl.obj.maybeGetComponent(NetworkingHost) ||
+      this.pearl.obj.maybeGetComponent(NetworkingClient)
+    );
   }
 
   die() {
@@ -69,7 +91,7 @@ export default class Player extends Component<Options> {
     }
 
     const players = this.pearl.obj.getComponent(NetworkingHost).players;
-    const networkedPlayer = players.get(this.playerId)!;
+    const networkedPlayer = players.get(this.playerId!)!;
     const inputter = networkedPlayer.inputter;
 
     let inputDirection: Coordinates | null = null;
@@ -157,7 +179,7 @@ export default class Player extends Component<Options> {
       const width = collider.width!;
       const height = collider.height!;
 
-      ctx.strokeStyle = 'white';
+      ctx.strokeStyle = `rgb(${this.color!.join(',')})`;
       ctx.translate(phys.center.x, phys.center.y);
 
       // draw an x

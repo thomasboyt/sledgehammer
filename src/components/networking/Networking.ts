@@ -32,6 +32,8 @@ export default abstract class Networking extends Component<Opts> {
 
   networkedObjects = new Map<string, GameObject>();
 
+  localPlayerId?: number;
+
   create(opts: Opts) {
     this.prefabs = opts.prefabs;
   }
@@ -64,7 +66,6 @@ export default abstract class Networking extends Component<Opts> {
     this.pearl.entities.add(obj);
 
     const networked = obj.getComponent(NetworkedObject);
-
     this.networkedObjects.set(networked.id, obj);
 
     return obj;
@@ -73,5 +74,9 @@ export default abstract class Networking extends Component<Opts> {
   deregisterNetworkedObject(obj: GameObject) {
     const networked = obj.getComponent(NetworkedObject);
     this.networkedObjects.delete(networked.id);
+  }
+
+  protected setIdentity(id: number) {
+    this.localPlayerId = id;
   }
 }
