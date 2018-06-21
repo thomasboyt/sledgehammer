@@ -3,6 +3,7 @@ import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
 import { levelTiles } from '../levels';
 import Game from './Game';
 import World from './World';
+import { START_COUNTDOWN_MS } from '../constants';
 
 export type GameState =
   | 'waiting'
@@ -41,12 +42,12 @@ export default class Session extends Component<null> {
 
   startGame() {
     this.gameState = 'starting';
-    this.startTime = Date.now() + 3000;
+    this.startTime = Date.now() + START_COUNTDOWN_MS;
     this.createWorld();
 
     this.pearl.async.schedule(
       function*(this: Session) {
-        yield this.pearl.async.waitMs(3000);
+        yield this.pearl.async.waitMs(START_COUNTDOWN_MS);
 
         this.gameState = 'playing';
         const world = this.worldObj.getComponent(World);
