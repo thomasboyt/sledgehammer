@@ -19,7 +19,7 @@ import TileMap from './TileMap';
 import Player from './Player';
 import WrappedPFGrid from '../util/WrappedPFGrid';
 
-const MOVE_TIME_MS = 240;
+const MOVE_TIME_MS = 320;
 const CHASE_TIME_MS = 160;
 
 export default class Enemy extends Component<null> {

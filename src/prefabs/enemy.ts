@@ -38,7 +38,6 @@ const enemy: NetworkedPrefab<EnemySnapshot> = {
       new Physical({
         center: { x: 120, y: 120 },
       }),
-      new PolygonRenderer({ strokeStyle: 'red' }),
       new TileEntity(),
       new WrappedEntityRenderer({
         // TODO: would be nice if this came from TileMap or world somehow...

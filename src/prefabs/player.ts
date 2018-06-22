@@ -42,7 +42,6 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       new Physical({
         center: { x: 120, y: 120 },
       }),
-      new PolygonRenderer({ strokeStyle: 'cyan' }),
       PolygonCollider.createBox({
         width: TILE_SIZE - 2,
         height: TILE_SIZE - 2,

@@ -5,6 +5,8 @@ import {
   GameObject,
   Keys,
 } from 'pearl';
+import { sampleSize } from 'lodash-es';
+
 import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
 import Player from './Player';
 import TileEntity from './TileEntity';
@@ -25,39 +27,6 @@ export default class World extends Component<null> {
 
   players = new Map<number, GameObject>();
 
-  start() {
-    this.players = new Map();
-
-    const players = this.pearl.obj.getComponent(NetworkingHost).players;
-    for (let player of players.values()) {
-      this.addPlayer(player);
-    }
-
-    const tileMap = this.getComponent(TileMap);
-
-    // generate enemies
-    tileMap.forEachTile(({ x, y }, value) => {
-      if (value === Tile.Empty) {
-        if (getRandomInt(0, 100) <= 1) {
-          const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-          const facing = randomChoice(choices);
-
-          const enemyObj = this.pearl.obj
-            .getComponent(NetworkingHost)
-            .createNetworkedPrefab('enemy');
-
-          const tileEntity = enemyObj.getComponent(TileEntity);
-          tileEntity.world = this.gameObject;
-          tileEntity.setPosition({ x, y });
-
-          const enemy = enemyObj.getComponent(Enemy);
-          enemy.facing = { x: facing[0], y: facing[1] };
-          // enemy.setFacing({ x: facing[0], y: facing[1] });
-        }
-      }
-    });
-  }
-
   loadTileMap(levelTiles: string) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
     const tiles = getTilesFromString(levelTiles);
@@ -67,6 +36,58 @@ export default class World extends Component<null> {
       if (value === Tile.Spawn) {
         this.spawns.push({ x, y });
       }
+    });
+  }
+
+  start() {
+    this.players = new Map();
+
+    const players = this.pearl.obj.getComponent(NetworkingHost).players;
+    for (let player of players.values()) {
+      this.addPlayer(player);
+    }
+
+    this.spawnEnemies();
+  }
+
+  private isNearSpawn({ x, y }: Coordinates): boolean {
+    // TODO: use pathfinding for this in the future?
+    return this.spawns.some((spawnPos) => {
+      const dx = spawnPos.x - x;
+      const dy = spawnPos.y - y;
+      return Math.abs(dx) < 3 || Math.abs(dy) < 3;
+    });
+  }
+
+  private spawnEnemies() {
+    const tileMap = this.getComponent(TileMap);
+
+    // generate enemies
+    const enemyCount = 40;
+    const availableTiles: Coordinates[] = [];
+    tileMap.forEachTile(({ x, y }, value) => {
+      if (value === Tile.Empty) {
+        if (!this.isNearSpawn({ x, y })) {
+          availableTiles.push({ x, y });
+        }
+      }
+    });
+
+    const tiles = sampleSize(availableTiles, 40);
+    tiles.forEach(({ x, y }) => {
+      const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      const facing = randomChoice(choices);
+
+      const enemyObj = this.pearl.obj
+        .getComponent(NetworkingHost)
+        .createNetworkedPrefab('enemy');
+
+      const tileEntity = enemyObj.getComponent(TileEntity);
+      tileEntity.world = this.gameObject;
+      tileEntity.setPosition({ x, y });
+
+      const enemy = enemyObj.getComponent(Enemy);
+      enemy.setFacing({ x: facing[0], y: facing[1] });
     });
   }
 
