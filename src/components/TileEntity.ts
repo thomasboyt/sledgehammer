@@ -69,16 +69,6 @@ export default class TileEntity extends Component<null> {
     this.getComponent(Physical).center = center;
   }
 
-  init() {
-    // const tileMap =
-    //   this.gameObject.parent &&
-    //   this.gameObject.parent.maybeGetComponent(TileMap);
-    // if (!tileMap) {
-    //   throw new Error('TileEntity must be a child of a TileMap component');
-    // }
-    // this.tileMap = tileMap;
-  }
-
   get isMoving(): boolean {
     return !!this.moveTween;
   }
@@ -90,13 +80,6 @@ export default class TileEntity extends Component<null> {
         this.moveTween = undefined;
       }
     }
-  }
-
-  /**
-   * Cancel current move
-   */
-  cancelMove() {
-    this.moveTween = undefined;
   }
 
   /**
@@ -129,5 +112,12 @@ export default class TileEntity extends Component<null> {
 
     const phys = this.getComponent(Physical);
     this.moveTween = new MoveTween(phys, start, end, timeMs);
+  }
+
+  /**
+   * Cancel current move
+   */
+  cancelMove() {
+    this.moveTween = undefined;
   }
 }
