@@ -22,6 +22,7 @@
   "dependencies": {
     "@types/axios": "^0.14.0",
     "@types/lodash-es": "^4.17.0",
+    "@types/pathfinding": "0.0.2",
     "@types/query-string": "^5.1.0",
     "@types/simple-peer": "^6.1.4",
     "@types/uuid": "^3.4.3",
@@ -30,6 +31,7 @@
     "immer": "^1.3.1",
     "lodash-es": "^4.17.10",
     "micro-memoize": "^2.0.3",
+    "pathfinding": "^0.4.18",
     "pearl": "git://github.com/thomasboyt/pearl.git",
     "query-string": "^6.1.0",
     "runtypes": "^2.0.6",
