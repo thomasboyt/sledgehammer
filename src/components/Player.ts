@@ -63,7 +63,7 @@ export default class Player extends Component<Options> {
   die() {
     this.playerState = 'dead';
     this.getComponent(TileEntity).cancelMove();
-    this.getComponent(AnimationManager).visible = false;
+    this.getComponent(AnimationManager).isVisible = false;
   }
 
   setFacing(coordinates: Coordinates) {
