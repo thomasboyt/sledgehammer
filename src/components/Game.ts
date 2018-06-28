@@ -12,6 +12,16 @@ export default class Game extends Component<Options> {
   init(opts: Options) {
     this.isHost = opts.isHost;
 
+    // XXX: This is kind of a hack rn because what I actually want is a render tree that translates
+    // rendering relative to the parent Physical
+    // this is: a hell of a lot of work to implement and I don't want to do it right now
+    // TODO: write up a doc in the pearl repo about this!
+    const center = this.pearl.renderer.getViewCenter();
+    this.pearl.renderer.setViewCenter({
+      x: center.x - 8,
+      y: center.y - 20,
+    });
+
     if (this.isHost) {
       this.initializeHost();
     }
@@ -37,6 +47,7 @@ export default class Game extends Component<Options> {
   render(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = 'black';
     const size = this.pearl.renderer.getViewSize();
-    ctx.fillRect(0, 0, size.x, size.y);
+    const center = this.pearl.renderer.getViewCenter();
+    ctx.fillRect(center.x - size.x / 2, center.y - size.y / 2, size.x, size.y);
   }
 }

@@ -20,6 +20,7 @@ import {
   deserializePhysical,
 } from '../../serializers/serializePhysical';
 import BaseEnemy from '../../components/enemies/BaseEnemy';
+import { ZIndex } from '../../types';
 
 interface EnemySnapshot {
   physical: PhysicalSnapshot;
@@ -35,8 +36,8 @@ interface FactoryOptions {
 function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
   return {
     type: opts.type,
-
     tags: ['enemy'],
+    zIndex: ZIndex.Enemy,
 
     createComponents: (pearl) => {
       return [

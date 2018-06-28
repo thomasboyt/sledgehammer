@@ -1,6 +1,7 @@
 import { Physical, Coordinates } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 import BulletExplosion from '../components/BulletExplosion';
+import { ZIndex } from '../types';
 
 interface BulletExplosionSnapshot {
   center: Coordinates;
@@ -9,7 +10,7 @@ interface BulletExplosionSnapshot {
 const bulletExplosion: NetworkedPrefab<BulletExplosionSnapshot> = {
   type: 'bulletExplosion',
 
-  zIndex: 1,
+  zIndex: ZIndex.BulletExplosion,
 
   createComponents: () => {
     return [

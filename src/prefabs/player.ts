@@ -21,6 +21,7 @@ import {
   deserializeAnimationManager,
   AnimationSnapshot,
 } from '../serializers/serializeAnimationManager';
+import { ZIndex } from '../types';
 
 interface PlayerSnapshot {
   center: Coordinates;
@@ -36,6 +37,8 @@ interface PlayerSnapshot {
 
 const player: NetworkedPrefab<PlayerSnapshot> = {
   type: 'player',
+
+  zIndex: ZIndex.Pickup,
 
   createComponents(pearl) {
     return [

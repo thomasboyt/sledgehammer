@@ -6,13 +6,16 @@ import {
   deserializePhysical,
 } from '../serializers/serializePhysical';
 import Pickup from '../components/Pickup';
+import { ZIndex } from '../types';
 
 interface PickupSnapshot {
   physical: PhysicalSnapshot;
 }
 
-const bullet: NetworkedPrefab<PickupSnapshot> = {
-  type: 'bullet',
+const pickup: NetworkedPrefab<PickupSnapshot> = {
+  type: 'pickup',
+
+  zIndex: ZIndex.Pickup,
 
   createComponents: () => {
     return [
@@ -39,4 +42,4 @@ const bullet: NetworkedPrefab<PickupSnapshot> = {
   },
 };
 
-export default bullet;
+export default pickup;

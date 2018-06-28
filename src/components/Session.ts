@@ -86,40 +86,4 @@ export default class Session extends Component<null> {
       }
     }
   }
-
-  render(ctx: CanvasRenderingContext2D) {
-    const { isHost } = this.pearl.obj.getComponent(Game);
-    const { gameState } = this;
-
-    ctx.fillStyle = 'white';
-    ctx.font = '16px monospace';
-    ctx.textAlign = 'center';
-
-    if (gameState === 'waiting') {
-      let text: string;
-
-      if (isHost) {
-        const connected = this.pearl.obj.getComponent(NetworkingHost).players
-          .size;
-        text = `press space to start (${connected} connected)`;
-      } else {
-        text = 'waiting for host to start game...';
-      }
-
-      ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
-    } else if (gameState === 'starting') {
-      const text = `${Math.ceil((this.startTime! - Date.now()) / 1000)}...`;
-      ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
-    } else if (gameState === 'cleared') {
-      const text = 'you won!';
-      ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
-    } else if (gameState === 'gameOver') {
-      const text = isHost ? 'game over :( press R to retry' : 'game over :(';
-      ctx.fillText(text, this.pearl.renderer.getViewSize().x / 2, 420);
-    }
-
-    // ctx.textAlign = 'left';
-    // const pings = [...state.pings.values()].filter((ping) => !!ping).join(', ');
-    // ctx.fillText(`pings: ${pings}`, 20, 460);
-  }
 }

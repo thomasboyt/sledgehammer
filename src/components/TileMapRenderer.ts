@@ -32,5 +32,14 @@ export default class TileMapRenderer extends Component<null> {
   render(ctx: CanvasRenderingContext2D) {
     // TODO: tiles is getting replaced every tick on the client...
     this.renderTiles(ctx, 1, this.tileMap.tiles);
+
+    // render borders, same color as BG, around edges, to prevent displaying wrapped entities
+    const { tileSize, worldSize } = this.tileMap;
+    const width = worldSize!.x * tileSize;
+    const height = worldSize!.y * tileSize;
+    ctx.fillRect(0, -tileSize, width, tileSize);
+    ctx.fillRect(0, height, width, tileSize);
+    ctx.fillRect(-tileSize, 0, tileSize, width);
+    ctx.fillRect(width, 0, tileSize, height);
   }
 }

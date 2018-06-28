@@ -3,6 +3,7 @@ import { NetworkedPrefab } from '../components/networking/Networking';
 import TileMap from '../components/TileMap';
 import TileMapRenderer from '../components/TileMapRenderer';
 import World from '../components/World';
+import { ZIndex } from '../types';
 
 interface WorldSnapshot {
   tiles: string[][];
@@ -10,6 +11,8 @@ interface WorldSnapshot {
 
 const world: NetworkedPrefab<WorldSnapshot> = {
   type: 'world',
+
+  zIndex: ZIndex.World,
 
   createComponents: () => {
     return [
@@ -32,7 +35,7 @@ const world: NetworkedPrefab<WorldSnapshot> = {
     if (map.tiles) {
       return;
     } else {
-      map.tiles = snapshot.tiles;
+      map.setTiles(snapshot.tiles);
     }
   },
 };
