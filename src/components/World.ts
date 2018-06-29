@@ -55,11 +55,24 @@ export default class World extends Component<null> {
 
     this.spawnEnemies();
     this.spawnNextPickup();
+
+    this.pearl.async.schedule(
+      function*(this: World) {
+        const shouldSpawn = () =>
+          this.gameObject.state !== 'destroyed' &&
+          this.sessionObj!.getComponent(Session).gameState === 'playing';
+
+        while (shouldSpawn()) {
+          this.spawnEnemy();
+          yield this.pearl.async.waitMs(3000);
+        }
+      }.bind(this)
+    );
   }
 
   private spawnNextPickup() {
     const candidateTiles = this.getCandidateTiles();
-    const pickupTile = sample(candidateTiles)!;
+    const pickupTile = randomChoice(candidateTiles)!;
 
     const pickupObj = this.pearl.obj
       .getComponent(NetworkingHost)
@@ -113,23 +126,32 @@ export default class World extends Component<null> {
     const availableTiles = this.getCandidateTiles();
 
     const tiles = sampleSize(availableTiles, enemyCount);
-    tiles.forEach(({ x, y }) => {
-      const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-      const facing = randomChoice(choices);
-
-      const type = randomChoice(['lemonShark', 'blueThing']);
-
-      const enemyObj = this.pearl.obj
-        .getComponent(NetworkingHost)
-        .createNetworkedPrefab(type);
-
-      const tileEntity = enemyObj.getComponent(TileEntity);
-      tileEntity.world = this.gameObject;
-      tileEntity.setPosition({ x, y });
-
-      const enemy = enemyObj.getComponent(BaseEnemy);
-      enemy.setFacing({ x: facing[0], y: facing[1] });
+    tiles.forEach((tilePos) => {
+      this.addEnemy(tilePos);
     });
+  }
+
+  private spawnEnemy() {
+    const tilePos = sample(this.getCandidateTiles())!;
+    this.addEnemy(tilePos);
+  }
+
+  private addEnemy(tilePos: Coordinates) {
+    const type = sample(['lemonShark', 'blueThing'])!;
+
+    const enemyObj = this.pearl.obj
+      .getComponent(NetworkingHost)
+      .createNetworkedPrefab(type);
+
+    const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const facing = sample(choices)!;
+
+    const tileEntity = enemyObj.getComponent(TileEntity);
+    tileEntity.world = this.gameObject;
+    tileEntity.setPosition(tilePos);
+
+    const enemy = enemyObj.getComponent(BaseEnemy);
+    enemy.setFacing({ x: facing[0], y: facing[1] });
   }
 
   addPlayer(sessionPlayer: SessionPlayer) {
