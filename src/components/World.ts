@@ -19,7 +19,8 @@ import Game from './Game';
 import Bullet from './Bullet';
 import { getRandomInt, randomChoice } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
-import Session from './Session';
+import Session, { SessionPlayer } from './Session';
+import Delegate from '../util/Delegate';
 
 export default class World extends Component<null> {
   sessionObj?: GameObject;
@@ -28,6 +29,8 @@ export default class World extends Component<null> {
   nextSpawnIndex = 0;
 
   players = new Map<number, GameObject>();
+
+  onPlayerGotPickup = new Delegate<{ playerId: number }>();
 
   loadTileMap(levelTiles: string) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
@@ -44,8 +47,8 @@ export default class World extends Component<null> {
   start() {
     this.players = new Map();
 
-    const players = this.pearl.obj.getComponent(NetworkingHost).players;
-    for (let player of players.values()) {
+    const players = this.sessionObj!.getComponent(Session).players;
+    for (let player of players) {
       this.addPlayer(player);
     }
 
@@ -105,7 +108,7 @@ export default class World extends Component<null> {
   }
 
   private spawnEnemies() {
-    const enemyCount = 40;
+    const enemyCount = 30;
     const availableTiles = this.getCandidateTiles();
 
     const tiles = sampleSize(availableTiles, enemyCount);
@@ -128,7 +131,7 @@ export default class World extends Component<null> {
     });
   }
 
-  addPlayer(networkingPlayer: NetworkingPlayer) {
+  addPlayer(sessionPlayer: SessionPlayer) {
     if (this.sessionObj!.getComponent(Session).gameState !== 'playing') {
       return;
     }
@@ -136,13 +139,15 @@ export default class World extends Component<null> {
     const networkingHost = this.pearl.obj.getComponent(NetworkingHost);
 
     const playerObject = networkingHost.createNetworkedPrefab('player');
-    playerObject.getComponent(Player).playerId = networkingPlayer.id;
+    const player = playerObject.getComponent(Player);
+    player.playerId = sessionPlayer.id;
+    player.color = sessionPlayer.color;
 
     const tileEntity = playerObject.getComponent(TileEntity);
     tileEntity.world = this.gameObject;
     tileEntity.setPosition(this.getNextSpawn());
 
-    this.players.set(networkingPlayer.id, playerObject);
+    this.players.set(sessionPlayer.id, playerObject);
   }
 
   removePlayer(networkingPlayer: NetworkingPlayer) {
@@ -211,6 +216,10 @@ export default class World extends Component<null> {
             .isColliding(pickup.getComponent(PolygonCollider))
         ) {
           // pick up pickup and spawn a new one
+          this.onPlayerGotPickup.call({
+            playerId: player.getComponent(Player).playerId!,
+          });
+
           this.pearl.entities.destroy(pickup);
           this.spawnNextPickup();
         }

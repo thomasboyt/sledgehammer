@@ -31,7 +31,7 @@ export default class Player extends Component<Options> {
   facing: Coordinates = { x: 1, y: 0 };
   playerState = 'alive';
 
-  color!: [number, number, number];
+  color?: [number, number, number];
   playerId?: number;
 
   init() {
@@ -39,25 +39,11 @@ export default class Player extends Component<Options> {
       throw new Error('no playerId set on player');
     }
 
-    const cyan: [number, number, number] = [0, 255, 255];
-    const red: [number, number, number] = [255, 0, 0];
-    const networking: Networking = this.getNetworking()!;
-
-    if (networking.localPlayerId === this.playerId) {
-      this.color = red;
-    } else {
-      this.color = cyan;
+    if (!this.color) {
+      throw new Error('missing color on player');
     }
 
     this.getComponent(AnimationManager).mask([0, 0, 0], this.color);
-  }
-
-  private getNetworking() {
-    // TODO: make this a generic util that lives on... idk, game?
-    return (
-      this.pearl.obj.maybeGetComponent(NetworkingHost) ||
-      this.pearl.obj.maybeGetComponent(NetworkingClient)
-    );
   }
 
   die() {

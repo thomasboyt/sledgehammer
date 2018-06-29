@@ -1,6 +1,8 @@
 import { Component, Keys } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Session from './Session';
+import NetworkingClient from './networking/NetworkingClient';
+import { WIDTH } from '../constants';
 
 interface Options {
   isHost: boolean;
@@ -49,5 +51,20 @@ export default class Game extends Component<Options> {
     const size = this.pearl.renderer.getViewSize();
     const center = this.pearl.renderer.getViewCenter();
     ctx.fillRect(center.x - size.x / 2, center.y - size.y / 2, size.x, size.y);
+
+    if (!this.isHost) {
+      const client = this.getComponent(NetworkingClient);
+
+      ctx.font = '16px monospace';
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+
+      if (client.connectionState === 'connecting') {
+        ctx.fillText('connecting', WIDTH / 2, 200);
+      } else if (client.connectionState === 'error') {
+        ctx.fillText('connection error:', WIDTH / 2, 200);
+        ctx.fillText(client.errorReason!, WIDTH / 2, 220);
+      }
+    }
   }
 }

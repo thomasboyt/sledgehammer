@@ -7,6 +7,8 @@ import NetworkedObject from './NetworkedObject';
 
 let playerIdCounter = 0;
 
+const MAX_CLIENTS = 4;
+
 interface OnPlayerAddedMsg {
   networkingPlayer: NetworkingPlayer;
 }
@@ -52,6 +54,16 @@ export default class NetworkingHost extends Networking {
   onPlayerRemoved = new Delegate<OnPlayerAddedMsg>();
 
   onPeerConnected(peer: Peer.Instance) {
+    if (this.players.size === MAX_CLIENTS) {
+      peer.send(
+        JSON.stringify({
+          type: 'tooManyPlayers',
+        })
+      );
+      peer.destroy();
+      return;
+    }
+
     const player = this.addPlayer({ inputter: new NetworkedInputter() });
 
     this.peerToPlayerId.set(peer, player.id);

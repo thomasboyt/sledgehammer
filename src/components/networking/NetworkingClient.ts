@@ -6,10 +6,17 @@ import Networking, { Snapshot } from './Networking';
 import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 
+type ConnectionState = 'connecting' | 'connected' | 'error';
+
 export default class NetworkingClient extends Networking {
   hostPeer!: Peer.Instance;
 
+  connectionState: ConnectionState = 'connecting';
+  errorReason?: string;
+
   registerHostPeer(hostPeer: Peer.Instance) {
+    this.connectionState = 'connected';
+
     this.hostPeer = hostPeer;
 
     hostPeer.on('data', (strData: string) => {
@@ -20,6 +27,9 @@ export default class NetworkingClient extends Networking {
         this.onSnapshot(msg.data);
       } else if (msg.type === 'identity') {
         this.setIdentity(msg.data.id);
+      } else if (msg.type === 'tooManyPlayers') {
+        this.connectionState = 'error';
+        this.errorReason = 'Room at max capacity';
       } else if (msg.type === 'ping') {
         // this.sendToHost({
         //   type: 'pong',
