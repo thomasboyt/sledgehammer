@@ -88,6 +88,12 @@ export default class NetworkingHost extends Networking {
       this.removePlayer(player);
     });
 
+    peer.on('error', () => {
+      this.peerToPlayerId.delete(peer);
+      this.players.delete(player.id);
+      this.removePlayer(player);
+    });
+
     peer.send(
       JSON.stringify({
         type: 'identity',
