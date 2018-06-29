@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <style>
+      body {
+        margin: 8px 0;
+      }
+
+      .game-iframes {
+        display: flex;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="game-iframes">
+      <iframe id="host" src="/game.html?host=true" width="640" height="480"></iframe>
+      <div class="client-container"></div>
+      <div class="client-container"></div>
+      <div class="client-container"></div>
+    </div>
+
+    <script>
+      window.addEventListener('message', (evt) => {
+        if (origin === window.location.origin) {
+          if (evt.data.type === 'hostCreatedRoom') {
+            const roomCode = evt.data.roomCode;
+            const elements = Array.from(document.querySelectorAll('.client-container'));
+
+            for (let i = 0; i < elements.length; i += 1) {
+              const element = elements[i];
+
+              // element creation is throttled because simple-peer freaks out if a bunch of clients
+              // try to connect at once... think this is just an issue with _local_ webrtc hopefully
+              setTimeout(() => {
+                element.innerHTML = `
+                  <iframe id="game" src="/game.html?game=${roomCode}" width="640" height="480"></iframe>
+                `;
+              }, 500 * i);
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
