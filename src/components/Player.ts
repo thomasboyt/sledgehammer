@@ -17,11 +17,12 @@ import createCachedRender from '../../src/util/createCachedRender';
 import { WIDTH, HEIGHT } from '../constants';
 import NetworkingClient from './networking/NetworkingClient';
 import Networking from './networking/Networking';
+import SpawnRenderer from './SpawnRenderer';
 
 const MOVE_TIME_MS = 120;
 const BULLET_SPEED = 0.2;
 
-type PlayerState = 'alive' | 'dead';
+type PlayerState = 'spawning' | 'alive' | 'dead';
 
 export interface Options {
   playerId: number;
@@ -29,7 +30,7 @@ export interface Options {
 
 export default class Player extends Component<Options> {
   facing: Coordinates = { x: 1, y: 0 };
-  playerState = 'alive';
+  playerState = 'spawning';
 
   color?: [number, number, number];
   playerId?: number;
@@ -44,6 +45,10 @@ export default class Player extends Component<Options> {
     }
 
     this.getComponent(AnimationManager).mask([0, 0, 0], this.color);
+
+    this.getComponent(SpawnRenderer).onFinish.add(() => {
+      this.playerState = 'alive';
+    });
   }
 
   die() {
@@ -72,7 +77,7 @@ export default class Player extends Component<Options> {
       return;
     }
 
-    if (this.playerState === 'dead') {
+    if (this.playerState !== 'alive') {
       return;
     }
 

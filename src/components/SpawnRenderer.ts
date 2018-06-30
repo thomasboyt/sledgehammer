@@ -1,5 +1,6 @@
 import { Component, AnimationManager, Physical } from 'pearl';
 import { lerp, getRandomInt, getVectorComponents } from '../util/math';
+import Delegate from '../util/Delegate';
 
 interface Pixel {
   startX: number;
@@ -12,6 +13,8 @@ interface Pixel {
 export default class SpawnRenderer extends Component<null> {
   spawning = true;
 
+  onFinish = new Delegate();
+
   private _timeElapsedMs = 0;
   private _targetTimeMs = 1000;
 
@@ -21,9 +24,24 @@ export default class SpawnRenderer extends Component<null> {
     const anim = this.getComponent(AnimationManager);
     anim.isVisible = false;
     const sprite = anim.getSprite();
-    const spriteData = sprite.canvas;
 
-    const imageData = spriteData
+    let canvas: HTMLCanvasElement = sprite.canvas;
+
+    if (anim.masked) {
+      // TODO: I don't like the indirection here, maybe add like animationManager.getCanvas()
+      canvas = document.createElement('canvas');
+      canvas.width = sprite.width;
+      canvas.height = sprite.height;
+      sprite.drawMasked(
+        canvas.getContext('2d')!,
+        0,
+        0,
+        anim.maskFrom,
+        anim.maskTo
+      );
+    }
+
+    const imageData = canvas
       .getContext('2d')!
       .getImageData(0, 0, sprite.width, sprite.height);
 
@@ -71,13 +89,15 @@ export default class SpawnRenderer extends Component<null> {
     this._timeElapsedMs += dt;
 
     if (this._timeElapsedMs > this._targetTimeMs) {
-      this.onFinish();
+      this._onFinish();
     }
   }
 
-  onFinish() {
+  _onFinish() {
     this.spawning = false;
     this.getComponent(AnimationManager).isVisible = true;
+    this.isVisible = false;
+    this.onFinish.call({});
   }
 
   render(ctx: CanvasRenderingContext2D) {

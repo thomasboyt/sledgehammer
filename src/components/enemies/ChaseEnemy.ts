@@ -20,7 +20,7 @@ export default class ChaseEnemy extends BaseEnemy {
     let nextTilePos: Coordinates;
 
     if (this.chasingPlayer) {
-      if (this.chasingPlayer.getComponent(Player).playerState === 'dead') {
+      if (this.chasingPlayer.getComponent(Player).playerState !== 'alive') {
         this.chasingPlayer = undefined;
       }
     } else {

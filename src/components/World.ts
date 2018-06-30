@@ -236,7 +236,9 @@ export default class World extends Component<null> {
             .getComponent(PolygonCollider)
             .isColliding(enemy.getComponent(PolygonCollider))
         ) {
-          player.getComponent(Player).die();
+          if (player.getComponent(Player).playerState === 'alive') {
+            player.getComponent(Player).die();
+          }
         }
       }
 
