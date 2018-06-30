@@ -6,9 +6,7 @@ export default class Pickup extends Component<null> {
       function*(this: Pickup) {
         const renderer = this.getComponent(PolygonRenderer);
 
-        let flashCount = 5;
-
-        for (let i = 0; i < flashCount; i += 1) {
+        while (this.gameObject.state !== 'destroyed') {
           renderer.isVisible = false;
           yield this.pearl.async.waitMs(300);
           renderer.isVisible = true;
