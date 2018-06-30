@@ -16,6 +16,7 @@ import Bullet from '../Bullet';
 import { addVector, getRandomInt, randomChoice } from '../../util/math';
 import TileMap from '../TileMap';
 import Player from '../Player';
+import SpawnRenderer from '../SpawnRenderer';
 
 const MOVE_TIME_MS = 320;
 
@@ -46,6 +47,10 @@ export default class BaseEnemy extends Component<null> {
 
   update(dt: number) {
     if (!this.pearl.obj.getComponent(Game).isHost) {
+      return;
+    }
+
+    if (this.getComponent(SpawnRenderer).spawning) {
       return;
     }
 

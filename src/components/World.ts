@@ -21,6 +21,7 @@ import { getRandomInt, randomChoice } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import Delegate from '../util/Delegate';
+import SpawnRenderer from './SpawnRenderer';
 
 export default class World extends Component<null> {
   sessionObj?: GameObject;
@@ -180,6 +181,12 @@ export default class World extends Component<null> {
 
     const tileMap = this.getComponent(TileMap);
 
+    // BUG: with bullets and pickups, if multiple things are colliding with it, the collision
+    // logic runs TWICE
+    // this would mean: 2 players would both get points for defeating an enemy
+    // and more annoyingly, if 2 players get a pickup on the same frame, it spawns TWO PICKUPS,
+    // lol
+
     for (let bullet of bullets) {
       const bulletCollider = bullet.getComponent(PolygonCollider);
 
@@ -191,9 +198,11 @@ export default class World extends Component<null> {
       for (let enemy of enemies) {
         if (bulletCollider.isColliding(enemy.getComponent(PolygonCollider))) {
           // destroy enemy
-          bullet.getComponent(Bullet).explode();
-          this.pearl.entities.destroy(enemy);
-          continue;
+          if (!enemy.getComponent(SpawnRenderer).spawning) {
+            bullet.getComponent(Bullet).explode();
+            this.pearl.entities.destroy(enemy);
+            continue;
+          }
         }
       }
     }
