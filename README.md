@@ -29,40 +29,6 @@ you'll also need a [groovejet](https://github.com/thomasboyt/groovejet) server r
 
 this is a long-term-ish planning list and not meant as todos; that's living in a workflowy document.
 
-#### enemy AI
-
-so crossroads has the concept of "sightlines" which is pretty important to AI. basically, there are enemies that can only see a few tiles in front of themselves, but will chase you once they see you, stuff like that.
-
-this is a really interesting challenge. the naive way to do this would be something like:
-
-```typescript
-class ChasingEnemy {
-  canSeePlayer = false;
-
-  findNextTile() {
-    const player = this.pearl.entities.find('player');
-
-    if (this.sawPlayer || this.canSeePlayer(player)) {
-      // TODO: maybe like debounce this or something so you're not re-finding on every frame
-      // also would make enemy "lag behind" slightly which might be nice
-      const playerTile = player.getComponent(TileEntity).tilePosition;
-      return pathFind(this.getComponent(TileEntity), playerTile);
-    } else {
-      // use normal AI
-    }
-  }
-
-  canSeePlayer(player): boolean {
-    // get bounding box forward from current tile...
-    const boundingBox = this.getComponent(TileEntity).project(3)  // n = number of tiles to project
-    // if player collides with bounding box, we can see them
-    return player.getComponent(PolygonCollider).isColliding(boundingBox);
-  }
-}
-```
-
-i think this is fine but should only happen like 5 times a second or something?
-
 #### how to only send changes over network
 
 goals: less data sent, less cpu used updating, allow memoized rendering to work on the client w/o special logic
