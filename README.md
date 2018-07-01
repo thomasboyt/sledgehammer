@@ -2,7 +2,7 @@
 
 hey this thing sucks rn don't look at it
 
-### what is this
+## what is this
 
 sledgehammer ([working title](https://www.youtube.com/watch?v=OJWJE0x7T4Q)) is a browser-based game for 1-4 players, featuring peer-to-peer multiplayer. it's basically a clone of [crossroads for the c64](http://www.dessgeega.com/crossroads.html).
 
@@ -14,7 +14,7 @@ it uses webrtc for networking, powered by [simple-peer](https://github.com/feros
 
 it's currently live at [http://sledgehammer.surge.sh/](http://sledgehammer.surge.sh/).
 
-### how do i run it
+## how do i run it
 
 to run:
 
@@ -25,11 +25,11 @@ npm run dev
 
 you'll also need a [groovejet](https://github.com/thomasboyt/groovejet) server running
 
-### what's left to figure out
+## what's left to figure out
 
 this is a long-term-ish planning list and not meant as todos; that's living in a workflowy document.
 
-#### how to only send changes over network
+### how to only send changes over network
 
 goals: less data sent, less cpu used updating, allow memoized rendering to work on the client w/o special logic
 
@@ -44,11 +44,11 @@ goals: less data sent, less cpu used updating, allow memoized rendering to work 
 
 also a big thing here is potentially using udp-like semantics, since webrtc gives you a choice. this would be good for snapshots, but not so good for RPC-like things (e.g. if i end up adding separate "entity created/destroyed" messages, or player input messages). think i could create two different channels per peer to solve this?
 
-#### how to maintain object hierarchy
+### how to maintain object hierarchy
 
 goals: allow e.g. world to own entities, make cleanup of scenes easier
 
-#### thoughts on collision
+### thoughts on collision
 
 i'd like **semi-automated collision stuff**. basically have some concept of collision layers, and some sort of collision protocol? and _possibly_ automated collision resolution (by preventing collisions from happening in the first place)?
 
