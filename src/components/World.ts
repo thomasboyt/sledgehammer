@@ -194,17 +194,35 @@ export default class World extends Component<null> {
       return;
     }
 
+    this.handleCollisions();
+
     if (this.sessionObj!.getComponent(Session).gameState !== 'playing') {
       return;
     }
 
+    const enemies = this.pearl.entities.all('enemy');
+
+    if (enemies.length === 0) {
+      // you done won
+      this.sessionObj!.getComponent(Session).gameState = 'cleared';
+    }
+
+    const allPlayersDead = [...this.players.values()].every(
+      (player) => player.getComponent(Player).playerState === 'dead'
+    );
+
+    if (allPlayersDead) {
+      this.sessionObj!.getComponent(Session).gameState = 'gameOver';
+    }
+  }
+
+  handleCollisions() {
     // TODO: maybe do this via parent-child relationships if i can figure out how to implement
     // with networking
-    const entities = [...this.pearl.entities.all().values()];
-    const players = entities.filter((obj) => obj.hasTag('player'));
-    const enemies = entities.filter((obj) => obj.hasTag('enemy'));
-    const bullets = entities.filter((obj) => obj.hasTag('bullet'));
-    const pickups = entities.filter((obj) => obj.hasTag('pickup'));
+    const players = this.pearl.entities.all('player');
+    const enemies = this.pearl.entities.all('enemy');
+    const bullets = this.pearl.entities.all('bullet');
+    const pickups = this.pearl.entities.all('pickup');
 
     const tileMap = this.getComponent(TileMap);
 
@@ -220,6 +238,19 @@ export default class World extends Component<null> {
       if (tileMap.isColliding(bulletCollider, [Tile.Wall])) {
         bullet.getComponent(Bullet).explode();
         continue;
+      }
+
+      for (let otherBullet of bullets) {
+        if (bullet === otherBullet) {
+          continue;
+        }
+
+        if (
+          bulletCollider.isColliding(otherBullet.getComponent(PolygonCollider))
+        ) {
+          bullet.getComponent(Bullet).explode();
+          otherBullet.getComponent(Bullet).explode();
+        }
       }
 
       for (let player of players) {
@@ -275,19 +306,6 @@ export default class World extends Component<null> {
         }
       }
     }
-
-    if (enemies.length === 0) {
-      // you done won
-      this.sessionObj!.getComponent(Session).gameState = 'cleared';
-    }
-
-    const allPlayersDead = players.every(
-      (player) => player.getComponent(Player).playerState === 'dead'
-    );
-
-    if (allPlayersDead) {
-      this.sessionObj!.getComponent(Session).gameState = 'gameOver';
-    }
   }
 
   private getNextSpawn() {
@@ -301,9 +319,11 @@ export default class World extends Component<null> {
       return;
     }
 
-    const entityTags = ['player', 'enemy', 'bullet', 'pickup'];
-    const worldEntities = [...this.pearl.entities.all().values()].filter(
-      (obj) => entityTags.some((tag) => obj.hasTag(tag))
+    const worldEntities = this.pearl.entities.all(
+      'player',
+      'enemy',
+      'bullet',
+      'pickup'
     );
 
     for (let entity of worldEntities) {
