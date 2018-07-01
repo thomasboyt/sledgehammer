@@ -15,7 +15,6 @@ export function deserializePhysical(
   phys: Physical,
   snapshot: PhysicalSnapshot
 ) {
-  const { center, angle, vel } = snapshot;
   phys.center = snapshot.center;
   phys.angle = snapshot.angle;
   phys.vel = snapshot.vel;

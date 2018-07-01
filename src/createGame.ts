@@ -38,8 +38,6 @@ export default async function createGame(opts: Options) {
     networkingComponent.registerHostPeer(hostPeer!);
   }
 
-  const canvas = document.getElementById('game') as HTMLCanvasElement;
-
   return createPearl({
     rootComponents: [
       networkingComponent,

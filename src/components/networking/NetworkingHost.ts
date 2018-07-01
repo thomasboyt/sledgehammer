@@ -1,4 +1,4 @@
-import { Component, GameObject } from 'pearl';
+import { GameObject } from 'pearl';
 
 import * as Peer from 'simple-peer';
 import Networking, { Snapshot, SnapshotObject } from './Networking';

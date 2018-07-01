@@ -1,4 +1,4 @@
-import { Component, Keys } from 'pearl';
+import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Session from './Session';
 import NetworkingClient from './networking/NetworkingClient';

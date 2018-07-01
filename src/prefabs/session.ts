@@ -1,4 +1,3 @@
-import { GameObject } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 import Session, { GameState, SessionPlayer } from '../components/Session';
 import SessionUI from '../components/SessionUI';

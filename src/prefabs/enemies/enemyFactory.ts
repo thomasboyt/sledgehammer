@@ -1,4 +1,4 @@
-import { Component, Physical, PolygonCollider, AnimationManager } from 'pearl';
+import { Physical, PolygonCollider, AnimationManager } from 'pearl';
 import { NetworkedPrefab } from '../../components/networking/Networking';
 
 import TileEntity from '../../components/TileEntity';
@@ -84,7 +84,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
       };
     },
 
-    deserialize: (obj, snapshot, objectsById) => {
+    deserialize: (obj, snapshot) => {
       const phys = obj.getComponent(Physical);
       deserializePhysical(phys, snapshot.physical);
 

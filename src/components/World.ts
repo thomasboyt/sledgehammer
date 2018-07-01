@@ -3,9 +3,7 @@ import {
   Coordinates,
   PolygonCollider,
   GameObject,
-  Keys,
   Physical,
-  PolygonRenderer,
 } from 'pearl';
 import { sample, sampleSize } from 'lodash-es';
 
@@ -17,7 +15,7 @@ import TileMap from './TileMap';
 import { getTilesFromString } from '../levels';
 import Game from './Game';
 import Bullet from './Bullet';
-import { getRandomInt, randomChoice } from '../util/math';
+import { randomChoice } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import Delegate from '../util/Delegate';

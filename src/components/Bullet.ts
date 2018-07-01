@@ -6,7 +6,6 @@ import {
   GameObject,
 } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
-import BulletExplosion from './BulletExplosion';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 import Game from './Game';
 

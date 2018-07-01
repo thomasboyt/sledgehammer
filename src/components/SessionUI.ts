@@ -1,9 +1,7 @@
-import { Component, GameObject, Keys } from 'pearl';
-import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
-import { levelTiles } from '../levels';
+import { Component } from 'pearl';
+import NetworkingHost from './networking/NetworkingHost';
 import Game from './Game';
-import World from './World';
-import { START_COUNTDOWN_MS, WIDTH } from '../constants';
+import { WIDTH } from '../constants';
 import Session from './Session';
 import NetworkingClient from './networking/NetworkingClient';
 

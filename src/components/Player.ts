@@ -13,10 +13,6 @@ import TileEntity from './TileEntity';
 import { Tile } from '../types';
 import Bullet from './Bullet';
 import { addVector } from '../util/math';
-import createCachedRender from '../../src/util/createCachedRender';
-import { WIDTH, HEIGHT } from '../constants';
-import NetworkingClient from './networking/NetworkingClient';
-import Networking from './networking/Networking';
 import SpawningDyingRenderer from './SpawningDyingRenderer';
 import { DEBUG_GOD_MODE } from '../constants';
 

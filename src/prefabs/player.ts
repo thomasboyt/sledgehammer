@@ -1,11 +1,9 @@
 import {
   Physical,
-  PolygonRenderer,
   PolygonCollider,
   Coordinates,
   GameObject,
   AnimationManager,
-  SpriteSheet,
 } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 

@@ -1,7 +1,6 @@
 import {
   Component,
   Physical,
-  Keys,
   Coordinates,
   PolygonCollider,
   AnimationManager,
@@ -12,10 +11,8 @@ import * as SAT from 'sat';
 import Game from '../Game';
 import TileEntity from '../TileEntity';
 import { Tile } from '../../types';
-import Bullet from '../Bullet';
 import { addVector, getRandomInt, randomChoice } from '../../util/math';
 import TileMap from '../TileMap';
-import Player from '../Player';
 import SpawningDyingRenderer from '../SpawningDyingRenderer';
 import { DEBUG_RENDER_SIGHTLINES } from '../../constants';
 

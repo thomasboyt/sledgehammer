@@ -1,4 +1,4 @@
-import { PolygonCollider, Physical, Coordinates, PolygonRenderer } from 'pearl';
+import { PolygonCollider, Physical, PolygonRenderer } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 import {
   PhysicalSnapshot,
@@ -36,7 +36,7 @@ const pickup: NetworkedPrefab<PickupSnapshot> = {
     };
   },
 
-  deserialize: (obj, snapshot, objectsById) => {
+  deserialize: (obj, snapshot) => {
     const phys = obj.getComponent(Physical);
     deserializePhysical(phys, snapshot.physical);
   },

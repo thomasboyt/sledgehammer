@@ -23,7 +23,6 @@ placeholder.getComponent(SpawnRenderer).onSpawned.add(() => {
 
 import { Physical, Coordinates, AnimationManager } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
-import BulletExplosion from '../components/BulletExplosion';
 import { ZIndex } from '../types';
 import {
   PhysicalSnapshot,
