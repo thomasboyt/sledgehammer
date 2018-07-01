@@ -19,6 +19,7 @@ const assetPaths = {
     player: require('../assets/player-sheet.png'),
     lemonShark: require('../assets/lemon-shark.png'),
     blueThing: require('../assets/blue-thing.png'),
+    archer: require('../assets/archer.png'),
   },
   audio: {},
 };

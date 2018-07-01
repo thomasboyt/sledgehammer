@@ -22,6 +22,10 @@ import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import Delegate from '../util/Delegate';
 
+const ENEMY_COUNT = 50;
+const ENEMY_TYPES = ['archer', 'lemonShark', 'blueThing'];
+const SPAWN_MORE = true;
+
 export default class World extends Component<null> {
   sessionObj?: GameObject;
 
@@ -55,18 +59,20 @@ export default class World extends Component<null> {
     this.spawnEnemies();
     this.spawnNextPickup();
 
-    this.pearl.async.schedule(
-      function*(this: World) {
-        const shouldSpawn = () =>
-          this.gameObject.state !== 'destroyed' &&
-          this.sessionObj!.getComponent(Session).gameState === 'playing';
+    if (SPAWN_MORE) {
+      this.pearl.async.schedule(
+        function*(this: World) {
+          const shouldSpawn = () =>
+            this.gameObject.state !== 'destroyed' &&
+            this.sessionObj!.getComponent(Session).gameState === 'playing';
 
-        while (shouldSpawn()) {
-          this.spawnEnemy();
-          yield this.pearl.async.waitMs(3000);
-        }
-      }.bind(this)
-    );
+          while (shouldSpawn()) {
+            this.spawnEnemy();
+            yield this.pearl.async.waitMs(3000);
+          }
+        }.bind(this)
+      );
+    }
   }
 
   private spawnNextPickup() {
@@ -121,7 +127,7 @@ export default class World extends Component<null> {
   }
 
   private spawnEnemies() {
-    const enemyCount = 30;
+    const enemyCount = ENEMY_COUNT;
     const availableTiles = this.getCandidateTiles();
 
     const tiles = sampleSize(availableTiles, enemyCount);
@@ -136,7 +142,7 @@ export default class World extends Component<null> {
   }
 
   private addEnemy(tilePos: Coordinates) {
-    const type = sample(['lemonShark', 'blueThing'])!;
+    const type = sample(ENEMY_TYPES)!;
 
     const enemyObj = this.pearl.obj
       .getComponent(NetworkingHost)
@@ -214,6 +220,15 @@ export default class World extends Component<null> {
       if (tileMap.isColliding(bulletCollider, [Tile.Wall])) {
         bullet.getComponent(Bullet).explode();
         continue;
+      }
+
+      for (let player of players) {
+        if (bulletCollider.isColliding(player.getComponent(PolygonCollider))) {
+          if (player.getComponent(Player).playerState === 'alive') {
+            bullet.getComponent(Bullet).explode();
+            player.getComponent(Player).die();
+          }
+        }
       }
 
       for (let enemy of enemies) {

@@ -6,8 +6,9 @@ export enum Tile {
 
 export enum ZIndex {
   Pickup,
-  Player,
   Enemy,
+  Player,
+  Bullet,
   // tile walls and the border around the tile map that prevents wrapped entities from rendering on
   // edges
   World,

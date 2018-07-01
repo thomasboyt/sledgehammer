@@ -18,9 +18,10 @@ import { WIDTH, HEIGHT } from '../constants';
 import NetworkingClient from './networking/NetworkingClient';
 import Networking from './networking/Networking';
 import SpawningDyingRenderer from './SpawningDyingRenderer';
+import { DEBUG_GOD_MODE } from '../constants';
 
 const MOVE_TIME_MS = 120;
-const BULLET_SPEED = 0.2;
+const PLAYER_BULLET_SPEED = 0.2;
 
 type PlayerState = 'spawning' | 'alive' | 'dead';
 
@@ -52,6 +53,10 @@ export default class Player extends Component<Options> {
   }
 
   die() {
+    if (DEBUG_GOD_MODE) {
+      return;
+    }
+
     this.playerState = 'dead';
     this.getComponent(TileEntity).cancelMove();
     this.getComponent(SpawningDyingRenderer).die();
@@ -138,28 +143,10 @@ export default class Player extends Component<Options> {
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('bullet');
 
-    const phys = this.getComponent(Physical);
-    const collider = this.getComponent(PolygonCollider);
-    const bulletPhys = bullet.getComponent(Physical);
-    const bulletCollider = bullet.getComponent(PolygonCollider);
-
-    // spawn bullet directly in front of where player's facing, offset so that it's in front of
-    // player + padding so there's no intersecting
-    // (padding is kinda arbitrary and may need to be shifted if velocities of players or bullets
-    // are changed since it's possible for a player to "catch up" if they shoot in direction they
-    // are moving)
-    bulletPhys.center = {
-      x:
-        phys.center.x +
-        this.facing.x * (collider.width! / 2 + bulletCollider.width! / 2 + 3),
-      y:
-        phys.center.y +
-        this.facing.y * (collider.height! / 2 + bulletCollider.height! / 2 + 3),
-    };
-
-    bulletPhys.vel = {
-      x: this.facing.x * BULLET_SPEED,
-      y: this.facing.y * BULLET_SPEED,
-    };
+    bullet.getComponent(Bullet).shoot({
+      originObject: this.gameObject,
+      facing: this.facing,
+      speed: PLAYER_BULLET_SPEED,
+    });
   }
 }

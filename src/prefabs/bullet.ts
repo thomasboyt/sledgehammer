@@ -1,6 +1,7 @@
 import { PolygonCollider, Physical, Coordinates, PolygonRenderer } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 import Bullet from '../components/Bullet';
+import { ZIndex } from '../types';
 
 interface BulletSnapshot {
   center: Coordinates;
@@ -9,6 +10,8 @@ interface BulletSnapshot {
 
 const bullet: NetworkedPrefab<BulletSnapshot> = {
   type: 'bullet',
+
+  zIndex: ZIndex.Bullet,
 
   createComponents: () => {
     return [

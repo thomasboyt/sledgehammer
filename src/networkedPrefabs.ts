@@ -7,6 +7,7 @@ import pickup from './prefabs/pickup';
 
 import lemonShark from './prefabs/enemies/lemonShark';
 import blueThing from './prefabs/enemies/blueThing';
+import archer from './prefabs/enemies/archer';
 
 export default {
   player,
@@ -18,4 +19,5 @@ export default {
 
   lemonShark,
   blueThing,
+  archer,
 };
