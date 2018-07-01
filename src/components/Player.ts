@@ -59,6 +59,10 @@ export default class Player extends Component<Options> {
 
     this.playerState = 'dead';
     this.getComponent(TileEntity).cancelMove();
+    this.rpcDie();
+  }
+
+  rpcDie() {
     this.getComponent(SpawningDyingRenderer).die();
   }
 

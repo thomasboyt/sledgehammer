@@ -5,6 +5,7 @@ import Networking, { Snapshot } from './Networking';
 // TODO: replace this with something better?
 import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
+import { RpcMessage } from './NetworkingHost';
 
 type ConnectionState = 'connecting' | 'connected' | 'error';
 
@@ -30,6 +31,8 @@ export default class NetworkingClient extends Networking {
       } else if (msg.type === 'tooManyPlayers') {
         this.connectionState = 'error';
         this.errorReason = 'Room at max capacity';
+      } else if (msg.type === 'rpc') {
+        this.handleRpc(msg.data);
       } else if (msg.type === 'ping') {
         // this.sendToHost({
         //   type: 'pong',
@@ -64,6 +67,11 @@ export default class NetworkingClient extends Networking {
     this.hostPeer.send(JSON.stringify(msg));
   }
 
+  private createNetworkedPrefab(name: string, id: string): GameObject {
+    const prefab = this.getPrefab(name);
+    return this.instantiatePrefab(prefab, id);
+  }
+
   private onSnapshot(snapshot: Snapshot) {
     const unseenIds = new Set(this.networkedObjects.keys());
 
@@ -90,5 +98,30 @@ export default class NetworkingClient extends Networking {
     for (let unseenId of unseenIds) {
       this.pearl.entities.destroy(this.networkedObjects.get(unseenId)!);
     }
+  }
+
+  private handleRpc(rpc: RpcMessage) {
+    const { objectId, componentName, methodName, args } = rpc;
+    const obj = this.networkedObjects.get(objectId);
+
+    if (!obj) {
+      console.warn(
+        `ignoring rpc for nonexistent object -
+        ${rpc.componentName}, ${rpc.methodName}`
+      );
+      return;
+    }
+
+    const component = obj.components.find(
+      (component) => component.constructor.name === componentName
+    );
+
+    if (!component) {
+      throw new Error(
+        `missing component ${component} for rpc message ${methodName}`
+      );
+    }
+
+    (component as any)[methodName](...args);
   }
 }

@@ -46,6 +46,13 @@ interface AddPlayerOpts {
   isLocal?: boolean;
 }
 
+export interface RpcMessage {
+  objectId: string;
+  componentName: string;
+  methodName: string;
+  args: any[];
+}
+
 export default class NetworkingHost extends Networking {
   peerToPlayerId = new Map<Peer.Instance, number>();
   players = new Map<number, NetworkingPlayer>();
@@ -168,6 +175,13 @@ export default class NetworkingHost extends Networking {
     }
   }
 
+  createNetworkedPrefab(name: string): GameObject {
+    const prefab = this.getPrefab(name);
+    const obj = this.instantiatePrefab(prefab);
+    this.wrapRpcFunctions(obj);
+    return obj;
+  }
+
   private sendToPeers(msg: any): void {
     // const serialized = serializeMessage('host', msg);
     const serialized = JSON.stringify(msg);
@@ -198,4 +212,59 @@ export default class NetworkingHost extends Networking {
       objects: serializedObjects,
     };
   }
+
+  private wrapRpcFunctions(object: GameObject) {
+    const components = object.components;
+    const objectId = object.getComponent(NetworkedObject).id;
+
+    for (let component of components) {
+      const componentName = component.constructor.name;
+
+      // TODO: It'd be nice to have some extra guarantees here around ensuring function is not a getter or setter, etc
+      const rpcMethodNames = getRPCClassMethodNames(component);
+
+      for (let methodName of rpcMethodNames) {
+        const originalFn = (component as any)[methodName].bind(component);
+
+        (component as any)[methodName] = (...args: any[]) => {
+          originalFn(...args);
+
+          this.dispatchRpc({
+            objectId,
+            // maybe replace this with a component ID at some point...
+            componentName,
+            methodName,
+            args,
+          });
+        };
+      }
+    }
+  }
+
+  dispatchRpc(opts: RpcMessage) {
+    this.sendToPeers({
+      type: 'rpc',
+      data: opts,
+    });
+  }
+}
+
+function getRecursiveProps(obj: Object): string[] {
+  const prototype = Object.getPrototypeOf(obj);
+  const propNames = Object.getOwnPropertyNames(obj);
+
+  if (!prototype) {
+    return propNames;
+  } else {
+    return propNames.concat(getRecursiveProps(prototype));
+  }
+}
+
+// TODO: Would be nice to have guarantee rpc isn't a getter/setter, etc.
+function getRPCClassMethodNames(obj: any): string[] {
+  const props = getRecursiveProps(obj);
+
+  return props
+    .filter((prop) => prop.startsWith('rpc'))
+    .filter((prop) => obj[prop] instanceof Function);
 }

@@ -30,33 +30,38 @@ interface Opts {
 
 export default abstract class Networking extends Component<Opts> {
   prefabs!: { [_: string]: NetworkedPrefab<any> };
-
   networkedObjects = new Map<string, GameObject>();
-
   localPlayerId?: number;
 
   create(opts: Opts) {
     this.prefabs = opts.prefabs;
   }
 
-  createNetworkedPrefab(prefabName: string, id?: string): GameObject {
+  protected getPrefab(prefabName: string): NetworkedPrefab<any> {
     const prefab = this.prefabs[prefabName];
 
     if (!prefab) {
       throw new Error(`no registered networked prefab with name ${prefabName}`);
     }
 
+    return prefab;
+  }
+
+  protected instantiatePrefab(
+    prefab: NetworkedPrefab<any>,
+    id?: string
+  ): GameObject {
     const components = prefab.createComponents(this.pearl);
 
     const obj = new GameObject({
-      name: prefabName,
-      tags: [prefabName, ...(prefab.tags || [])],
+      name: prefab.type,
+      tags: [prefab.type, ...(prefab.tags || [])],
       zIndex: prefab.zIndex || 0,
       components: [
         ...components,
         new NetworkedObject({
           networking: this,
-          type: prefabName,
+          type: prefab.type,
           serialize: prefab.serialize,
           deserialize: prefab.deserialize,
           id,

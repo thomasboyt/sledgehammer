@@ -214,6 +214,16 @@ export default class BaseEnemy extends Component<null> {
     renderer.die(() => {
       this.pearl.entities.destroy(this.gameObject);
     });
+    this.rpcDie();
+  }
+
+  rpcDie() {
+    if (this.pearl.obj.getComponent(Game).isHost) {
+      return;
+    }
+
+    const renderer = this.getComponent(SpawningDyingRenderer);
+    renderer.die();
   }
 
   render(ctx: CanvasRenderingContext2D) {
