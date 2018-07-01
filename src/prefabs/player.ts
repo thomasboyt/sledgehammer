@@ -14,7 +14,7 @@ import Player from '../components/Player';
 import TileEntity from '../components/TileEntity';
 import NetworkedObject from '../components/networking/NetworkedObject';
 import WrappedEntityRenderer from '../components/WrappedEntityRenderer';
-import SpawnRenderer from '../components/SpawnRenderer';
+import SpawningDyingRenderer from '../components/SpawningDyingRenderer';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 
 import {
@@ -79,7 +79,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       }),
 
       new Player(),
-      new SpawnRenderer(),
+      new SpawningDyingRenderer(),
     ];
   },
 
