@@ -84,8 +84,8 @@ export default class NetworkingHost extends Networking {
       } else if (msg.type === 'keyUp') {
         this.onClientKeyUp(player, msg.data.keyCode);
       } else if (msg.type === 'pong') {
-        // const ping = Date.now() - this.lastPingTime;
-        // this.pings.set(playerId, ping);
+        // const ping = Date.now() - this.lastPingTime; this.pings.set(playerId,
+        // ping);
       }
     });
 
@@ -148,9 +148,9 @@ export default class NetworkingHost extends Networking {
       data: snapshot,
     });
 
-    // TODO: This is wrapped in setImmediate() so that keys aren't unset before everything else's
-    // update() hook is called
-    // This is a decent argument for adding a lateUpdate() hook that happens after update()
+    // TODO: This is wrapped in setImmediate() so that keys aren't unset before
+    // everything else's update() hook is called This is a decent argument for
+    // adding a lateUpdate() hook that happens after update()
     setImmediate(() => {
       for (let player of this.players.values()) {
         if (player.inputter instanceof NetworkedInputter) {
@@ -220,7 +220,8 @@ export default class NetworkingHost extends Networking {
     for (let component of components) {
       const componentName = component.constructor.name;
 
-      // TODO: It'd be nice to have some extra guarantees here around ensuring function is not a getter or setter, etc
+      // TODO: It'd be nice to have some extra guarantees here around ensuring
+      // function is not a getter or setter, etc
       const rpcMethodNames = getRPCClassMethodNames(component);
 
       for (let methodName of rpcMethodNames) {

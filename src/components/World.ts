@@ -217,8 +217,8 @@ export default class World extends Component<null> {
   }
 
   handleCollisions() {
-    // TODO: maybe do this via parent-child relationships if i can figure out how to implement
-    // with networking
+    // TODO: maybe do this via parent-child relationships if i can figure out
+    // how to implement with networking
     const players = this.pearl.entities.all('player');
     const enemies = this.pearl.entities.all('enemy');
     const bullets = this.pearl.entities.all('bullet');
@@ -226,11 +226,12 @@ export default class World extends Component<null> {
 
     const tileMap = this.getComponent(TileMap);
 
-    // BUG: with bullets and pickups, if multiple things are colliding with it, the collision
-    // logic runs TWICE
+    // BUG: with bullets and pickups, if multiple things are colliding with it,
+    // the collision logic runs TWICE
+    //
     // this would mean: 2 players would both get points for defeating an enemy
-    // and more annoyingly, if 2 players get a pickup on the same frame, it spawns TWO PICKUPS,
-    // lol
+    // and more annoyingly, if 2 players get a pickup on the same frame, it
+    // spawns TWO PICKUPS, lol
 
     for (let bullet of bullets) {
       const bulletCollider = bullet.getComponent(PolygonCollider);

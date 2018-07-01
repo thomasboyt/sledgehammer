@@ -90,9 +90,5 @@ export default class SessionUI extends Component<null> {
       const text = isHost ? 'game over :( press R to retry' : 'game over :(';
       ctx.fillText(text, textX, textY);
     }
-
-    // ctx.textAlign = 'left';
-    // const pings = [...state.pings.values()].filter((ping) => !!ping).join(', ');
-    // ctx.fillText(`pings: ${pings}`, 20, 460);
   }
 }

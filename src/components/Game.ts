@@ -14,9 +14,10 @@ export default class Game extends Component<Options> {
   init(opts: Options) {
     this.isHost = opts.isHost;
 
-    // XXX: This is kind of a hack rn because what I actually want is a render tree that translates
-    // rendering relative to the parent Physical
-    // this is: a hell of a lot of work to implement and I don't want to do it right now
+    // XXX: This is kind of a hack rn because what I actually want is a render
+    // tree that translates rendering relative to the parent Physical this is: a
+    // hell of a lot of work to implement and I don't want to do it right now
+    //
     // TODO: write up a doc in the pearl repo about this!
     const center = this.pearl.renderer.getViewCenter();
     this.pearl.renderer.setViewCenter({

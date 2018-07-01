@@ -29,8 +29,8 @@ export default async function initializeClient(roomCode: string) {
     return p;
   }
 
-  // we wait to create the peer until after the websocket is established so the peer can
-  // immediately send the signal upon generation
+  // we wait to create the peer until after the websocket is established so the
+  // peer can immediately send the signal upon generation
   let peer: Peer.Instance;
 
   const groovejet = new GroovejetClient({

@@ -23,8 +23,9 @@ export class OffscreenCanvas {
   }
 
   /*
-   * Okay so this is super confusing but: we have to render this at the "internal" resolution so it
-   * can be later scaled UP to the "native" resolution
+   * Okay so this is super confusing but: we have to render this at the
+   * "internal" resolution so it can be later scaled UP to the "native"
+   * resolution
    */
   render(ctx: CanvasRenderingContext2D) {
     ctx.drawImage(this.canvas, 0, 0, this.width, this.height);
@@ -32,9 +33,9 @@ export class OffscreenCanvas {
 }
 
 /*
- * Creates a cached reducer that renders to an offscreen canvas. Does a naive equality check on
- * passed args, so works well with immutable state. Also will always re-render if scaleFactor
- * changes.
+ * Creates a cached reducer that renders to an offscreen canvas. Does a naive
+ * equality check on passed args, so works well with immutable state. Also will
+ * always re-render if scaleFactor changes.
  */
 export default function createCachedRender(
   width: number,

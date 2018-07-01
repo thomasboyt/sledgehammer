@@ -24,7 +24,8 @@ export default async function initializeHost() {
     });
 
     p.on('signal', (signalData) => {
-      // signaling data has been created for the host, so it needs to be passed back to the server
+      // signaling data has been created for the host, so it needs to be passed
+      // back to the server
       console.log('SIGNAL', JSON.stringify(signalData));
       onSignal(signalData);
     });

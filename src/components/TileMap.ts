@@ -5,9 +5,6 @@ interface Options {
   tileSize: number;
 }
 
-/**
- * Accepts
- */
 export default class TileMap<T> extends Component<Options> {
   /**
    * two dimensional array of tiles, indexed by [y][x]
@@ -67,7 +64,6 @@ export default class TileMap<T> extends Component<Options> {
       }
     }
   }
-
   /**
    * Test whether some Collider is intersecting with one of the tiles passed
    * This is hacky as hell rn because of how collision was implemented

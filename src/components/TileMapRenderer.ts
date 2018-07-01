@@ -10,9 +10,9 @@ export default class TileMapRenderer extends Component<null> {
     return tileMap as TileMap<Tile>;
   }
 
-  // TODO: maybe move this util inside this.pearl.renderer or something? so can access width/height.
-  // tricky bit is this.pearl isn't set until init so need to be able to defer creation until later
-  // maybe a good use for annotations?
+  // TODO: maybe move this util inside this.pearl.renderer or something? so can
+  // access width/height. tricky bit is this.pearl isn't set until init so need
+  // to be able to defer creation until later maybe a good use for annotations?
   renderTiles = createCachedRender(
     WIDTH,
     HEIGHT,
@@ -33,7 +33,8 @@ export default class TileMapRenderer extends Component<null> {
     // TODO: tiles is getting replaced every tick on the client...
     this.renderTiles(ctx, 1, this.tileMap.tiles);
 
-    // render borders, same color as BG, around edges, to prevent displaying wrapped entities
+    // render borders, same color as BG, around edges, to prevent displaying
+    // wrapped entities
     const { tileSize, worldSize } = this.tileMap;
     const width = worldSize!.x * tileSize;
     const height = worldSize!.y * tileSize;

@@ -22,7 +22,8 @@ export default class BulletExplosion extends Component<null> {
       this.particles.push({
         center: { x: 0, y: 0 },
 
-        // there are 2 radians in a circle, so 0 to 2 radians gives us a random angle
+        // there are 2 radians in a circle, so 0 to 2 radians gives us a random
+        // angle
         angle: Math.random() * 2 * Math.PI,
 
         speed: PARTICLE_SPEED_BASE + Math.random() * PARTICLE_SPEED_BASE,

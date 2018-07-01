@@ -87,9 +87,10 @@ export default class ChaseEnemy extends BaseEnemy {
       y: next[1],
     };
 
-    // XXX: The pathfinding grid handles wrapping by actually wrapping the coordinates, which is
-    // cool, but unfortunately, TileEntity.move() wants moving "off screen" to be handled by
-    // actually passing off-screen coordinates. This bit "unwraps" the returned coordinates
+    // XXX: The pathfinding grid handles wrapping by actually wrapping the
+    // coordinates, which is cool, but unfortunately, TileEntity.move() wants
+    // moving "off screen" to be handled by actually passing off-screen
+    // coordinates. This bit "unwraps" the returned coordinates
     const curPos = tileEntity.tilePosition;
     const worldSize = tileEntity.tileMap.worldSize!;
 

@@ -33,7 +33,8 @@ export default class SpawningDyingRenderer extends Component<null> {
     let canvas: HTMLCanvasElement = sprite.canvas;
 
     if (anim.masked) {
-      // TODO: I don't like the indirection here, maybe add like animationManager.getCanvas()
+      // TODO: I don't like the indirection here, maybe add like
+      // animationManager.getCanvas()
       canvas = document.createElement('canvas');
       canvas.width = sprite.width;
       canvas.height = sprite.height;

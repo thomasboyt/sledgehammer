@@ -41,7 +41,6 @@ class MoveTween {
 
 export default class TileEntity extends Component<null> {
   moveTween?: MoveTween;
-  // tileMap!: TileMap<any>;
 
   world?: GameObject;
 

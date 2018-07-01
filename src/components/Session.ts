@@ -28,8 +28,8 @@ export default class Session extends Component<null> {
   gameState: GameState = 'waiting';
   startTime?: number;
 
-  // xxx: this could be a map or something but this serializes easier and i don't think finding
-  // one item out of four is gonna be a lot of overhead
+  // xxx: this could be a map or something but this serializes easier and i
+  // don't think finding one item out of four is gonna be a lot of overhead
   players: SessionPlayer[] = [];
 
   create() {

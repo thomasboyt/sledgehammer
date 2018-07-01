@@ -31,7 +31,9 @@ export default class Bullet extends Component<null> {
     const originPhys = this.origin.getComponent(Physical);
     const originCollider = this.origin.getComponent(PolygonCollider);
 
-    // (3px padding is kinda arbitrary and may need to be shifted if velocities of players or bullets are changed since it's possible for a player to "catch up" if they shoot in direction they are moving)
+    // (3px padding is kinda arbitrary and may need to be shifted if velocities
+    // of players or bullets are changed since it's possible for a player to
+    // "catch up" if they shoot in direction they are moving)
     phys.center = {
       x:
         originPhys.center.x +

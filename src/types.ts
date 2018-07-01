@@ -9,8 +9,8 @@ export enum ZIndex {
   Enemy,
   Player,
   Bullet,
-  // tile walls and the border around the tile map that prevents wrapped entities from rendering on
-  // edges
+  // tile walls and the border around the tile map that prevents wrapped
+  // entities from rendering on edges
   World,
   // bullet explosions show up above everything
   BulletExplosion,
