@@ -47,3 +47,20 @@ also a big thing here is potentially using udp-like semantics, since webrtc give
 #### how to maintain object hierarchy
 
 goals: allow e.g. world to own entities, make cleanup of scenes easier
+
+#### thoughts on collision
+
+i'd like **semi-automated collision stuff**. basically have some concept of collision layers, and some sort of collision protocol? and _possibly_ automated collision resolution (by preventing collisions from happening in the first place)?
+
+* collision protocol
+  * so a preresiquite for automated collision pairing is that I need to be able to say `obj1.isColliding(obj2)`, which isn't a concept that currently exists right now
+  * basically need an `obj.getCollider()`
+  * maybe this is something like `obj.registerCollider(component)`, then `obj.getCollider()`
+  * `obj.registerCollider` could happen within collider creation. could also check for existing collider and error out if there is one
+  * then if `obj1.isColliding(obj2)` is passed, it actually calls `obj1.getCollider().isColliding(obj2.getCollider())`
+  * this does mean that in some cases you'd end up with "obj1's collider knows how to handle obj2's collider, but not vice versa", which is really tricky :\
+  * maybe won't be an issue if tileMap walls get turned into collidable entities...
+* can _maybe_ consider automated collision resolution but it'd be a stretch, especially in a tile-based world
+  * would probably have to be a move-and-collide strategy like godot? http://docs.godotengine.org/en/3.0/tutorials/physics/physics_introduction.html
+  * this pacman unity tutorial also sorta relevant https://noobtuts.com/unity/2d-pacman-game
+* collision layers...
