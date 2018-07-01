@@ -16,17 +16,24 @@ import Bullet from '../Bullet';
 import { addVector, getRandomInt, randomChoice } from '../../util/math';
 import TileMap from '../TileMap';
 import Player from '../Player';
-import SpawnRenderer from '../SpawnRenderer';
+import SpawningDyingRenderer from '../SpawningDyingRenderer';
 
 const MOVE_TIME_MS = 320;
 
+export type EnemyState = 'spawning' | 'alive' | 'dead';
+
 export default class BaseEnemy extends Component<null> {
   facing: Coordinates = { x: 1, y: 0 };
+  state: EnemyState = 'spawning';
 
   init() {
     const anim = this.getComponent(AnimationManager);
     anim.set('walking');
     anim.setScale(2, 2);
+
+    this.getComponent(SpawningDyingRenderer).spawn(() => {
+      this.state = 'alive';
+    });
   }
 
   // TODO: dedupe this from Player
@@ -50,7 +57,7 @@ export default class BaseEnemy extends Component<null> {
       return;
     }
 
-    if (this.getComponent(SpawnRenderer).spawning) {
+    if (this.state !== 'alive') {
       return;
     }
 
@@ -197,5 +204,13 @@ export default class BaseEnemy extends Component<null> {
     });
 
     return collidingEntities;
+  }
+
+  die() {
+    this.state = 'dead';
+    const renderer = this.getComponent(SpawningDyingRenderer);
+    renderer.die(() => {
+      this.pearl.entities.destroy(this.gameObject);
+    });
   }
 }

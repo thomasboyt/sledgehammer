@@ -17,7 +17,7 @@ import createCachedRender from '../../src/util/createCachedRender';
 import { WIDTH, HEIGHT } from '../constants';
 import NetworkingClient from './networking/NetworkingClient';
 import Networking from './networking/Networking';
-import SpawnRenderer from './SpawnRenderer';
+import SpawningDyingRenderer from './SpawningDyingRenderer';
 
 const MOVE_TIME_MS = 120;
 const BULLET_SPEED = 0.2;
@@ -46,7 +46,7 @@ export default class Player extends Component<Options> {
 
     this.getComponent(AnimationManager).mask([0, 0, 0], this.color);
 
-    this.getComponent(SpawnRenderer).onFinish.add(() => {
+    this.getComponent(SpawningDyingRenderer).spawn(() => {
       this.playerState = 'alive';
     });
   }
@@ -54,7 +54,7 @@ export default class Player extends Component<Options> {
   die() {
     this.playerState = 'dead';
     this.getComponent(TileEntity).cancelMove();
-    this.getComponent(AnimationManager).isVisible = false;
+    this.getComponent(SpawningDyingRenderer).die();
   }
 
   setFacing(coordinates: Coordinates) {
@@ -161,31 +161,5 @@ export default class Player extends Component<Options> {
       x: this.facing.x * BULLET_SPEED,
       y: this.facing.y * BULLET_SPEED,
     };
-  }
-
-  render(ctx: CanvasRenderingContext2D) {
-    if (this.playerState === 'dead') {
-      const phys = this.getComponent(Physical);
-      const collider = this.getComponent(PolygonCollider);
-      const width = collider.width!;
-      const height = collider.height!;
-
-      ctx.strokeStyle = `rgb(${this.color!.join(',')})`;
-      ctx.translate(phys.center.x, phys.center.y);
-
-      // draw an x
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(-width / 2 + 3, -height / 2 + 3);
-      ctx.lineTo(width / 2 - 3, height / 2 - 3);
-      ctx.closePath();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(-width / 2 + 3, height / 2 - 3);
-      ctx.lineTo(width / 2 - 3, -height / 2 + 3);
-      ctx.closePath();
-      ctx.stroke();
-    }
   }
 }

@@ -21,7 +21,7 @@ import {
 } from '../../serializers/serializePhysical';
 import BaseEnemy from '../../components/enemies/BaseEnemy';
 import { ZIndex } from '../../types';
-import SpawnRenderer from '../../components/SpawnRenderer';
+import SpawningDyingRenderer from '../../components/SpawningDyingRenderer';
 
 interface EnemySnapshot {
   physical: PhysicalSnapshot;
@@ -70,7 +70,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
           },
         }),
         new opts.EnemyComponent(),
-        new SpawnRenderer(),
+        new SpawningDyingRenderer(),
       ];
     },
 

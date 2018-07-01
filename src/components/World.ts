@@ -21,7 +21,6 @@ import { getRandomInt, randomChoice } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import Delegate from '../util/Delegate';
-import SpawnRenderer from './SpawnRenderer';
 
 export default class World extends Component<null> {
   sessionObj?: GameObject;
@@ -220,9 +219,9 @@ export default class World extends Component<null> {
       for (let enemy of enemies) {
         if (bulletCollider.isColliding(enemy.getComponent(PolygonCollider))) {
           // destroy enemy
-          if (!enemy.getComponent(SpawnRenderer).spawning) {
+          if (enemy.getComponent(BaseEnemy).state === 'alive') {
             bullet.getComponent(Bullet).explode();
-            this.pearl.entities.destroy(enemy);
+            enemy.getComponent(BaseEnemy).die();
             continue;
           }
         }

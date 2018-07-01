@@ -1,26 +1,31 @@
 import { Component, AnimationManager, Physical } from 'pearl';
 import { lerp, getRandomInt, getVectorComponents } from '../util/math';
-import Delegate from '../util/Delegate';
 
 interface Pixel {
   startX: number;
   startY: number;
   destX: number;
   destY: number;
-  rgba: [number, number, number, number];
+  rgb: [number, number, number];
 }
 
-export default class SpawnRenderer extends Component<null> {
-  spawning = true;
+const SPAWN_TIME_MS = 1000;
+const DIE_TIME_MS = 1000;
 
-  onFinish = new Delegate();
-
+export default class SpawningDyingRenderer extends Component<null> {
+  private _state: 'spawning' | 'dying' | null = null;
   private _timeElapsedMs = 0;
-  private _targetTimeMs = 1000;
+  private _targetTimeMs = 0;
 
   private _pixels: Pixel[] = [];
+  private _onFinishCb?: () => void;
 
-  init() {
+  private startAnimation(targetTime: number) {
+    this.isVisible = true;
+    this._timeElapsedMs = 0;
+    this._targetTimeMs = targetTime;
+    this._pixels = [];
+
     const anim = this.getComponent(AnimationManager);
     anim.isVisible = false;
     const sprite = anim.getSprite();
@@ -46,14 +51,15 @@ export default class SpawnRenderer extends Component<null> {
       .getImageData(0, 0, sprite.width, sprite.height);
 
     for (let i = 0; i < imageData.data.length; i += 4) {
-      const rgba: [number, number, number, number] = [
+      const rgb: [number, number, number] = [
         imageData.data[i],
         imageData.data[i + 1],
         imageData.data[i + 2],
-        imageData.data[i + 3],
       ];
 
-      if (rgba[3] > 0) {
+      const alpha = imageData.data[i + 3];
+
+      if (alpha > 0) {
         // this is a pixel that needs to be rendered
         const pixelIdx = i / 4;
         const pixelX = pixelIdx % sprite.width;
@@ -67,7 +73,7 @@ export default class SpawnRenderer extends Component<null> {
         };
 
         const angleFromCenter = Math.atan2(vector.y, vector.x);
-        const len = getRandomInt(0, 20);
+        const len = getRandomInt(0, 25);
         const startPoint = getVectorComponents(len, angleFromCenter);
 
         this._pixels.push({
@@ -75,14 +81,26 @@ export default class SpawnRenderer extends Component<null> {
           startY: startPoint.y,
           destX: pixelX,
           destY: pixelY,
-          rgba,
+          rgb,
         });
       }
     }
   }
 
+  spawn(cb?: () => void) {
+    this._state = 'spawning';
+    this._onFinishCb = cb;
+    this.startAnimation(SPAWN_TIME_MS);
+  }
+
+  die(cb?: () => void) {
+    this._state = 'dying';
+    this._onFinishCb = cb;
+    this.startAnimation(DIE_TIME_MS);
+  }
+
   update(dt: number) {
-    if (!this.spawning) {
+    if (!this._state) {
       return;
     }
 
@@ -93,11 +111,17 @@ export default class SpawnRenderer extends Component<null> {
     }
   }
 
-  _onFinish() {
-    this.spawning = false;
-    this.getComponent(AnimationManager).isVisible = true;
+  private _onFinish() {
+    if (this._state === 'spawning') {
+      this.getComponent(AnimationManager).isVisible = true;
+    }
+
+    this._state = null;
     this.isVisible = false;
-    this.onFinish.call({});
+
+    if (this._onFinishCb) {
+      this._onFinishCb();
+    }
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -112,10 +136,17 @@ export default class SpawnRenderer extends Component<null> {
     const { width, height } = anim.getSprite();
 
     for (let pixel of this._pixels) {
-      const f = this._timeElapsedMs / this._targetTimeMs;
+      let f = this._timeElapsedMs / this._targetTimeMs;
+
+      if (this._state === 'dying') {
+        f = 1 - f;
+      }
+
       const x = lerp(pixel.startX, pixel.destX - width / 2, f);
       const y = lerp(pixel.startY, pixel.destY - height / 2, f);
-      ctx.fillStyle = `rgba(${pixel.rgba.join(',')})`;
+      const alpha = f;
+      const rgba = [...pixel.rgb, alpha];
+      ctx.fillStyle = `rgba(${rgba.join(',')})`;
       ctx.fillRect(x, y, 1, 1);
     }
   }
