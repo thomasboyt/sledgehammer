@@ -1,14 +1,37 @@
-[ ] instead of diffing against snapshot, add explicit createObject() and removeObject() messages
-[ ] simplify serialization logic
+### fun game todos
+
+- [ ] move bottom-screen text to mid-screen
+- [ ] initial enemies should spawn in after players
+- [ ] a few more enemy types?
+  - enemies that take multiple hits
+- [ ] more enemy interactions
+- [ ] power-ups
+  - bubble shield
+- [ ] add more levels
+- [ ] add difficulty curve
+  - every level: more enemies to start with, faster spawning
+  - different distributions of enemy types?
+
+### architecture
+
+- [ ] BIG BUG: things added in update() get rendered BEFORE init() IS CALLED BY THE FIRST update() AAAAAAAAA
+  - This is why things are blinking into existence in spawn
+  - options:
+    - don't render uninitialized entities
+    - don't include uninitialized entities in all()?
+    - add() could just add to a queue that gets added on the next frame
+    - back out initialization system?
+- [ ] instead of diffing against snapshot, add explicit createObject() and removeObject() messages
+- [ ] simplify serialization logic
   - using this `component.constructor.name` trick, maybe?
   - basically have like `const syncList: (keyof )[] = ['center', 'vel', 'angle']` and then pass this syncList to the prefab somehow?
-[ ] improve prefab system
+- [ ] improve prefab system
   - pass arguments to prefab constructor?
-[ ] automagically handle references to other objects
+- [ ] automagically handle references to other objects
   - on host: `if (typeof component[field] === 'object') { serialized[field] = networkIdFor(component[field])}`
   - on client: IDK this is trickier :(
   - maybe need some sort of decorator/metadata magic...
-[ ] handle parent/child relationships on networked objects
+- [ ] handle parent/child relationships on networked objects
   - also probably just use object ID
   - update pearl to allow setting a child/parent relationship without addChild()?
   - but also update createNetworkedPrefab() to accept a parent object
