@@ -11,13 +11,17 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /\.(png|jpg|gif)$/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {},
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.(png|jpg|gif|ttf)$/,
+        use: {
+          loader: 'url-loader',
+          options: {
+            limit: 50000,
           },
-        ],
+        },
       },
     ],
   },

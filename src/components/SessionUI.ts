@@ -1,7 +1,7 @@
 import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Game from './Game';
-import { WIDTH } from '../constants';
+import { WIDTH, TILE_SIZE, WORLD_SIZE_HEIGHT } from '../constants';
 import Session from './Session';
 import NetworkingClient from './networking/NetworkingClient';
 
@@ -18,7 +18,8 @@ export default class SessionUI extends Component<null> {
     ctx.save();
 
     ctx.textBaseline = 'top';
-    const y = 400; // nice
+    ctx.font = '24px "1980XX", monospace';
+    const y = 400;
 
     const players = this.getComponent(Session).players;
 
@@ -37,7 +38,7 @@ export default class SessionUI extends Component<null> {
         ctx.fillStyle = colorStyle;
       }
 
-      ctx.fillText(`player ${player.slot}`, centerX, y);
+      ctx.fillText(`PLAYER ${player.slot}`, centerX, y);
       ctx.fillText(`${player.score}`, centerX, y + 20);
     }
 
@@ -57,36 +58,42 @@ export default class SessionUI extends Component<null> {
     const { isHost } = this.pearl.obj.getComponent(Game);
     const { gameState, startTime } = this.getComponent(Session);
 
-    ctx.font = '16px monospace';
+    ctx.font = '32px "1980XX", monospace';
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
 
-    const textX = this.pearl.renderer.getViewSize().x / 2;
-    const textY = 470;
-
     this.renderScores(ctx);
 
+    ctx.translate(0, -pos.y);
+
+    const textX = this.pearl.renderer.getViewSize().x / 2;
+    const textY = (WORLD_SIZE_HEIGHT / 2) * TILE_SIZE - 2;
+    ctx.textBaseline = 'middle';
+
+    let text: string | undefined;
+
     if (gameState === 'waiting') {
-      let text: string;
-
       if (isHost) {
-        const connected = this.pearl.obj.getComponent(NetworkingHost).players
-          .size;
-        text = `press space to start (${connected} connected)`;
+        text = `SLEDGEHAMMER\npress space to start`;
       } else {
-        text = 'waiting for host to start game...';
+        text = 'SLEDGEHAMMER\nwaiting for host to start game...';
       }
-
-      ctx.fillText(text, textX, textY);
     } else if (gameState === 'starting') {
-      const text = `${Math.ceil((startTime! - Date.now()) / 1000)}...`;
-      ctx.fillText(text, textX, textY);
+      text = `${Math.ceil((startTime! - Date.now()) / 1000)}...`;
     } else if (gameState === 'cleared') {
-      const text = 'you won!';
-      ctx.fillText(text, textX, textY);
+      text = 'you won!';
     } else if (gameState === 'gameOver') {
-      const text = isHost ? 'game over :( press R to retry' : 'game over :(';
-      ctx.fillText(text, textX, textY);
+      text = isHost ? 'game over :(\npress R to retry' : 'game over :(';
+    }
+
+    if (text) {
+      const lines = text.split('\n');
+      const lineHeight = 20;
+      const firstLineY = textY - (lines.length * lineHeight) / 2;
+      ctx.translate(0, textY - ((lines.length - 1) * lineHeight) / 2);
+      for (let i = 0; i < lines.length; i += 1) {
+        ctx.fillText(lines[i], textX, lineHeight * i);
+      }
     }
   }
 }

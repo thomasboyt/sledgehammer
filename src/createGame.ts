@@ -1,3 +1,4 @@
+require('../styles/font.css');
 import { createPearl, AudioManager } from 'pearl';
 import * as Peer from 'simple-peer';
 
