@@ -54,11 +54,8 @@ export default class World extends Component<null> {
       this.addPlayer(player);
     }
 
-    this.runCoroutine(function*(this: World) {
-      yield this.pearl.async.waitMs(500);
-      this.spawnEnemies();
-      this.spawnNextPickup();
-    });
+    this.spawnEnemies();
+    this.spawnNextPickup();
 
     if (SPAWN_MORE) {
       this.runCoroutine(function*(this: World) {
@@ -66,6 +63,7 @@ export default class World extends Component<null> {
           this.sessionObj!.getComponent(Session).gameState === 'playing';
 
         yield this.pearl.async.waitMs(3000);
+
         while (shouldSpawn()) {
           this.spawnEnemy();
           yield this.pearl.async.waitMs(3000);
@@ -133,7 +131,7 @@ export default class World extends Component<null> {
 
     tiles.forEach((tilePos) => {
       this.runCoroutine(function*(this: World) {
-        yield this.pearl.async.waitMs(getRandomInt(0, 2000));
+        yield this.pearl.async.waitMs(getRandomInt(500, 1000));
         this.addEnemy(tilePos);
       });
     });
@@ -203,12 +201,7 @@ export default class World extends Component<null> {
       return;
     }
 
-    const enemies = this.pearl.entities.all('enemy');
-
-    if (enemies.length === 0) {
-      // you done won
-      this.sessionObj!.getComponent(Session).gameState = 'cleared';
-    }
+    // TODO: WHATEVER THE WIN STATE ENDS UP BEING
 
     const allPlayersDead = [...this.players.values()].every(
       (player) => player.getComponent(Player).playerState === 'dead'
