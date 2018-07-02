@@ -76,7 +76,7 @@ export default class SessionUI extends Component<null> {
       if (isHost) {
         text = `SLEDGEHAMMER\npress space to start`;
       } else {
-        text = 'SLEDGEHAMMER\nwaiting for host to start game...';
+        text = 'SLEDGEHAMMER\nwaiting for host\nto start game...';
       }
     } else if (gameState === 'starting') {
       text = `${Math.ceil((startTime! - Date.now()) / 1000)}...`;
