@@ -15,7 +15,7 @@ import TileMap from './TileMap';
 import { getTilesFromString } from '../levels';
 import Game from './Game';
 import Bullet from './Bullet';
-import { randomChoice } from '../util/math';
+import { randomChoice, getRandomInt } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import Delegate from '../util/Delegate';
@@ -54,22 +54,23 @@ export default class World extends Component<null> {
       this.addPlayer(player);
     }
 
-    this.spawnEnemies();
-    this.spawnNextPickup();
+    this.runCoroutine(function*(this: World) {
+      yield this.pearl.async.waitMs(500);
+      this.spawnEnemies();
+      this.spawnNextPickup();
+    });
 
     if (SPAWN_MORE) {
-      this.pearl.async.schedule(
-        function*(this: World) {
-          const shouldSpawn = () =>
-            this.gameObject.state !== 'destroyed' &&
-            this.sessionObj!.getComponent(Session).gameState === 'playing';
+      this.runCoroutine(function*(this: World) {
+        const shouldSpawn = () =>
+          this.sessionObj!.getComponent(Session).gameState === 'playing';
 
-          while (shouldSpawn()) {
-            this.spawnEnemy();
-            yield this.pearl.async.waitMs(3000);
-          }
-        }.bind(this)
-      );
+        yield this.pearl.async.waitMs(3000);
+        while (shouldSpawn()) {
+          this.spawnEnemy();
+          yield this.pearl.async.waitMs(3000);
+        }
+      });
     }
   }
 
@@ -129,8 +130,12 @@ export default class World extends Component<null> {
     const availableTiles = this.getCandidateTiles();
 
     const tiles = sampleSize(availableTiles, enemyCount);
+
     tiles.forEach((tilePos) => {
-      this.addEnemy(tilePos);
+      this.runCoroutine(function*(this: World) {
+        yield this.pearl.async.waitMs(getRandomInt(0, 2000));
+        this.addEnemy(tilePos);
+      });
     });
   }
 

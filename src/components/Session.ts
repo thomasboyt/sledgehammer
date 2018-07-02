@@ -66,16 +66,14 @@ export default class Session extends Component<null> {
       player.score = 0;
     }
 
-    this.pearl.async.schedule(
-      function*(this: Session) {
-        yield this.pearl.async.waitMs(START_COUNTDOWN_MS);
+    this.runCoroutine(function*(this: Session) {
+      yield this.pearl.async.waitMs(START_COUNTDOWN_MS);
 
-        this.gameState = 'playing';
+      this.gameState = 'playing';
 
-        const world = this.worldObj.getComponent(World);
-        world.start();
-      }.bind(this)
-    );
+      const world = this.worldObj.getComponent(World);
+      world.start();
+    });
   }
 
   addPlayer(networkingPlayer: NetworkingPlayer) {
