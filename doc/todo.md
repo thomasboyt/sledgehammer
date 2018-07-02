@@ -1,7 +1,8 @@
 ### fun game todos
 
-- [ ] move bottom-screen text to mid-screen
-- [ ] initial enemies should spawn in after players
+- [x] move bottom-screen text to mid-screen
+- [x] initial enemies should spawn in after players
+- [x] add slight delay for shooting enemies
 - [ ] a few more enemy types?
   - enemies that take multiple hits
 - [ ] more enemy interactions

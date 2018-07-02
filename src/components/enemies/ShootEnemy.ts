@@ -3,23 +3,20 @@ import TileEntity from '../TileEntity';
 import NetworkingHost from '../networking/NetworkingHost';
 import Bullet from '../Bullet';
 import Player from '../Player';
+import { Physical } from 'pearl';
 
 const ENEMY_BULLET_SPEED = 0.1;
+const FIRE_THROTTLE_MS = 1500;
 
 export default class ShootEnemy extends BaseEnemy {
-  timeSinceLastShot = 0;
+  private didShoot: boolean = false;
+  private seeEntity: boolean = false;
 
   updateAlive(dt: number) {
     const tileEntity = this.getComponent(TileEntity);
 
     if (!tileEntity.isMoving) {
       this.nextMove();
-    }
-
-    this.timeSinceLastShot += dt;
-
-    if (this.timeSinceLastShot < 1500) {
-      return;
     }
 
     const entities = this.getEntitiesInSightline(10, ['player', 'enemy']);
@@ -35,21 +32,41 @@ export default class ShootEnemy extends BaseEnemy {
     });
 
     if (aliveEntities.length) {
+      this.seeEntity = true;
       this.shoot();
+    } else {
+      this.seeEntity = false;
     }
   }
 
   shoot() {
-    const bullet = this.pearl.obj
-      .getComponent(NetworkingHost)
-      .createNetworkedPrefab('bullet');
+    if (this.didShoot) {
+      return;
+    }
 
-    bullet.getComponent(Bullet).shoot({
-      originObject: this.gameObject,
-      facing: this.facing,
-      speed: ENEMY_BULLET_SPEED,
+    this.didShoot = true;
+
+    this.runCoroutine(function*(this: ShootEnemy) {
+      yield this.pearl.async.waitMs(300);
+
+      if (this.state !== 'alive' || !this.seeEntity) {
+        this.didShoot = false;
+        return;
+      }
+
+      const bullet = this.pearl.obj
+        .getComponent(NetworkingHost)
+        .createNetworkedPrefab('bullet');
+
+      bullet.getComponent(Bullet).shoot({
+        originObject: this.gameObject,
+        facing: this.facing,
+        speed: ENEMY_BULLET_SPEED,
+      });
+
+      yield this.pearl.async.waitMs(FIRE_THROTTLE_MS);
+
+      this.didShoot = false;
     });
-
-    this.timeSinceLastShot = 0;
   }
 }
