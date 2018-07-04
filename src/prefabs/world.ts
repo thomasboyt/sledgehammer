@@ -7,6 +7,7 @@ import { ZIndex } from '../types';
 
 interface WorldSnapshot {
   tiles: string[][];
+  wallColor?: string;
 }
 
 const world: NetworkedPrefab<WorldSnapshot> = {
@@ -26,11 +27,15 @@ const world: NetworkedPrefab<WorldSnapshot> = {
 
   serialize(obj: GameObject): WorldSnapshot {
     const map: TileMap<any> = obj.getComponent(TileMap);
-    return { tiles: map.tiles! };
+    const renderer = obj.getComponent(TileMapRenderer);
+    return { tiles: map.tiles!, wallColor: renderer.wallColor };
   },
 
   deserialize(obj: GameObject, snapshot: WorldSnapshot) {
     const map = obj.getComponent(TileMap);
+    const renderer = obj.getComponent(TileMapRenderer);
+
+    renderer.wallColor = snapshot.wallColor;
 
     if (map.tiles) {
       return;

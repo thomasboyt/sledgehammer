@@ -12,13 +12,14 @@ import Player from './Player';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
 import TileMap from './TileMap';
-import { getTilesFromString } from '../levels';
+import { LevelData } from '../levels';
 import Game from './Game';
 import Bullet from './Bullet';
 import { randomChoice, getRandomInt } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import Delegate from '../util/Delegate';
+import TileMapRenderer from './TileMapRenderer';
 
 const ENEMY_COUNT = 50;
 const ENEMY_TYPES = ['archer', 'lemonShark', 'blueThing'];
@@ -34,16 +35,17 @@ export default class World extends Component<null> {
 
   onPlayerGotPickup = new Delegate<{ playerId: number }>();
 
-  loadTileMap(levelTiles: string) {
+  loadLevel(level: LevelData) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
-    const tiles = getTilesFromString(levelTiles);
-    tileMap.setTiles(tiles);
+    tileMap.setTiles(level.tiles);
 
     tileMap.forEachTile(({ x, y }, value) => {
       if (value === Tile.Spawn) {
         this.spawns.push({ x, y });
       }
     });
+
+    this.getComponent(TileMapRenderer).wallColor = level.color;
   }
 
   start() {

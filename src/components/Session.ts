@@ -1,6 +1,6 @@
 import { Component, GameObject, Keys } from 'pearl';
 import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
-import { levelTiles } from '../levels';
+import { levels } from '../levels';
 import Game from './Game';
 import World from './World';
 import { START_COUNTDOWN_MS } from '../constants';
@@ -51,7 +51,7 @@ export default class Session extends Component<null> {
 
     const world = this.worldObj.getComponent(World);
     world.sessionObj = this.gameObject;
-    world.loadTileMap(levelTiles);
+    world.loadLevel(levels[0]);
 
     world.onPlayerGotPickup.add(this.handlePlayerGotPickup.bind(this));
   }

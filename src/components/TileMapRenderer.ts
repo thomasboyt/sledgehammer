@@ -5,6 +5,8 @@ import { Tile } from '../types';
 import { WIDTH, HEIGHT } from '../constants';
 
 export default class TileMapRenderer extends Component<null> {
+  wallColor?: string;
+
   get tileMap(): TileMap<Tile> {
     const tileMap = this.getComponent(TileMap);
     return tileMap as TileMap<Tile>;
@@ -17,7 +19,7 @@ export default class TileMapRenderer extends Component<null> {
     WIDTH,
     HEIGHT,
     (ctx: CanvasRenderingContext2D) => {
-      ctx.fillStyle = 'yellow';
+      ctx.fillStyle = this.wallColor!;
 
       const { tileSize } = this.tileMap;
 
