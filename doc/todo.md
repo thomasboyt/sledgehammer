@@ -3,6 +3,9 @@
 - [x] move bottom-screen text to mid-screen
 - [x] initial enemies should spawn in after players
 - [x] add slight delay for shooting enemies
+- [x] add a ready-up system
+  - shows ready state under the player
+  - host can ignore?
 - [ ] a few more enemy types?
   - enemies that take multiple hits
 - [ ] more enemy interactions
@@ -15,13 +18,6 @@
 
 ### architecture
 
-- [ ] BIG BUG: things added in update() get rendered BEFORE init() IS CALLED BY THE FIRST update() AAAAAAAAA
-  - This is why things are blinking into existence in spawn
-  - options:
-    - don't render uninitialized entities
-    - don't include uninitialized entities in all()?
-    - add() could just add to a queue that gets added on the next frame
-    - back out initialization system?
 - [ ] instead of diffing against snapshot, add explicit createObject() and removeObject() messages
 - [ ] simplify serialization logic
   - using this `component.constructor.name` trick, maybe?

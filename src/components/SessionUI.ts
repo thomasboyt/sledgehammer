@@ -2,16 +2,20 @@ import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Game from './Game';
 import { WIDTH, TILE_SIZE, WORLD_SIZE_HEIGHT } from '../constants';
-import Session from './Session';
+import Session, { SessionPlayer } from './Session';
 import NetworkingClient from './networking/NetworkingClient';
 
 export default class SessionUI extends Component<null> {
-  private getLocalPlayerId(): number {
-    // TODO: make this a generic util that lives on... idk, game?
+  private getLocalPlayer(): SessionPlayer | undefined {
+    // TODO: make this a generic util that lives on... idk, session?
     const networking = (this.pearl.obj.maybeGetComponent(NetworkingHost) ||
       this.pearl.obj.maybeGetComponent(NetworkingClient))!;
 
-    return networking.localPlayerId!;
+    const id = networking.localPlayerId;
+
+    return this.getComponent(Session).players.find(
+      (player) => id === player.id
+    );
   }
 
   renderScores(ctx: CanvasRenderingContext2D) {
@@ -23,14 +27,14 @@ export default class SessionUI extends Component<null> {
 
     const players = this.getComponent(Session).players;
 
-    const localPlayerId = this.getLocalPlayerId();
+    const localPlayer = this.getLocalPlayer()!;
 
     for (let player of players) {
       const centerX = (WIDTH / 4) * player.slot - WIDTH / 8;
 
       const colorStyle = `rgb(${player.color.join(',')})`;
 
-      if (player.id === localPlayerId) {
+      if (player === localPlayer) {
         ctx.fillStyle = colorStyle;
         ctx.fillRect(centerX - WIDTH / 8 + 8, y - 5, WIDTH / 4 - 16, 48);
         ctx.fillStyle = 'black';
@@ -40,6 +44,16 @@ export default class SessionUI extends Component<null> {
 
       ctx.fillText(`PLAYER ${player.slot}`, centerX, y);
       ctx.fillText(`${player.score}`, centerX, y + 20);
+
+      ctx.fillStyle = 'white';
+
+      if (this.getComponent(Session).gameState === 'waiting') {
+        if (player.isReady) {
+          ctx.fillText('ready!', centerX, y + 42);
+        } else {
+          ctx.fillText('waiting...', centerX, y + 42);
+        }
+      }
     }
 
     ctx.restore();
@@ -56,7 +70,7 @@ export default class SessionUI extends Component<null> {
     ctx.translate(pos.x, pos.y);
 
     const { isHost } = this.pearl.obj.getComponent(Game);
-    const { gameState, startTime } = this.getComponent(Session);
+    const { gameState, startTime, players } = this.getComponent(Session);
 
     ctx.font = '32px "1980XX", monospace';
     ctx.fillStyle = 'white';
@@ -73,11 +87,13 @@ export default class SessionUI extends Component<null> {
 
     let text: string | undefined;
 
+    const localPlayer = this.getLocalPlayer()!;
+
     if (gameState === 'waiting') {
-      if (isHost) {
-        text = `SLEDGEHAMMER\npress space to start`;
+      if (localPlayer.isReady) {
+        text = 'SLEDGEHAMMER\nwaiting for\nplayers to ready...';
       } else {
-        text = 'SLEDGEHAMMER\nwaiting for host\nto start game...';
+        text = 'SLEDGEHAMMER\npress space to ready';
       }
     } else if (gameState === 'starting') {
       text = `${Math.ceil((startTime! - Date.now()) / 1000)}...`;

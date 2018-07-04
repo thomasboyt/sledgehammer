@@ -20,6 +20,7 @@ export interface SessionPlayer {
   // 1 - 4
   slot: number;
   color: [number, number, number];
+  isReady: boolean;
 }
 
 export default class Session extends Component<null> {
@@ -92,6 +93,7 @@ export default class Session extends Component<null> {
       slot: availableSlots[0],
       score: 0,
       color: colorForSlot.get(availableSlots[0])!,
+      isReady: false,
     };
 
     this.worldObj.getComponent(World).addPlayer(player);
@@ -112,16 +114,31 @@ export default class Session extends Component<null> {
     player!.score += 100;
   }
 
+  togglePlayerReady(playerId: number) {
+    const player = this.players.find((player) => player.id === playerId)!;
+    player.isReady = true;
+
+    const allReady = this.players.every((player) => player.isReady === true);
+    if (allReady) {
+      this.startGame();
+    }
+  }
+
   update(dt: number) {
     if (!this.pearl.obj.getComponent(Game).isHost) {
       return;
     }
 
     const hostInputter = this.pearl.inputter;
+    const networkedPlayers = [
+      ...this.pearl.obj.getComponent(NetworkingHost).players.values(),
+    ];
 
     if (this.gameState === 'waiting') {
-      if (hostInputter.isKeyDown(Keys.space)) {
-        this.startGame();
+      for (let player of networkedPlayers) {
+        if (player.inputter.isKeyPressed(Keys.space)) {
+          this.togglePlayerReady(player.id);
+        }
       }
     } else if (this.gameState === 'gameOver') {
       if (hostInputter.isKeyDown(Keys.r)) {
