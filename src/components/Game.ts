@@ -2,7 +2,7 @@ import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Session from './Session';
 import NetworkingClient from './networking/NetworkingClient';
-import { WIDTH } from '../constants';
+import { WIDTH, HEIGHT, WORLD_SIZE_HEIGHT, TILE_SIZE } from '../constants';
 
 interface Options {
   isHost: boolean;
@@ -20,9 +20,10 @@ export default class Game extends Component<Options> {
     //
     // TODO: write up a doc in the pearl repo about this!
     const center = this.pearl.renderer.getViewCenter();
+    const mapHeight = WORLD_SIZE_HEIGHT * TILE_SIZE;
     this.pearl.renderer.setViewCenter({
       x: center.x - 8,
-      y: center.y - 20,
+      y: center.y - (HEIGHT - mapHeight),
     });
 
     if (this.isHost) {

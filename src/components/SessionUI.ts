@@ -19,7 +19,7 @@ export default class SessionUI extends Component<null> {
 
     ctx.textBaseline = 'top';
     ctx.font = '24px "1980XX", monospace';
-    const y = 400;
+    const y = 48;
 
     const players = this.getComponent(Session).players;
 
@@ -32,7 +32,7 @@ export default class SessionUI extends Component<null> {
 
       if (player.id === localPlayerId) {
         ctx.fillStyle = colorStyle;
-        ctx.fillRect(centerX - WIDTH / 8 + 8, y - 5, WIDTH / 4 - 16, 50);
+        ctx.fillRect(centerX - WIDTH / 8 + 8, y - 5, WIDTH / 4 - 16, 48);
         ctx.fillStyle = 'black';
       } else {
         ctx.fillStyle = colorStyle;
@@ -60,6 +60,7 @@ export default class SessionUI extends Component<null> {
 
     ctx.font = '32px "1980XX", monospace';
     ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
     ctx.textAlign = 'center';
 
     this.renderScores(ctx);
@@ -92,6 +93,8 @@ export default class SessionUI extends Component<null> {
       const firstLineY = textY - (lines.length * lineHeight) / 2;
       ctx.translate(0, textY - ((lines.length - 1) * lineHeight) / 2);
       for (let i = 0; i < lines.length; i += 1) {
+        ctx.lineWidth = 4;
+        ctx.strokeText(lines[i], textX, lineHeight * i);
         ctx.fillText(lines[i], textX, lineHeight * i);
       }
     }
