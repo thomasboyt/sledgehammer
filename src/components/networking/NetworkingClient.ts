@@ -75,18 +75,19 @@ export default class NetworkingClient extends Networking {
   private onSnapshot(snapshot: Snapshot) {
     const unseenIds = new Set(this.networkedObjects.keys());
 
+    // first, find any prefabs that don't exist, and create them. this happens
+    // first so entities that are created on the same frame can still be linked
+    // together
+    const newObjects = snapshot.objects.filter(
+      (obj) => !this.networkedObjects.has(obj.id)
+    );
+
+    for (let snapshotObject of newObjects) {
+      this.createNetworkedPrefab(snapshotObject.type, snapshotObject.id);
+    }
+
     for (let snapshotObject of snapshot.objects) {
-      const prefab = this.prefabs[snapshotObject.type];
-
-      if (!prefab) {
-        throw new Error(
-          `unrecognized networked object prefab ${snapshotObject.type}`
-        );
-      }
-
-      const object =
-        this.networkedObjects.get(snapshotObject.id) ||
-        this.createNetworkedPrefab(snapshotObject.type, snapshotObject.id);
+      const object = this.networkedObjects.get(snapshotObject.id)!;
 
       object
         .getComponent(NetworkedObject)
