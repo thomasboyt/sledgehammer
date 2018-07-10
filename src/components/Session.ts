@@ -6,6 +6,8 @@ import World from './World';
 import { START_COUNTDOWN_MS } from '../constants';
 import { difference } from 'lodash-es';
 import { colorForSlot } from '../types';
+import { randomChoice } from '../util/math';
+import LevelTransitionManager from './LevelTransitionManager';
 
 export type GameState =
   | 'waiting'
@@ -33,18 +35,32 @@ export default class Session extends Component<null> {
   // don't think finding one item out of four is gonna be a lot of overhead
   players: SessionPlayer[] = [];
 
+  currentLevel = 0;
+
   create() {
     if (!this.pearl.obj.getComponent(Game).isHost) {
       return;
     }
 
+    this.resetGame();
     this.createWorld();
   }
 
-  createWorld() {
+  private resetGame() {
+    this.currentLevel = 0;
+
+    // set all scores to 0
+    for (let player of this.players) {
+      player.score = 0;
+    }
+  }
+
+  private createWorld() {
     if (this.worldObj) {
       this.pearl.entities.destroy(this.worldObj);
     }
+
+    const levelIdx = this.currentLevel % levels.length;
 
     this.worldObj = this.pearl.obj
       .getComponent(NetworkingHost)
@@ -52,20 +68,13 @@ export default class Session extends Component<null> {
 
     const world = this.worldObj.getComponent(World);
     world.sessionObj = this.gameObject;
-    world.loadLevel(levels[0]);
-
-    world.onPlayerGotPickup.add(this.handlePlayerGotPickup.bind(this));
+    world.loadLevel(levels[levelIdx]);
   }
 
-  startGame() {
+  private startGame() {
     this.gameState = 'starting';
     this.startTime = Date.now() + START_COUNTDOWN_MS;
     this.createWorld();
-
-    // set all scores to 0
-    for (let player of this.players) {
-      player.score = 0;
-    }
 
     this.runCoroutine(function*(this: Session) {
       yield this.pearl.async.waitMs(START_COUNTDOWN_MS);
@@ -109,12 +118,29 @@ export default class Session extends Component<null> {
     );
   }
 
-  handlePlayerGotPickup({ playerId }: { playerId: number }) {
+  addScore(playerId: number, score: number) {
     const player = this.players.find((player) => player.id === playerId);
-    player!.score += 100;
+    player!.score += score;
   }
 
-  togglePlayerReady(playerId: number) {
+  gameOver() {
+    this.gameState = 'gameOver';
+  }
+
+  levelFinished() {
+    this.gameState = 'cleared';
+
+    const transition = this.getComponent(LevelTransitionManager);
+    transition.rpcSetPrevWorld();
+    this.currentLevel += 1;
+    this.createWorld();
+
+    transition.start(() => {
+      this.startGame();
+    });
+  }
+
+  private togglePlayerReady(playerId: number) {
     const player = this.players.find((player) => player.id === playerId)!;
     player.isReady = true;
 
@@ -142,10 +168,7 @@ export default class Session extends Component<null> {
       }
     } else if (this.gameState === 'gameOver') {
       if (hostInputter.isKeyDown(Keys.r)) {
-        this.startGame();
-      }
-    } else if (this.gameState === 'cleared') {
-      if (hostInputter.isKeyDown(Keys.r)) {
+        this.resetGame();
         this.startGame();
       }
     }

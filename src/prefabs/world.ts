@@ -10,11 +10,12 @@ import {
   deserializePhysical,
   PhysicalSnapshot,
 } from '../serializers/serializePhysical';
+import NetworkedObject from '../components/networking/NetworkedObject';
 
 interface WorldSnapshot {
   tiles: string[][];
   wallColor?: string;
-  physical: PhysicalSnapshot;
+  sessionId: string;
 }
 
 const world: NetworkedPrefab<WorldSnapshot> = {
@@ -45,26 +46,26 @@ const world: NetworkedPrefab<WorldSnapshot> = {
   serialize(obj: GameObject): WorldSnapshot {
     const map: TileMap<any> = obj.getComponent(TileMap);
     const renderer = obj.getComponent(TileMapRenderer);
+    const world = obj.getComponent(World);
     return {
       tiles: map.tiles!,
       wallColor: renderer.wallColor,
-      physical: serializePhysical(obj.getComponent(Physical)),
+      sessionId: world.sessionObj!.getComponent(NetworkedObject).id,
     };
   },
 
-  deserialize(obj: GameObject, snapshot: WorldSnapshot) {
+  deserialize(obj: GameObject, snapshot: WorldSnapshot, objectsById) {
     const map = obj.getComponent(TileMap);
     const renderer = obj.getComponent(TileMapRenderer);
 
     renderer.wallColor = snapshot.wallColor;
 
-    if (map.tiles) {
-      return;
-    } else {
+    if (!map.tiles) {
       map.setTiles(snapshot.tiles);
     }
 
-    deserializePhysical(obj.getComponent(Physical), snapshot.physical);
+    const world = obj.getComponent(World);
+    world.sessionObj = objectsById.get(snapshot.sessionId)!;
   },
 };
 

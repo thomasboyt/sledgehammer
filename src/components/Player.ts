@@ -15,6 +15,7 @@ import Bullet from './Bullet';
 import { addVector } from '../util/math';
 import SpawningDyingRenderer from './SpawningDyingRenderer';
 import { DEBUG_GOD_MODE } from '../constants';
+import Session from './Session';
 
 const MOVE_TIME_MS = 120;
 const PLAYER_BULLET_SPEED = 0.2;
@@ -82,7 +83,11 @@ export default class Player extends Component<Options> {
       return;
     }
 
-    if (this.playerState !== 'alive') {
+    const session = this.pearl.entities
+      .all('session')[0]!
+      .getComponent(Session);
+
+    if (this.playerState !== 'alive' || session.gameState !== 'playing') {
       return;
     }
 

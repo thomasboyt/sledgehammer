@@ -86,8 +86,6 @@ export default class SessionUI extends Component<null> {
       }
     } else if (gameState === 'starting') {
       text = `${Math.ceil((startTime! - Date.now()) / 1000)}...`;
-    } else if (gameState === 'cleared') {
-      text = 'you won!';
     } else if (gameState === 'gameOver') {
       text = isHost ? 'game over :(\npress R to retry' : 'game over :(';
     }

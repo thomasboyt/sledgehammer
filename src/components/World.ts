@@ -18,7 +18,6 @@ import Bullet from './Bullet';
 import { randomChoice, getRandomInt } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
-import Delegate from '../util/Delegate';
 import TileMapRenderer from './TileMapRenderer';
 
 const ENEMY_COUNT = 50;
@@ -28,12 +27,11 @@ const SPAWN_MORE = true;
 export default class World extends Component<null> {
   sessionObj?: GameObject;
 
-  spawns: Coordinates[] = [];
-  nextSpawnIndex = 0;
+  pickupsCollected = 0;
+  private spawns: Coordinates[] = [];
+  private nextSpawnIndex = 0;
 
-  players = new Map<number, GameObject>();
-
-  onPlayerGotPickup = new Delegate<{ playerId: number }>();
+  private players = new Map<number, GameObject>();
 
   loadLevel(level: LevelData) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
@@ -75,8 +73,13 @@ export default class World extends Component<null> {
   }
 
   private spawnNextPickup() {
-    const candidateTiles = this.getCandidateTiles();
-    const pickupTile = randomChoice(candidateTiles)!;
+    // const candidateTiles = this.getCandidateTiles();
+    // const pickupTile = randomChoice(candidateTiles)!;
+
+    // DEBUG: spawn pickup next to player
+    const playerTile = [...this.players.values()][0].getComponent(TileEntity)
+      .tilePosition;
+    const pickupTile = { x: playerTile.x - 1, y: playerTile.y };
 
     const pickupObj = this.pearl.obj
       .getComponent(NetworkingHost)
@@ -211,14 +214,17 @@ export default class World extends Component<null> {
       return;
     }
 
-    // TODO: WHATEVER THE WIN STATE ENDS UP BEING
+    if (this.pickupsCollected === 1) {
+      this.sessionObj!.getComponent(Session).levelFinished();
+      return;
+    }
 
     const allPlayersDead = [...this.players.values()].every(
       (player) => player.getComponent(Player).playerState === 'dead'
     );
 
     if (allPlayersDead) {
-      this.sessionObj!.getComponent(Session).gameState = 'gameOver';
+      this.sessionObj!.getComponent(Session).gameOver();
     }
   }
 
@@ -303,38 +309,25 @@ export default class World extends Component<null> {
             .getComponent(PolygonCollider)
             .isColliding(pickup.getComponent(PolygonCollider))
         ) {
-          // pick up pickup and spawn a new one
-          this.onPlayerGotPickup.call({
-            playerId: player.getComponent(Player).playerId!,
-          });
-
-          this.pearl.entities.destroy(pickup);
-          this.spawnNextPickup();
+          this.playerCollectedPickup(player, pickup);
         }
       }
     }
+  }
+
+  private playerCollectedPickup(player: GameObject, pickup: GameObject) {
+    const playerId = player.getComponent(Player).playerId!;
+    this.sessionObj!.getComponent(Session).addScore(playerId, 100);
+
+    this.pickupsCollected += 1;
+
+    this.pearl.entities.destroy(pickup);
+    this.spawnNextPickup();
   }
 
   private getNextSpawn() {
     const spawn = this.spawns[this.nextSpawnIndex % this.spawns.length];
     this.nextSpawnIndex += 1;
     return spawn;
-  }
-
-  onDestroy() {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
-      return;
-    }
-
-    const worldEntities = this.pearl.entities.all(
-      'player',
-      'enemy',
-      'bullet',
-      'pickup'
-    );
-
-    for (let entity of worldEntities) {
-      this.pearl.entities.destroy(entity);
-    }
   }
 }

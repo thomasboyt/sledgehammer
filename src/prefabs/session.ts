@@ -2,11 +2,14 @@ import { NetworkedPrefab } from '../components/networking/Networking';
 import Session, { GameState, SessionPlayer } from '../components/Session';
 import SessionUI from '../components/SessionUI';
 import { ZIndex } from '../types';
+import LevelTransitionManager from '../components/LevelTransitionManager';
+import NetworkedObject from '../components/networking/NetworkedObject';
 
 interface SessionSnapshot {
   gameState: GameState;
   startTime?: number;
   players: SessionPlayer[];
+  worldId: string;
 }
 
 const session: NetworkedPrefab<SessionSnapshot> = {
@@ -15,7 +18,7 @@ const session: NetworkedPrefab<SessionSnapshot> = {
   zIndex: ZIndex.Session,
 
   createComponents: () => {
-    return [new Session(), new SessionUI()];
+    return [new Session(), new SessionUI(), new LevelTransitionManager()];
   },
 
   serialize(obj) {
@@ -24,14 +27,16 @@ const session: NetworkedPrefab<SessionSnapshot> = {
       gameState: session.gameState,
       startTime: session.startTime,
       players: session.players,
+      worldId: session.worldObj.getComponent(NetworkedObject).id,
     };
   },
 
-  deserialize(obj, snapshot) {
+  deserialize(obj, snapshot, objectsById) {
     const session = obj.getComponent(Session);
     session.gameState = snapshot.gameState;
     session.startTime = snapshot.startTime;
     session.players = snapshot.players;
+    session.worldObj = objectsById.get(snapshot.worldId)!;
   },
 };
 
