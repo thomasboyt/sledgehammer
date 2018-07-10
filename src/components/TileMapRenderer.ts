@@ -1,4 +1,4 @@
-import { Component } from 'pearl';
+import { Component, Physical } from 'pearl';
 import TileMap from './TileMap';
 import createCachedRender from '../util/createCachedRender';
 import { Tile } from '../types';
@@ -32,6 +32,9 @@ export default class TileMapRenderer extends Component<null> {
   );
 
   render(ctx: CanvasRenderingContext2D) {
+    const pos = this.getComponent(Physical).center;
+    ctx.translate(pos.x, pos.y);
+
     // TODO: tiles is getting replaced every tick on the client...
     this.renderTiles(ctx, 1, this.tileMap.tiles);
 

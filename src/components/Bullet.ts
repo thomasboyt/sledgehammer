@@ -55,7 +55,7 @@ export default class Bullet extends Component<null> {
     }
 
     const collider = this.getComponent(PolygonCollider);
-    const bounds = collider.getBounds();
+    const bounds = collider.getLocalBounds();
 
     if (
       bounds.xMin < 0 ||

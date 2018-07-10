@@ -14,18 +14,6 @@ export default class Game extends Component<Options> {
   init(opts: Options) {
     this.isHost = opts.isHost;
 
-    // XXX: This is kind of a hack rn because what I actually want is a render
-    // tree that translates rendering relative to the parent Physical this is: a
-    // hell of a lot of work to implement and I don't want to do it right now
-    //
-    // TODO: write up a doc in the pearl repo about this!
-    const center = this.pearl.renderer.getViewCenter();
-    const mapHeight = WORLD_SIZE_HEIGHT * TILE_SIZE;
-    this.pearl.renderer.setViewCenter({
-      x: center.x - 8,
-      y: center.y - (HEIGHT - mapHeight),
-    });
-
     if (this.isHost) {
       this.initializeHost();
     }

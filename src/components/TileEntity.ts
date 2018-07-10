@@ -29,7 +29,7 @@ class MoveTween {
     }
 
     const f = this.elapsedMs / this.targetMs;
-    this.phys.center = lerpVector(this.start, this.end, f);
+    this.phys.localCenter = lerpVector(this.start, this.end, f);
 
     if (f === 1) {
       return true;
@@ -59,13 +59,13 @@ export default class TileEntity extends Component<null> {
   }
 
   get tilePosition(): Coordinates {
-    const center = this.getComponent(Physical).center;
-    return this.tileMap.centerToTileCoordinates(center);
+    const center = this.getComponent(Physical).localCenter;
+    return this.tileMap.localCenterToTileCoordinates(center);
   }
 
   setPosition(pos: Coordinates): void {
-    const center = this.tileMap.tileCoordinatesToCenter(pos);
-    this.getComponent(Physical).center = center;
+    const center = this.tileMap.tileCoordinatesToLocalCenter(pos);
+    this.getComponent(Physical).localCenter = center;
   }
 
   get isMoving(): boolean {
@@ -106,8 +106,8 @@ export default class TileEntity extends Component<null> {
       }
     }
 
-    const start = this.tileMap.tileCoordinatesToCenter(startTilePos);
-    const end = this.tileMap.tileCoordinatesToCenter(wrappedEndPos);
+    const start = this.tileMap.tileCoordinatesToLocalCenter(startTilePos);
+    const end = this.tileMap.tileCoordinatesToLocalCenter(wrappedEndPos);
 
     const phys = this.getComponent(Physical);
     this.moveTween = new MoveTween(phys, start, end, timeMs);

@@ -82,10 +82,14 @@ export default class World extends Component<null> {
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('pickup');
 
+    this.gameObject.appendChild(pickupObj);
+
     const tileMap = this.getComponent(TileMap);
+    const center = tileMap.tileCoordinatesToWorldCenter(pickupTile);
+
     pickupObj.getComponent(Physical).center = {
-      x: pickupTile.x * tileMap.tileSize + tileMap.tileSize / 2,
-      y: pickupTile.y * tileMap.tileSize + tileMap.tileSize / 2,
+      x: center.x,
+      y: center.y,
     };
   }
 
@@ -151,6 +155,8 @@ export default class World extends Component<null> {
       .getComponent(NetworkingHost)
       .createNetworkedPrefab(type);
 
+    this.gameObject.appendChild(enemyObj);
+
     const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     const facing = sample(choices)!;
 
@@ -170,6 +176,8 @@ export default class World extends Component<null> {
     const networkingHost = this.pearl.obj.getComponent(NetworkingHost);
 
     const playerObject = networkingHost.createNetworkedPrefab('player');
+    this.gameObject.appendChild(playerObject);
+
     const player = playerObject.getComponent(Player);
     player.playerId = sessionPlayer.id;
     player.color = sessionPlayer.color;

@@ -1,7 +1,7 @@
 import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Game from './Game';
-import { WIDTH, TILE_SIZE, WORLD_SIZE_HEIGHT } from '../constants';
+import { WIDTH, TILE_SIZE, WORLD_SIZE_HEIGHT, HEIGHT } from '../constants';
 import Session, { SessionPlayer } from './Session';
 import NetworkingClient from './networking/NetworkingClient';
 
@@ -60,15 +60,6 @@ export default class SessionUI extends Component<null> {
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    // translate UI opposite translation done to center game grid
-    const viewCenter = this.pearl.renderer.getViewCenter();
-    const viewSize = this.pearl.renderer.getViewSize();
-    const pos = {
-      x: viewCenter.x - viewSize.x / 2,
-      y: viewCenter.y - viewSize.y / 2,
-    };
-    ctx.translate(pos.x, pos.y);
-
     const { isHost } = this.pearl.obj.getComponent(Game);
     const { gameState, startTime, players } = this.getComponent(Session);
 
@@ -79,10 +70,8 @@ export default class SessionUI extends Component<null> {
 
     this.renderScores(ctx);
 
-    ctx.translate(0, -pos.y);
-
     const textX = this.pearl.renderer.getViewSize().x / 2;
-    const textY = (WORLD_SIZE_HEIGHT / 2) * TILE_SIZE - 2;
+    const textY = HEIGHT - (WORLD_SIZE_HEIGHT / 2) * TILE_SIZE - 2;
     ctx.textBaseline = 'middle';
 
     let text: string | undefined;

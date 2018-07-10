@@ -36,7 +36,7 @@ export default class WrappedEntityRenderer extends Component<Opts> {
       return;
     }
 
-    const bounds = this.getComponent(PolygonCollider).getBounds();
+    const bounds = this.getComponent(PolygonCollider).getLocalBounds();
 
     if (bounds.xMin < 0) {
       this.renderAtCenter(ctx, [worldWidth, 0]);

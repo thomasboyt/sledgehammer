@@ -166,7 +166,7 @@ export default class BaseEnemy extends Component<null> {
       const x = facing.x * i;
       const y = facing.y * i;
 
-      const tilePos = tileMap.centerToTileCoordinates({
+      const tilePos = tileMap.worldCenterToTileCoordinates({
         x: center.x + x,
         y: center.y + y,
       });

@@ -143,6 +143,8 @@ export default class Player extends Component<Options> {
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('bullet');
 
+    this.gameObject.parent!.appendChild(bullet);
+
     bullet.getComponent(Bullet).shoot({
       originObject: this.gameObject,
       facing: this.facing,

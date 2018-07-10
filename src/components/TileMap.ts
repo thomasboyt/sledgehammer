@@ -1,5 +1,6 @@
 import { Component, Physical, PolygonCollider, Coordinates } from 'pearl';
 import * as SAT from 'sat';
+import { addVector } from '../util/math';
 
 interface Options {
   tileSize: number;
@@ -33,7 +34,12 @@ export default class TileMap<T> extends Component<Options> {
     return tile;
   }
 
-  tileCoordinatesToCenter(tilePos: Coordinates): Coordinates {
+  tileCoordinatesToWorldCenter(tilePos: Coordinates): Coordinates {
+    const local = this.tileCoordinatesToLocalCenter(tilePos);
+    return addVector(this.getComponent(Physical).center, local);
+  }
+
+  tileCoordinatesToLocalCenter(tilePos: Coordinates): Coordinates {
     const { x, y } = tilePos;
 
     return {
@@ -42,13 +48,22 @@ export default class TileMap<T> extends Component<Options> {
     };
   }
 
-  centerToTileCoordinates(center: Coordinates): Coordinates {
+  localCenterToTileCoordinates(center: Coordinates): Coordinates {
     const { x, y } = center;
 
     return {
       x: (x - this.tileSize / 2) / this.tileSize,
       y: (y - this.tileSize / 2) / this.tileSize,
     };
+  }
+
+  worldCenterToTileCoordinates(center: Coordinates): Coordinates {
+    const mapCenter = this.getComponent(Physical).center;
+    const local = {
+      x: center.x - mapCenter.x,
+      y: center.y - mapCenter.y,
+    };
+    return this.localCenterToTileCoordinates(local);
   }
 
   forEachTile(cb: (pos: Coordinates, value: T) => void): void {
@@ -78,7 +93,7 @@ export default class TileMap<T> extends Component<Options> {
         return;
       }
 
-      const center = this.tileCoordinatesToCenter(tilePos);
+      const center = this.tileCoordinatesToWorldCenter(tilePos);
 
       const tilePoly = new SAT.Box(
         new SAT.Vector(

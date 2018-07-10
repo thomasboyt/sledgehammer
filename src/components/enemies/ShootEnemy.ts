@@ -58,6 +58,8 @@ export default class ShootEnemy extends BaseEnemy {
         .getComponent(NetworkingHost)
         .createNetworkedPrefab('bullet');
 
+      this.gameObject.parent!.appendChild(bullet);
+
       bullet.getComponent(Bullet).shoot({
         originObject: this.gameObject,
         facing: this.facing,
