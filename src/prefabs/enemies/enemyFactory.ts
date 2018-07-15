@@ -22,6 +22,7 @@ import {
 import BaseEnemy from '../../components/enemies/BaseEnemy';
 import { ZIndex } from '../../types';
 import SpawningDyingRenderer from '../../components/SpawningDyingRenderer';
+import SpriteSheetAsset from '../../SpriteSheetAsset';
 
 interface EnemySnapshot {
   physical: PhysicalSnapshot;
@@ -56,9 +57,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
           height: TILE_SIZE - 2,
         }),
         new AnimationManager({
-          sheet: pearl.obj
-            .getComponent(AssetManager)
-            .getSpriteSheet(opts.spriteSheet, 8, 8),
+          sheet: pearl.assets.get(SpriteSheetAsset, opts.spriteSheet),
 
           initialState: 'walking',
 

@@ -21,6 +21,7 @@ import {
   AnimationSnapshot,
 } from '../serializers/serializeAnimationManager';
 import { ZIndex } from '../types';
+import SpriteSheetAsset from '../SpriteSheetAsset';
 
 interface PlayerSnapshot {
   center: Coordinates;
@@ -57,10 +58,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       }),
 
       new AnimationManager({
-        // TODO: cache this?
-        sheet: pearl.obj
-          .getComponent(AssetManager)
-          .getSpriteSheet('player', TILE_SIZE, TILE_SIZE),
+        sheet: pearl.assets.get(SpriteSheetAsset, 'player'),
 
         initialState: 'idle',
 

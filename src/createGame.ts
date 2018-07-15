@@ -1,5 +1,5 @@
 require('../styles/font.css');
-import { createPearl, AudioManager } from 'pearl';
+import { createPearl } from 'pearl';
 import * as Peer from 'simple-peer';
 
 import { WIDTH, HEIGHT } from './constants';
@@ -7,27 +7,21 @@ import Game from './components/Game';
 import NetworkingHost from './components/networking/NetworkingHost';
 import NetworkingClient from './components/networking/NetworkingClient';
 import networkedPrefabs from './networkedPrefabs';
-import { loadAssets } from './assets';
-import AssetManager from './components/AssetManager';
+import SpriteSheetAsset from './SpriteSheetAsset';
 
 interface Options {
   isHost: boolean;
   hostPeer?: Peer.Instance;
 }
 
-const assetPaths = {
-  images: {
-    player: require('../assets/player-sheet.png'),
-    lemonShark: require('../assets/lemon-shark.png'),
-    blueThing: require('../assets/blue-thing.png'),
-    archer: require('../assets/archer.png'),
-  },
-  audio: {},
+const assets = {
+  player: new SpriteSheetAsset(require('../assets/player-sheet.png'), 16, 16),
+  lemonShark: new SpriteSheetAsset(require('../assets/lemon-shark.png'), 8, 8),
+  blueThing: new SpriteSheetAsset(require('../assets/blue-thing.png'), 8, 8),
+  archer: new SpriteSheetAsset(require('../assets/archer.png'), 8, 8),
 };
 
 export default async function createGame(opts: Options) {
-  const assets = await loadAssets(assetPaths);
-
   const { isHost, hostPeer } = opts;
 
   let networkingComponent;
@@ -40,16 +34,10 @@ export default async function createGame(opts: Options) {
   }
 
   return createPearl({
-    rootComponents: [
-      networkingComponent,
-      new AudioManager({
-        defaultGain: 0.5,
-      }),
-      new AssetManager(assets),
-      new Game({ isHost }),
-    ],
+    rootComponents: [networkingComponent, new Game({ isHost })],
     width: WIDTH,
     height: HEIGHT,
     canvas: document.getElementById('game') as HTMLCanvasElement,
+    assets,
   });
 }
