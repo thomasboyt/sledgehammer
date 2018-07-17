@@ -1,4 +1,4 @@
-import { Component, AnimationManager, Physical } from 'pearl';
+import { Component, AnimationManager, Physical, SpriteRenderer } from 'pearl';
 import { lerp, getRandomInt, getVectorComponents } from '../util/math';
 
 interface Pixel {
@@ -26,30 +26,14 @@ export default class SpawningDyingRenderer extends Component<null> {
     this._targetTimeMs = targetTime;
     this._pixels = [];
 
-    const anim = this.getComponent(AnimationManager);
-    anim.isVisible = false;
-    const sprite = anim.getSprite();
+    const renderer = this.getComponent(SpriteRenderer);
 
-    let canvas: HTMLCanvasElement = sprite.canvas;
-
-    if (anim.masked) {
-      // TODO: I don't like the indirection here, maybe add like
-      // animationManager.getCanvas()
-      canvas = document.createElement('canvas');
-      canvas.width = sprite.width;
-      canvas.height = sprite.height;
-      sprite.drawMasked(
-        canvas.getContext('2d')!,
-        0,
-        0,
-        anim.maskFrom,
-        anim.maskTo
-      );
-    }
+    const canvas = renderer.getCanvas();
+    renderer.isVisible = false;
 
     const imageData = canvas
       .getContext('2d')!
-      .getImageData(0, 0, sprite.width, sprite.height);
+      .getImageData(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < imageData.data.length; i += 4) {
       const rgb: [number, number, number] = [
@@ -63,11 +47,11 @@ export default class SpawningDyingRenderer extends Component<null> {
       if (alpha > 0) {
         // this is a pixel that needs to be rendered
         const pixelIdx = i / 4;
-        const pixelX = pixelIdx % sprite.width;
-        const pixelY = Math.floor(pixelIdx / sprite.width);
+        const pixelX = pixelIdx % canvas.width;
+        const pixelY = Math.floor(pixelIdx / canvas.width);
 
         // x, y relative to center
-        const center = { x: sprite.width / 2, y: sprite.height / 2 };
+        const center = { x: canvas.width / 2, y: canvas.height / 2 };
         const vector = {
           x: pixelX - center.x,
           y: pixelY - center.y,
@@ -114,7 +98,7 @@ export default class SpawningDyingRenderer extends Component<null> {
 
   private _onFinish() {
     if (this._state === 'spawning') {
-      this.getComponent(AnimationManager).isVisible = true;
+      this.getComponent(SpriteRenderer).isVisible = true;
     }
 
     this._state = null;
@@ -126,15 +110,15 @@ export default class SpawningDyingRenderer extends Component<null> {
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    const anim = this.getComponent(AnimationManager);
+    const renderer = this.getComponent(SpriteRenderer);
     const phys = this.getComponent(Physical);
     const { center, angle } = phys;
 
     ctx.translate(center.x, center.y);
-    ctx.scale(anim.scaleX, anim.scaleY);
+    ctx.scale(renderer.scaleX, renderer.scaleY);
     ctx.rotate(angle);
 
-    const { width, height } = anim.getSprite();
+    const { width, height } = renderer.sprite!;
 
     for (let pixel of this._pixels) {
       let f = this._timeElapsedMs / this._targetTimeMs;

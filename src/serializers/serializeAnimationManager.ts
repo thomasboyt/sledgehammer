@@ -1,4 +1,4 @@
-import { AnimationManager } from 'pearl';
+import { AnimationManager, SpriteRenderer } from 'pearl';
 
 export interface AnimationSnapshot {
   current: string;
@@ -8,18 +8,22 @@ export interface AnimationSnapshot {
 }
 
 export function serializeAnimationManager(
-  anim: AnimationManager
+  anim: AnimationManager,
+  renderer: SpriteRenderer
 ): AnimationSnapshot {
-  const { current, scaleX, scaleY, isVisible } = anim;
+  const { current } = anim;
+  const { scaleX, scaleY, isVisible } = renderer;
   return { current, scaleX, scaleY, isVisible };
 }
 
 export function deserializeAnimationManager(
   anim: AnimationManager,
+  renderer: SpriteRenderer,
   snapshot: AnimationSnapshot
 ) {
   const { current, scaleX, scaleY, isVisible } = snapshot;
   anim.set(current);
-  anim.setScale(scaleX, scaleY);
-  anim.isVisible = isVisible;
+  renderer.scaleX = scaleX;
+  renderer.scaleY = scaleY;
+  renderer.isVisible = isVisible;
 }

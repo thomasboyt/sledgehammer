@@ -5,6 +5,7 @@ import {
   PolygonCollider,
   AnimationManager,
   GameObject,
+  SpriteRenderer,
 } from 'pearl';
 import * as SAT from 'sat';
 
@@ -27,7 +28,9 @@ export default class BaseEnemy extends Component<null> {
   init() {
     const anim = this.getComponent(AnimationManager);
     anim.set('walking');
-    anim.setScale(2, 2);
+    const renderer = this.getComponent(SpriteRenderer);
+    renderer.scaleX = 2;
+    renderer.scaleY = 2;
 
     this.getComponent(SpawningDyingRenderer).spawn(() => {
       this.state = 'alive';
@@ -42,9 +45,9 @@ export default class BaseEnemy extends Component<null> {
 
     // mirror the X direction if we're going left
     if (this.facing.x < 0) {
-      this.getComponent(AnimationManager).setScale(-2, 2);
+      this.getComponent(SpriteRenderer).scaleX = -2;
     } else {
-      this.getComponent(AnimationManager).setScale(2, 2);
+      this.getComponent(SpriteRenderer).scaleX = 2;
     }
 
     this.getComponent(Physical).angle = angle;

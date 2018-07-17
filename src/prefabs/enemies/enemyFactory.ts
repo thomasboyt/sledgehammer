@@ -1,4 +1,9 @@
-import { Physical, PolygonCollider, AnimationManager } from 'pearl';
+import {
+  Physical,
+  PolygonCollider,
+  AnimationManager,
+  SpriteRenderer,
+} from 'pearl';
 import { NetworkedPrefab } from '../../components/networking/Networking';
 
 import TileEntity from '../../components/TileEntity';
@@ -68,6 +73,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
             },
           },
         }),
+        new SpriteRenderer(),
         new opts.EnemyComponent(),
         new SpawningDyingRenderer(),
       ];
@@ -76,10 +82,11 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
     serialize: (obj) => {
       const phys = obj.getComponent(Physical);
       const anim = obj.getComponent(AnimationManager);
+      const renderer = obj.getComponent(SpriteRenderer);
 
       return {
         physical: serializePhysical(phys),
-        animation: serializeAnimationManager(anim),
+        animation: serializeAnimationManager(anim, renderer),
       };
     },
 
@@ -88,7 +95,8 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
       deserializePhysical(phys, snapshot.physical);
 
       const anim = obj.getComponent(AnimationManager);
-      deserializeAnimationManager(anim, snapshot.animation);
+      const renderer = obj.getComponent(SpriteRenderer);
+      deserializeAnimationManager(anim, renderer, snapshot.animation);
     },
   };
 }

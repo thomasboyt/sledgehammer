@@ -4,6 +4,7 @@ import {
   Coordinates,
   GameObject,
   AnimationManager,
+  SpriteRenderer,
 } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 
@@ -74,6 +75,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
         },
       }),
 
+      new SpriteRenderer(),
       new Player(),
       new SpawningDyingRenderer(),
     ];
@@ -85,6 +87,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
     const world = tileEntity.tileMap.gameObject.getComponent(NetworkedObject);
     const player = obj.getComponent(Player);
     const anim = obj.getComponent(AnimationManager);
+    const renderer = obj.getComponent(SpriteRenderer);
 
     return {
       center: phys.center,
@@ -97,7 +100,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       playerId: player.playerId,
       color: player.color!,
 
-      animation: serializeAnimationManager(anim),
+      animation: serializeAnimationManager(anim, renderer),
     };
   },
 
@@ -126,7 +129,8 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
     player.color = snapshot.color;
 
     const anim = obj.getComponent(AnimationManager);
-    deserializeAnimationManager(anim, snapshot.animation);
+    const renderer = obj.getComponent(SpriteRenderer);
+    deserializeAnimationManager(anim, renderer, snapshot.animation);
   },
 };
 

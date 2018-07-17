@@ -6,6 +6,7 @@ import {
   PolygonCollider,
   AnimationManager,
   Sprite,
+  SpriteRenderer,
 } from 'pearl';
 import Game from './Game';
 import NetworkingHost from './networking/NetworkingHost';
@@ -42,7 +43,7 @@ export default class Player extends Component<Options> {
       throw new Error('missing color on player');
     }
 
-    this.getComponent(AnimationManager).mask([0, 0, 0], this.color);
+    this.getComponent(SpriteRenderer).mask([0, 0, 0], this.color);
 
     this.getComponent(SpawningDyingRenderer).spawn(() => {
       this.playerState = 'alive';
@@ -70,9 +71,9 @@ export default class Player extends Component<Options> {
 
     // mirror the X direction if we're going left
     if (this.facing.x < 0) {
-      this.getComponent(AnimationManager).setScale(-1, 1);
+      this.getComponent(SpriteRenderer).scaleX = -1;
     } else {
-      this.getComponent(AnimationManager).setScale(1, 1);
+      this.getComponent(SpriteRenderer).scaleX = 1;
     }
 
     this.getComponent(Physical).angle = angle;
