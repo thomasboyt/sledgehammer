@@ -6,6 +6,7 @@ import {
   AnimationManager,
   GameObject,
   SpriteRenderer,
+  PolygonShape,
 } from 'pearl';
 import * as SAT from 'sat';
 
@@ -189,20 +190,23 @@ export default class BaseEnemy extends Component<null> {
       }
     );
 
-    const sightlinePoly = new SAT.Box(
-      new SAT.Vector(0, 0),
-      sightlineLength,
-      tileMap.tileSize
-    ).toPolygon();
+    const sightlinePoly = PolygonShape.createBox({
+      width: sightlineLength,
+      height: tileMap.tileSize,
+    });
 
-    sightlinePoly.translate(tileMap.tileSize / 2, -tileMap.tileSize / 2);
-    sightlinePoly.rotate(Math.atan2(facing.y, facing.x));
-    sightlinePoly.translate(center.x, center.y);
-    this.sightlinePoly = sightlinePoly;
+    const phys = this.getComponent(Physical);
+    const position = {
+      center: addVector(phys.center, {
+        x: (this.facing.x * sightlineLength) / 2,
+        y: (this.facing.y * sightlineLength) / 2,
+      }),
+      angle: Math.atan2(facing.y, facing.x),
+    };
 
     const collidingEntities = taggedEntities.filter((entity) => {
-      const poly = entity.getComponent(PolygonCollider).getSATPolygon();
-      return SAT.testPolygonPolygon(poly, sightlinePoly);
+      const poly = entity.getComponent(PolygonCollider);
+      return poly.testShape(sightlinePoly, position);
     });
 
     return collidingEntities;

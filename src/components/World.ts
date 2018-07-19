@@ -19,6 +19,7 @@ import { randomChoice, getRandomInt } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import TileMapRenderer from './TileMapRenderer';
+import TileMapCollider from './TileMapCollider';
 
 const ENEMY_COUNT = 50;
 const ENEMY_TYPES = ['archer', 'lemonShark', 'blueThing'];
@@ -236,7 +237,7 @@ export default class World extends Component<null> {
     const bullets = this.pearl.entities.all('bullet');
     const pickups = this.pearl.entities.all('pickup');
 
-    const tileMap = this.getComponent(TileMap);
+    const tileMapCollider = this.getComponent(TileMapCollider);
 
     // BUG: with bullets and pickups, if multiple things are colliding with it,
     // the collision logic runs TWICE
@@ -248,7 +249,7 @@ export default class World extends Component<null> {
     for (let bullet of bullets) {
       const bulletCollider = bullet.getComponent(PolygonCollider);
 
-      if (tileMap.isColliding(bulletCollider, [Tile.Wall])) {
+      if (tileMapCollider.isColliding(bulletCollider)) {
         bullet.getComponent(Bullet).explode();
         continue;
       }

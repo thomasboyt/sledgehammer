@@ -3,7 +3,7 @@ import { NetworkedPrefab } from '../components/networking/Networking';
 import TileMap from '../components/TileMap';
 import TileMapRenderer from '../components/TileMapRenderer';
 import World from '../components/World';
-import { ZIndex } from '../types';
+import { ZIndex, Tile } from '../types';
 import { WORLD_SIZE_HEIGHT, TILE_SIZE, HEIGHT } from '../constants';
 import {
   serializePhysical,
@@ -11,6 +11,7 @@ import {
   PhysicalSnapshot,
 } from '../serializers/serializePhysical';
 import NetworkedObject from '../components/networking/NetworkedObject';
+import TileMapCollider from '../components/TileMapCollider';
 
 interface WorldSnapshot {
   tiles: string[][];
@@ -37,8 +38,10 @@ const world: NetworkedPrefab<WorldSnapshot> = {
       new Physical({ center }),
       new TileMap({
         tileSize: 16,
+        collisionTileTypes: [Tile.Wall],
       }),
       new TileMapRenderer(),
+      new TileMapCollider(),
       new World(),
     ];
   },

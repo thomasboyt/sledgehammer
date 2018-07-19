@@ -1,22 +1,28 @@
 import { Component, Physical, PolygonCollider, Coordinates } from 'pearl';
-import * as SAT from 'sat';
 import { addVector } from '../util/math';
+import TileMapCollider, { ITileMap } from './TileMapCollider';
 
-interface Options {
+interface Options<T> {
   tileSize: number;
+  collisionTileTypes: T[];
 }
 
-export default class TileMap<T> extends Component<Options> {
+export default class TileMap<T> extends Component<Options<T>>
+  implements ITileMap {
   /**
    * two dimensional array of tiles, indexed by [y][x]
    */
   tiles?: T[][];
+  collisionTileTypes!: T[];
 
   tileSize!: number;
+  tileWidth!: number;
+  tileHeight!: number;
   worldSize?: Coordinates;
 
-  create(opts: Options) {
-    this.tileSize = opts.tileSize;
+  create(opts: Options<T>) {
+    this.tileSize = this.tileWidth = this.tileHeight = opts.tileSize;
+    this.collisionTileTypes = opts.collisionTileTypes;
   }
 
   setTiles(tiles: T[][]) {
@@ -26,12 +32,34 @@ export default class TileMap<T> extends Component<Options> {
       x: this.tiles[0].length,
       y: this.tiles.length,
     };
+
+    const collisionMap: boolean[] = [];
+
+    this.forEachTile(({ x, y }, value) => {
+      if (this.collisionTileTypes.indexOf(value) === -1) {
+        collisionMap.push(false);
+      } else {
+        collisionMap.push(true);
+      }
+    });
+
+    this.getComponent(TileMapCollider).initializeCollisions(this, collisionMap);
   }
 
   getTile(position: Coordinates): T {
     const wrapped = this.wrapTilePosition(position);
     const tile = this.tiles![wrapped.y][wrapped.x];
     return tile;
+  }
+
+  idxToTileCoordinates(idx: number): Coordinates {
+    const tx = idx % this.worldSize!.x;
+    const ty = Math.floor(idx / this.worldSize!.x);
+    return { x: tx, y: ty };
+  }
+
+  tileCoordinatesToIdx(tilePos: Coordinates): number {
+    return tilePos.y * this.worldSize!.x + tilePos.x;
   }
 
   tileCoordinatesToWorldCenter(tilePos: Coordinates): Coordinates {
@@ -78,38 +106,6 @@ export default class TileMap<T> extends Component<Options> {
         cb({ x, y }, tiles[y][x]);
       }
     }
-  }
-  /**
-   * Test whether some Collider is intersecting with one of the tiles passed
-   * This is hacky as hell rn because of how collision was implemented
-   */
-  isColliding(collider: PolygonCollider, collidingTiles: T[]): boolean {
-    const phys = collider.getComponent(Physical);
-    const poly = collider.getSATPolygon();
-
-    let isColliding = false;
-    this.forEachTile((tilePos, value) => {
-      if (collidingTiles.indexOf(value) === -1) {
-        return;
-      }
-
-      const center = this.tileCoordinatesToWorldCenter(tilePos);
-
-      const tilePoly = new SAT.Box(
-        new SAT.Vector(
-          center.x - this.tileSize / 2,
-          center.y - this.tileSize / 2
-        ),
-        this.tileSize,
-        this.tileSize
-      ).toPolygon();
-
-      if (SAT.testPolygonPolygon(poly, tilePoly)) {
-        isColliding = true;
-      }
-    });
-
-    return isColliding;
   }
 
   wrapTilePosition(position: Coordinates): Coordinates {
