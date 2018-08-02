@@ -3,7 +3,6 @@ import {
   Physical,
   Keys,
   Coordinates,
-  PolygonCollider,
   AnimationManager,
   Sprite,
   SpriteRenderer,

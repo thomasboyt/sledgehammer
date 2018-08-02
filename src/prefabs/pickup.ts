@@ -1,4 +1,4 @@
-import { PolygonCollider, Physical, PolygonRenderer } from 'pearl';
+import { Physical, PolygonRenderer, BoxCollider } from 'pearl';
 import { NetworkedPrefab } from '../components/networking/Networking';
 import {
   PhysicalSnapshot,
@@ -20,7 +20,7 @@ const pickup: NetworkedPrefab<PickupSnapshot> = {
   createComponents: () => {
     return [
       new Physical(),
-      PolygonCollider.createBox({ width: 10, height: 10 }),
+      new BoxCollider({ width: 10, height: 10 }),
       new PolygonRenderer({
         fillStyle: 'white',
       }),

@@ -1,4 +1,4 @@
-import { Component, Physical, PolygonCollider } from 'pearl';
+import { Component, Physical, ShapeCollider } from 'pearl';
 
 interface Opts {
   worldWidth: number;
@@ -36,7 +36,7 @@ export default class WrappedEntityRenderer extends Component<Opts> {
       return;
     }
 
-    const bounds = this.getComponent(PolygonCollider).getLocalBounds();
+    const bounds = this.gameObject.getComponent(ShapeCollider).getLocalBounds();
 
     if (bounds.xMin < 0) {
       this.renderAtCenter(ctx, [worldWidth, 0]);

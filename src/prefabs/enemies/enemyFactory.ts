@@ -1,9 +1,4 @@
-import {
-  Physical,
-  PolygonCollider,
-  AnimationManager,
-  SpriteRenderer,
-} from 'pearl';
+import { Physical, AnimationManager, SpriteRenderer, BoxCollider } from 'pearl';
 import { NetworkedPrefab } from '../../components/networking/Networking';
 
 import TileEntity from '../../components/TileEntity';
@@ -57,7 +52,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
           worldWidth: TILE_SIZE * WORLD_SIZE_WIDTH,
           worldHeight: TILE_SIZE * WORLD_SIZE_HEIGHT,
         }),
-        PolygonCollider.createBox({
+        new BoxCollider({
           width: TILE_SIZE - 2,
           height: TILE_SIZE - 2,
         }),

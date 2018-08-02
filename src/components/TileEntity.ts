@@ -89,7 +89,7 @@ export default class TileEntity extends Component<null> {
       throw new Error('already moving; cannot move again');
     }
 
-    const startTilePos = this.tilePosition;
+    const startTilePos = { x: this.tilePosition.x, y: this.tilePosition.y };
     const wrappedEndPos = this.tileMap.wrapTilePosition(endTilePos);
 
     if (wrappedEndPos.x !== endTilePos.x) {

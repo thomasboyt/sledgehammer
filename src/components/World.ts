@@ -1,7 +1,7 @@
 import {
   Component,
   Coordinates,
-  PolygonCollider,
+  ShapeCollider,
   GameObject,
   Physical,
 } from 'pearl';
@@ -247,7 +247,7 @@ export default class World extends Component<null> {
     // spawns TWO PICKUPS, lol
 
     for (let bullet of bullets) {
-      const bulletCollider = bullet.getComponent(PolygonCollider);
+      const bulletCollider = bullet.getComponent(ShapeCollider);
 
       if (tileMapCollider.isColliding(bulletCollider)) {
         bullet.getComponent(Bullet).explode();
@@ -260,7 +260,7 @@ export default class World extends Component<null> {
         }
 
         if (
-          bulletCollider.isColliding(otherBullet.getComponent(PolygonCollider))
+          bulletCollider.isColliding(otherBullet.getComponent(ShapeCollider))
         ) {
           bullet.getComponent(Bullet).explode();
           otherBullet.getComponent(Bullet).explode();
@@ -268,7 +268,7 @@ export default class World extends Component<null> {
       }
 
       for (let player of players) {
-        if (bulletCollider.isColliding(player.getComponent(PolygonCollider))) {
+        if (bulletCollider.isColliding(player.getComponent(ShapeCollider))) {
           if (player.getComponent(Player).playerState === 'alive') {
             bullet.getComponent(Bullet).explode();
             player.getComponent(Player).die();
@@ -277,7 +277,7 @@ export default class World extends Component<null> {
       }
 
       for (let enemy of enemies) {
-        if (bulletCollider.isColliding(enemy.getComponent(PolygonCollider))) {
+        if (bulletCollider.isColliding(enemy.getComponent(ShapeCollider))) {
           // destroy enemy
           if (enemy.getComponent(BaseEnemy).state === 'alive') {
             bullet.getComponent(Bullet).explode();
@@ -292,8 +292,8 @@ export default class World extends Component<null> {
       for (let enemy of enemies) {
         if (
           player
-            .getComponent(PolygonCollider)
-            .isColliding(enemy.getComponent(PolygonCollider))
+            .getComponent(ShapeCollider)
+            .isColliding(enemy.getComponent(ShapeCollider))
         ) {
           if (
             player.getComponent(Player).playerState === 'alive' &&
@@ -307,8 +307,8 @@ export default class World extends Component<null> {
       for (let pickup of pickups) {
         if (
           player
-            .getComponent(PolygonCollider)
-            .isColliding(pickup.getComponent(PolygonCollider))
+            .getComponent(ShapeCollider)
+            .isColliding(pickup.getComponent(ShapeCollider))
         ) {
           this.playerCollectedPickup(player, pickup);
         }

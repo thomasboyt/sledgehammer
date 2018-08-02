@@ -2,11 +2,11 @@ import {
   Component,
   Physical,
   Coordinates,
-  PolygonCollider,
   AnimationManager,
   GameObject,
   SpriteRenderer,
   PolygonShape,
+  ShapeCollider,
 } from 'pearl';
 import * as SAT from 'sat';
 
@@ -170,13 +170,15 @@ export default class BaseEnemy extends Component<null> {
       const x = facing.x * i;
       const y = facing.y * i;
 
-      const tilePos = tileMap.worldCenterToTileCoordinates({
+      let tilePos = tileMap.worldCenterToTileCoordinates({
         x: center.x + x,
         y: center.y + y,
       });
 
-      tilePos.x = Math.floor(tilePos.x);
-      tilePos.y = Math.floor(tilePos.y);
+      tilePos = {
+        x: Math.floor(tilePos.x),
+        y: Math.floor(tilePos.y),
+      };
 
       if (tileMap.getTile(tilePos) === Tile.Wall) {
         sightlineLength = i;
@@ -205,7 +207,7 @@ export default class BaseEnemy extends Component<null> {
     };
 
     const collidingEntities = taggedEntities.filter((entity) => {
-      const poly = entity.getComponent(PolygonCollider);
+      const poly = entity.getComponent(ShapeCollider);
       return poly.testShape(sightlinePoly, position);
     });
 

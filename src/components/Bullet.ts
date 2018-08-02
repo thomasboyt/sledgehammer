@@ -1,9 +1,11 @@
 import {
   Component,
   Physical,
-  PolygonCollider,
   Coordinates,
   GameObject,
+  Vector2,
+  BoxCollider,
+  VectorMaths as V,
 } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
@@ -20,15 +22,16 @@ interface ShootOptions {
 
 export default class Bullet extends Component<null> {
   origin?: GameObject;
+  vel: Vector2 = { x: 0, y: 0 };
 
   shoot(opts: ShootOptions) {
     this.origin = opts.originObject;
     const { facing, speed } = opts;
 
     const phys = this.getComponent(Physical);
-    const collider = this.getComponent(PolygonCollider);
+    const collider = this.getComponent(BoxCollider);
     const originPhys = this.origin.getComponent(Physical);
-    const originCollider = this.origin.getComponent(PolygonCollider);
+    const originCollider = this.origin.getComponent(BoxCollider);
 
     // (3px padding is kinda arbitrary and may need to be shifted if velocities
     // of players or bullets are changed since it's possible for a player to
@@ -42,7 +45,7 @@ export default class Bullet extends Component<null> {
         facing.y * (originCollider.height! / 2 + collider.height! / 2 + 3),
     };
 
-    phys.vel = {
+    this.vel = {
       x: facing.x * speed,
       y: facing.y * speed,
     };
@@ -54,7 +57,10 @@ export default class Bullet extends Component<null> {
       return;
     }
 
-    const collider = this.getComponent(PolygonCollider);
+    const phys = this.getComponent(Physical);
+    phys.translate(V.multiply(this.vel, dt));
+
+    const collider = this.getComponent(BoxCollider);
     const bounds = collider.getLocalBounds();
 
     if (

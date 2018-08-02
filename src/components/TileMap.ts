@@ -1,4 +1,4 @@
-import { Component, Physical, PolygonCollider, Coordinates } from 'pearl';
+import { Component, Physical, Coordinates } from 'pearl';
 import { addVector } from '../util/math';
 import TileMapCollider, { ITileMap } from './TileMapCollider';
 

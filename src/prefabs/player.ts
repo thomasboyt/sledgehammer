@@ -1,6 +1,6 @@
 import {
   Physical,
-  PolygonCollider,
+  BoxCollider,
   Coordinates,
   GameObject,
   AnimationManager,
@@ -26,7 +26,6 @@ import SpriteSheetAsset from '../SpriteSheetAsset';
 
 interface PlayerSnapshot {
   center: Coordinates;
-  vel: Coordinates;
   angle: number;
 
   worldId: string;
@@ -47,7 +46,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       new Physical({
         center: { x: 120, y: 120 },
       }),
-      PolygonCollider.createBox({
+      new BoxCollider({
         width: TILE_SIZE - 2,
         height: TILE_SIZE - 2,
       }),
@@ -91,7 +90,6 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
 
     return {
       center: phys.center,
-      vel: phys.vel,
       angle: phys.angle,
 
       worldId: world.id,
@@ -111,7 +109,6 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
   ) => {
     const phys = obj.getComponent(Physical);
     phys.center = snapshot.center;
-    phys.vel = snapshot.vel;
     phys.angle = snapshot.angle;
 
     const world = objectsById.get(snapshot.worldId);

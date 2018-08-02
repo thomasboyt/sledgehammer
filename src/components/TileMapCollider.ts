@@ -105,14 +105,7 @@ export default class TileMapCollider extends Collider {
       );
 
       if (resp && resp.overlap > 0) {
-        const overlapVector: [number, number] = [
-          resp.overlapVector[0],
-          resp.overlapVector[1],
-        ];
-        const overlap = resp.overlap;
-        const aInB = resp.aInB;
-        const bInA = resp.bInA;
-        return { overlapVector, overlap, aInB, bInA };
+        return resp;
       }
     }
   }
