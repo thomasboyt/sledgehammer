@@ -1,5 +1,24 @@
+import { Socket } from 'dgram';
+
 const ENABLE_LOGGING = true;
 const debugLog = (...msgs: any[]) => ENABLE_LOGGING && console.log(...msgs);
+
+interface PeerSocketOptions {
+  onOpen: () => void;
+  onMessage: (evt: MessageEvent) => void;
+  onClose: () => void;
+  onError?: (err: SocketError) => void;
+}
+
+type ErrorCode = 'iceFailed';
+
+class SocketError extends Error {
+  code: ErrorCode;
+  constructor(msg: string, code: ErrorCode) {
+    super(msg);
+    this.code = code;
+  }
+}
 
 /**
  * Represents a single connection, including two data channels, with another
@@ -8,6 +27,14 @@ const debugLog = (...msgs: any[]) => ENABLE_LOGGING && console.log(...msgs);
  */
 export default class PeerSocket {
   state: 'connecting' | 'open' | 'closed' = 'connecting';
+
+  onOpen = () => {};
+  onMessage = (evt: MessageEvent) => {};
+  onClose = () => {};
+  onError = (err: SocketError) => {
+    console.error('Unhandled PeerSocket error:');
+    throw err;
+  };
 
   private _peer: RTCPeerConnection;
 
@@ -19,12 +46,12 @@ export default class PeerSocket {
   );
   private _resolveCandidates!: (value: RTCIceCandidate[]) => void;
 
-  _channels: {
+  private _channels: {
     reliable?: RTCDataChannel;
     unreliable?: RTCDataChannel;
   } = {};
 
-  constructor(isOffering: boolean) {
+  constructor(opts: PeerSocketOptions) {
     this._peer = new RTCPeerConnection({
       iceServers: [
         {
@@ -55,40 +82,18 @@ export default class PeerSocket {
     };
 
     this._peer.oniceconnectionstatechange = (evt) => {
-      if (this._peer.iceConnectionState === 'connected') {
-        this.onConnect();
-      } else if (this._peer.iceConnectionState === 'disconnected') {
-        this.onDisconnect();
-      } else if (this._peer.iceConnectionState === 'failed') {
-        // TODO: maybe handle this differently??
+      if (this._peer.iceConnectionState === 'failed') {
+        debugLog('iceConnectionState = failed');
+        this.close(new SocketError('ice connection failed', 'iceFailed'));
       } else if (this._peer.iceConnectionState === 'closed') {
-        this.onClose();
+        debugLog('iceConnectionState = closed');
+        this.close();
       }
     };
-  }
 
-  async getConnectionProtocol() {
-    // XXX: RTCStatsReport isn't typed yet
-    const stats = (await this._peer.getStats()) as any;
-
-    const connectionPairs = [...stats.values()].filter(
-      (entry) => entry.type === 'candidate-pair'
-    );
-    const successPairs = connectionPairs.filter(
-      (entry) => entry.state === 'succeeded'
-    );
-
-    if (successPairs.length !== 1) {
-      console.log('too many or too few success pairs');
-      console.log(connectionPairs);
-      console.log([...stats.values()]);
-      throw new Error();
-    }
-
-    const pair = connectionPairs[0];
-    const remote = stats.get(pair.remoteCandidateId);
-
-    return remote.protocol;
+    this.onOpen = opts.onOpen;
+    this.onMessage = opts.onMessage;
+    this.onClose = opts.onClose;
   }
 
   /**
@@ -124,6 +129,8 @@ export default class PeerSocket {
     channel.binaryType = 'arraybuffer';
 
     channel.onopen = () => {
+      // XXX: both channels change readyState on the same tick, so this always
+      // gets called twice, which is why the allReady + state check is important
       const allReady = [
         this._channels.reliable,
         this._channels.unreliable,
@@ -131,12 +138,17 @@ export default class PeerSocket {
         return channel !== undefined && channel.readyState === 'open';
       });
 
-      console.log('opened channel', label);
+      debugLog('opened channel', label);
 
-      if (allReady && this.state !== 'open') {
+      if (allReady && this.state === 'connecting') {
         this.state = 'open';
         this.onOpen();
       }
+    };
+
+    channel.onclose = () => {
+      // if either channel closes, we kill the connection
+      this.close();
     };
 
     channel.onmessage = (evt) => {
@@ -181,13 +193,44 @@ export default class PeerSocket {
     channel.send(msg);
   }
 
-  close() {
-    this._peer.close();
-  }
+  close(err?: SocketError) {
+    if (this.state === 'closed') {
+      return;
+    }
 
-  onOpen = () => {};
-  onConnect = () => {};
-  onMessage = (evt: MessageEvent) => {};
-  onDisconnect = () => {};
-  onClose = () => {};
+    this.state = 'closed';
+
+    // attempt to close channels (can fail if already closed)
+    const channels = [this._channels.reliable, this._channels.unreliable];
+    for (let channel of channels) {
+      if (!channel) {
+        continue;
+      }
+      try {
+        debugLog('closing channel');
+        channel.close();
+      } catch (err) {
+        debugLog('error closing channel', err);
+      }
+    }
+
+    // attempt to close peer (can fail if already closed)
+    try {
+      debugLog('closing peer');
+      this._peer.close();
+    } catch (err) {
+      debugLog('error closing peer', err);
+    }
+
+    // unset peer listeners
+    this._peer.onicecandidate = () => {};
+    this._peer.oniceconnectionstatechange = () => {};
+    this._peer.ondatachannel = () => {};
+
+    if (err) {
+      this.onError(err);
+    }
+
+    this.onClose();
+  }
 }

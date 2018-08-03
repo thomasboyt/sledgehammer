@@ -9,16 +9,16 @@ import {
   TILE_SIZE,
   lobbyServer,
 } from '../constants';
-import initializeClient from '../initializeClient';
+import showRoomLink from '../roomLink';
 
 interface Options {
   isHost: boolean;
-  roomCode: string;
+  roomCode?: string;
 }
 
 export default class Game extends Component<Options> {
   isHost!: boolean;
-  roomCode!: string;
+  roomCode?: string;
 
   init(opts: Options) {
     this.isHost = opts.isHost;
@@ -34,10 +34,8 @@ export default class Game extends Component<Options> {
   *initializeHost() {
     const networkingHost = this.getComponent(NetworkingHost);
 
-    yield networkingHost.connect({
-      groovejetUrl: lobbyServer,
-      roomCode: this.roomCode,
-    });
+    const roomCode = yield networkingHost.connect(lobbyServer);
+    showRoomLink(roomCode);
 
     const sessionObject = networkingHost.createNetworkedPrefab('session');
     const session = sessionObject.getComponent(Session);
@@ -56,6 +54,12 @@ export default class Game extends Component<Options> {
   *initializeClient() {
     const networkingClient = this.getComponent(NetworkingClient);
 
+    if (!this.roomCode) {
+      throw new Error('missing roomCode, did you forget to pass it?');
+    }
+
+    showRoomLink(this.roomCode);
+
     yield networkingClient.connect({
       groovejetUrl: lobbyServer,
       roomCode: this.roomCode,
@@ -68,18 +72,25 @@ export default class Game extends Component<Options> {
     const center = this.pearl.renderer.getViewCenter();
     ctx.fillRect(center.x - size.x / 2, center.y - size.y / 2, size.x, size.y);
 
-    if (!this.isHost) {
-      const client = this.getComponent(NetworkingClient);
+    ctx.font = '16px monospace';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
 
-      ctx.font = '16px monospace';
-      ctx.fillStyle = 'white';
-      ctx.textAlign = 'center';
+    if (this.isHost) {
+      const host = this.getComponent(NetworkingHost);
+      if (host.connectionState === 'connecting') {
+        ctx.fillText('connecting to lobby...', WIDTH / 2, 200);
+      }
+    } else {
+      const client = this.getComponent(NetworkingClient);
 
       if (client.connectionState === 'connecting') {
         ctx.fillText('connecting', WIDTH / 2, 200);
       } else if (client.connectionState === 'error') {
         ctx.fillText('connection error:', WIDTH / 2, 200);
         ctx.fillText(client.errorReason!, WIDTH / 2, 220);
+      } else if (client.connectionState === 'closed') {
+        ctx.fillText('connection closed', WIDTH / 2, 200);
       }
     }
   }

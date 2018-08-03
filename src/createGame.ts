@@ -10,7 +10,7 @@ import SpriteSheetAsset from './SpriteSheetAsset';
 
 interface Options {
   isHost: boolean;
-  roomCode: string;
+  roomCode?: string;
 }
 
 const assets = {

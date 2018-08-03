@@ -9,13 +9,16 @@ interface GroovejetOptions {
   url: string;
   roomCode: string;
   isHost: boolean;
-  onOpen?: (this: WebSocket, evt: Event) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
   onClientOfferSignal?: OnClientOfferSignal;
   onHostAnswerSignal?: OnHostAnswerSignal;
 }
 
 export default class GroovejetClient {
   ws: WebSocket;
+  onOpen = () => {};
+  onClose = () => {};
   onClientOfferSignal?: OnClientOfferSignal;
   onHostAnswerSignal?: OnHostAnswerSignal;
 
@@ -28,12 +31,24 @@ export default class GroovejetClient {
     }
 
     this.ws = new WebSocket(url);
-    this.ws.onopen = opts.onOpen || null;
+    this.ws.onopen = this.handleOpen.bind(this);
     this.ws.onmessage = this.handleMessage.bind(this);
     this.ws.onclose = this.handleClose.bind(this);
 
+    if (this.onOpen) {
+      this.onOpen = opts.onOpen!;
+    }
+    if (this.onClose) {
+      this.onClose = opts.onClose!;
+    }
+
     this.onClientOfferSignal = opts.onClientOfferSignal;
     this.onHostAnswerSignal = opts.onHostAnswerSignal;
+  }
+
+  private handleOpen() {
+    console.log('*** Connected to Groovejet server');
+    this.onOpen();
   }
 
   private handleMessage(evt: MessageEvent) {
@@ -49,7 +64,8 @@ export default class GroovejetClient {
   }
 
   private handleClose() {
-    console.error('Lost connection to lobby server');
+    console.error('*** Lost connection to lobby server');
+    this.onClose();
   }
 
   private send(msg: any) {

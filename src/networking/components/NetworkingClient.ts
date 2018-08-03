@@ -5,26 +5,37 @@ import Networking, { Snapshot } from './Networking';
 import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 import { RpcMessage } from './NetworkingHost';
-import { ConnectionOptions, ClientConnection } from '../GameConnection';
+import ClientConnection from '../ClientConnection';
 
-type ConnectionState = 'connecting' | 'connected' | 'error';
+interface ConnectionOptions {
+  groovejetUrl: string;
+  roomCode: string;
+}
+
+type ConnectionState = 'connecting' | 'connected' | 'error' | 'closed';
 
 export default class NetworkingClient extends Networking {
   private connection!: ClientConnection;
   connectionState: ConnectionState = 'connecting';
   errorReason?: string;
+  private snapshotClock = 0;
+  private inputter?: PlayerInputter;
 
   connect(connectionOptions: ConnectionOptions) {
-    const connection = new ClientConnection(connectionOptions);
+    const connection = new ClientConnection(connectionOptions.groovejetUrl);
     this.connection = connection;
 
-    return new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       connection.onOpen = () => {
         this.onOpen();
         resolve();
       };
       connection.onMessage = this.onMessage.bind(this);
     });
+
+    connection.connectRoom(connectionOptions.roomCode);
+
+    return promise;
   }
 
   onMessage(strData: any) {
@@ -49,7 +60,7 @@ export default class NetworkingClient extends Networking {
   onOpen() {
     this.connectionState = 'connected';
 
-    const inputter = new PlayerInputter({
+    this.inputter = new PlayerInputter({
       onKeyDown: (keyCode) => {
         this.sendToHost({
           type: 'keyDown',
@@ -68,7 +79,15 @@ export default class NetworkingClient extends Networking {
       },
     });
 
-    inputter.registerLocalListeners();
+    this.inputter.registerLocalListeners();
+  }
+
+  onClose() {
+    this.connectionState = 'closed';
+    if (this.inputter) {
+      this.inputter.onKeyDown = () => {};
+      this.inputter.onKeyUp = () => {};
+    }
   }
 
   sendToHost(msg: any) {
@@ -81,6 +100,12 @@ export default class NetworkingClient extends Networking {
   }
 
   private onSnapshot(snapshot: Snapshot) {
+    const clock = snapshot.clock;
+    if (clock < this.snapshotClock) {
+      return;
+    }
+    this.snapshotClock = clock;
+
     const unseenIds = new Set(this.networkedObjects.keys());
 
     // first, find any prefabs that don't exist, and create them. this happens

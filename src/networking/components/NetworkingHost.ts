@@ -3,7 +3,7 @@ import { GameObject } from 'pearl';
 import Networking, { Snapshot, SnapshotObject } from './Networking';
 import Delegate from '../../util/Delegate';
 import NetworkedObject from './NetworkedObject';
-import { HostConnection, ConnectionOptions } from '../GameConnection';
+import HostConnection from '../HostConnection';
 
 let playerIdCounter = 0;
 
@@ -60,34 +60,46 @@ export default class NetworkingHost extends Networking {
   onPlayerAdded = new Delegate<OnPlayerAddedMsg>();
   onPlayerRemoved = new Delegate<OnPlayerAddedMsg>();
 
+  connectionState: 'connecting' | 'open' | 'closed' = 'connecting';
   private connection!: HostConnection;
+  private snapshotClock = 0;
 
-  connect(connectionOptions: ConnectionOptions) {
-    const connection = new HostConnection(connectionOptions);
+  // XXX: might be good in the future to have this use coroutines, once
+  // coroutines can yield other coroutines. for now, should be okay since this
+  // component never gets destroyed
+  async connect(groovejetUrl: string): Promise<string> {
+    const connection = new HostConnection(groovejetUrl);
     this.connection = connection;
 
-    return new Promise((resolve, reject) => {
-      connection.onGroovejetConnect = () => {
-        // report room created to parent for debug iframe usage
-        if (window.parent !== window) {
-          window.parent.postMessage(
-            {
-              type: 'hostCreatedRoom',
-              roomCode: connectionOptions.roomCode,
-            },
-            window.location.origin
-          );
-        }
+    const roomCode = await connection.getRoomCode();
 
-        resolve();
+    // report room created to parent for debug iframe usage
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: 'hostCreatedRoom',
+          roomCode,
+        },
+        window.location.origin
+      );
+    }
+
+    const promise = new Promise<string>((resolve, reject) => {
+      connection.onGroovejetOpen = () => {
+        this.connectionState = 'open';
+        resolve(roomCode);
       };
 
-      connection.onPeerConnection = this.onPeerConnected.bind(this);
+      connection.onPeerOpen = this.onPeerConnected.bind(this);
       connection.onPeerMessage = this.onPeerMessage.bind(this);
-      connection.onPeerDisconnect = this.onPeerDisconnect.bind(this);
+      connection.onPeerClose = this.onPeerDisconnect.bind(this);
       // TODO: not actually implemented yet
       // connection.onPeerError = this.onPeerDisconnect;
     });
+
+    this.connection.connectRoom(roomCode);
+
+    return promise;
   }
 
   onPeerConnected(peerId: string) {
@@ -120,7 +132,6 @@ export default class NetworkingHost extends Networking {
   }
 
   onPeerMessage(peerId: string, data: string) {
-    console.log('message');
     const player = this.players.get(this.peerIdToPlayerId.get(peerId)!)!;
     const msg = JSON.parse(data);
 
@@ -135,6 +146,11 @@ export default class NetworkingHost extends Networking {
   }
 
   onPeerDisconnect(peerId: string) {
+    if (!this.peerIdToPlayerId.has(peerId)) {
+      // this can happen if the socket is closed before the player is added
+      return;
+    }
+
     const player = this.players.get(this.peerIdToPlayerId.get(peerId)!)!;
     this.peerIdToPlayerId.delete(peerId);
     this.players.delete(player.id);
@@ -173,10 +189,13 @@ export default class NetworkingHost extends Networking {
   update(dt: number) {
     const snapshot = this.serializeSnapshot();
 
-    this.sendToPeers({
-      type: 'snapshot',
-      data: snapshot,
-    });
+    this.sendToPeers(
+      {
+        type: 'snapshot',
+        data: snapshot,
+      },
+      'unreliable'
+    );
 
     // TODO: This is wrapped in setImmediate() so that keys aren't unset before
     // everything else's update() hook is called This is a decent argument for
@@ -212,16 +231,21 @@ export default class NetworkingHost extends Networking {
     return obj;
   }
 
-  private sendToPeers(msg: any): void {
+  private sendToPeers(
+    msg: any,
+    channel: 'reliable' | 'unreliable' = 'reliable'
+  ): void {
     // const serialized = serializeMessage('host', msg);
     const serialized = JSON.stringify(msg);
 
     for (let peerId of this.peerIdToPlayerId.keys()) {
-      this.connection.sendPeer(peerId, serialized);
+      this.connection.sendPeer(peerId, serialized, channel);
     }
   }
 
   private serializeSnapshot(): Snapshot {
+    this.snapshotClock += 1;
+
     const networkedObjects = [...this.networkedObjects.values()];
 
     const serializedObjects: SnapshotObject[] = networkedObjects.map(
@@ -240,6 +264,7 @@ export default class NetworkingHost extends Networking {
 
     return {
       objects: serializedObjects,
+      clock: this.snapshotClock,
     };
   }
 
