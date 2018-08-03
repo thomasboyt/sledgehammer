@@ -7,7 +7,9 @@ import {
 } from 'pearl';
 import { sample, sampleSize } from 'lodash-es';
 
-import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
+import NetworkingHost, {
+  NetworkingPlayer,
+} from '../networking/components/NetworkingHost';
 import Player from './Player';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';

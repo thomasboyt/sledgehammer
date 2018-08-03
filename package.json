@@ -13,6 +13,7 @@
   "author": "Thomas Boyt <me@thomasboyt.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/webrtc": "0.0.23",
     "css-loader": "^0.28.11",
     "file-loader": "^1.1.11",
     "style-loader": "^0.21.0",
@@ -27,7 +28,6 @@
     "@types/lodash-es": "^4.17.0",
     "@types/pathfinding": "0.0.2",
     "@types/query-string": "^5.1.0",
-    "@types/simple-peer": "^6.1.4",
     "@types/uuid": "^3.4.3",
     "arson": "^0.2.6",
     "axios": "^0.18.0",
@@ -35,10 +35,9 @@
     "lodash-es": "^4.17.10",
     "micro-memoize": "^2.0.3",
     "pathfinding": "^0.4.18",
-    "pearl": "git://github.com/thomasboyt/pearl.git",
+    "pearl": "git://github.com/thomasboyt/pearl",
     "query-string": "^6.1.0",
     "runtypes": "^2.0.6",
-    "simple-peer": "^9.1.2",
     "uuid": "^3.2.1",
     "webpack-cli": "^2.1.4",
     "webpack-merge": "^4.1.2"

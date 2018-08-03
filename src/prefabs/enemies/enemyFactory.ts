@@ -1,5 +1,5 @@
 import { Physical, AnimationManager, SpriteRenderer, BoxCollider } from 'pearl';
-import { NetworkedPrefab } from '../../components/networking/Networking';
+import { NetworkedPrefab } from '../../networking/components/Networking';
 
 import TileEntity from '../../components/TileEntity';
 import WrappedEntityRenderer from '../../components/WrappedEntityRenderer';

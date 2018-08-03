@@ -1,5 +1,5 @@
 import { Physical, PolygonRenderer, BoxCollider } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPrefab } from '../networking/components/Networking';
 import {
   PhysicalSnapshot,
   serializePhysical,

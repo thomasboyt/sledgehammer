@@ -1,22 +1,24 @@
 type OnClientOfferSignal = (
-  offerSignal: string,
-  answerCallback: (answerSignal: string) => void
+  clientId: string,
+  offerSignal: RTCSessionDescriptionInit
 ) => void;
 
-type OnHostAnswerSignal = (answerSignal: string) => void;
+type OnHostAnswerSignal = (answerSignal: RTCSessionDescriptionInit) => void;
 
 interface GroovejetOptions {
   url: string;
   roomCode: string;
   isHost: boolean;
-  onOpen?: (this: WebSocket, evt: Event) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
   onClientOfferSignal?: OnClientOfferSignal;
   onHostAnswerSignal?: OnHostAnswerSignal;
 }
 
 export default class GroovejetClient {
   ws: WebSocket;
-  clientId?: string;
+  onOpen = () => {};
+  onClose = () => {};
   onClientOfferSignal?: OnClientOfferSignal;
   onHostAnswerSignal?: OnHostAnswerSignal;
 
@@ -29,12 +31,24 @@ export default class GroovejetClient {
     }
 
     this.ws = new WebSocket(url);
-    this.ws.onopen = opts.onOpen || null;
+    this.ws.onopen = this.handleOpen.bind(this);
     this.ws.onmessage = this.handleMessage.bind(this);
     this.ws.onclose = this.handleClose.bind(this);
 
+    if (this.onOpen) {
+      this.onOpen = opts.onOpen!;
+    }
+    if (this.onClose) {
+      this.onClose = opts.onClose!;
+    }
+
     this.onClientOfferSignal = opts.onClientOfferSignal;
     this.onHostAnswerSignal = opts.onHostAnswerSignal;
+  }
+
+  private handleOpen() {
+    console.log('*** Connected to Groovejet server');
+    this.onOpen();
   }
 
   private handleMessage(evt: MessageEvent) {
@@ -44,23 +58,21 @@ export default class GroovejetClient {
       this.onHostAnswerSignal!(msg.data.answerSignal);
     } else if (msg.type === 'clientConnection') {
       const { clientId, offerSignal } = msg.data;
-      this.clientId = clientId;
 
-      this.onClientOfferSignal!(offerSignal, (answerSignal) => {
-        this.sendHostAnswerSignal(answerSignal);
-      });
+      this.onClientOfferSignal!(clientId, offerSignal);
     }
   }
 
   private handleClose() {
-    console.error('Lost connection to lobby server');
+    console.error('*** Lost connection to lobby server');
+    this.onClose();
   }
 
   private send(msg: any) {
     this.ws.send(JSON.stringify(msg));
   }
 
-  sendClientOfferSignal(offerSignal: string) {
+  sendClientOfferSignal(offerSignal: RTCSessionDescriptionInit) {
     this.send({
       type: 'clientSignal',
       data: {
@@ -69,12 +81,15 @@ export default class GroovejetClient {
     });
   }
 
-  sendHostAnswerSignal(answerSignal: string) {
+  sendHostAnswerSignal(
+    clientId: string,
+    answerSignal: RTCSessionDescriptionInit
+  ) {
     this.send({
       type: 'hostSignal',
       data: {
-        answerSignal: answerSignal,
-        clientId: this.clientId,
+        answerSignal,
+        clientId,
       },
     });
   }

@@ -1,9 +1,9 @@
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPrefab } from '../networking/components/Networking';
 import Session, { GameState, SessionPlayer } from '../components/Session';
 import SessionUI from '../components/SessionUI';
 import { ZIndex } from '../types';
 import LevelTransitionManager from '../components/LevelTransitionManager';
-import NetworkedObject from '../components/networking/NetworkedObject';
+import NetworkedObject from '../networking/components/NetworkedObject';
 
 interface SessionSnapshot {
   gameState: GameState;

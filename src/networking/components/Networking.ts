@@ -9,6 +9,7 @@ export interface SnapshotObject {
 
 export interface Snapshot {
   objects: SnapshotObject[];
+  clock: number;
 }
 
 export interface NetworkedPrefab<Snapshot> {

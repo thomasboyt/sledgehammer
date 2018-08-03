@@ -1,9 +1,9 @@
 import { GameObject } from 'pearl';
 
-import * as Peer from 'simple-peer';
 import Networking, { Snapshot, SnapshotObject } from './Networking';
 import Delegate from '../../util/Delegate';
 import NetworkedObject from './NetworkedObject';
+import HostConnection from '../HostConnection';
 
 let playerIdCounter = 0;
 
@@ -54,54 +54,74 @@ export interface RpcMessage {
 }
 
 export default class NetworkingHost extends Networking {
-  peerToPlayerId = new Map<Peer.Instance, number>();
+  peerIdToPlayerId = new Map<string, number>();
   players = new Map<number, NetworkingPlayer>();
 
   onPlayerAdded = new Delegate<OnPlayerAddedMsg>();
   onPlayerRemoved = new Delegate<OnPlayerAddedMsg>();
 
-  onPeerConnected(peer: Peer.Instance) {
+  connectionState: 'connecting' | 'open' | 'closed' = 'connecting';
+  private connection!: HostConnection;
+  private snapshotClock = 0;
+
+  // XXX: might be good in the future to have this use coroutines, once
+  // coroutines can yield other coroutines. for now, should be okay since this
+  // component never gets destroyed
+  async connect(groovejetUrl: string): Promise<string> {
+    const connection = new HostConnection(groovejetUrl);
+    this.connection = connection;
+
+    const roomCode = await connection.getRoomCode();
+
+    // report room created to parent for debug iframe usage
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: 'hostCreatedRoom',
+          roomCode,
+        },
+        window.location.origin
+      );
+    }
+
+    const promise = new Promise<string>((resolve, reject) => {
+      connection.onGroovejetOpen = () => {
+        this.connectionState = 'open';
+        resolve(roomCode);
+      };
+
+      connection.onPeerOpen = this.onPeerConnected.bind(this);
+      connection.onPeerMessage = this.onPeerMessage.bind(this);
+      connection.onPeerClose = this.onPeerDisconnect.bind(this);
+      // TODO: not actually implemented yet
+      // connection.onPeerError = this.onPeerDisconnect;
+    });
+
+    this.connection.connectRoom(roomCode);
+
+    return promise;
+  }
+
+  onPeerConnected(peerId: string) {
     if (this.players.size === MAX_CLIENTS) {
-      peer.send(
+      this.connection.sendPeer(
+        peerId,
         JSON.stringify({
           type: 'tooManyPlayers',
         })
       );
-      peer.destroy();
+      this.connection.closePeerConnection(peerId);
       return;
     }
 
-    const player = this.addPlayer({ inputter: new NetworkedInputter() });
-
-    this.peerToPlayerId.set(peer, player.id);
-
-    peer.on('data', (data: string) => {
-      // const msg = deserializeMessage('client', data);
-      const msg = JSON.parse(data);
-
-      if (msg.type === 'keyDown') {
-        this.onClientKeyDown(player, msg.data.keyCode);
-      } else if (msg.type === 'keyUp') {
-        this.onClientKeyUp(player, msg.data.keyCode);
-      } else if (msg.type === 'pong') {
-        // const ping = Date.now() - this.lastPingTime; this.pings.set(playerId,
-        // ping);
-      }
+    const player = this.addPlayer({
+      inputter: new NetworkedInputter(),
     });
 
-    peer.on('close', () => {
-      this.peerToPlayerId.delete(peer);
-      this.players.delete(player.id);
-      this.removePlayer(player);
-    });
+    this.peerIdToPlayerId.set(peerId, player.id);
 
-    peer.on('error', () => {
-      this.peerToPlayerId.delete(peer);
-      this.players.delete(player.id);
-      this.removePlayer(player);
-    });
-
-    peer.send(
+    this.connection.sendPeer(
+      peerId,
       JSON.stringify({
         type: 'identity',
         data: {
@@ -109,6 +129,32 @@ export default class NetworkingHost extends Networking {
         },
       })
     );
+  }
+
+  onPeerMessage(peerId: string, data: string) {
+    const player = this.players.get(this.peerIdToPlayerId.get(peerId)!)!;
+    const msg = JSON.parse(data);
+
+    if (msg.type === 'keyDown') {
+      this.onClientKeyDown(player, msg.data.keyCode);
+    } else if (msg.type === 'keyUp') {
+      this.onClientKeyUp(player, msg.data.keyCode);
+    } else if (msg.type === 'pong') {
+      // const ping = Date.now() - this.lastPingTime; this.pings.set(playerId,
+      // ping);
+    }
+  }
+
+  onPeerDisconnect(peerId: string) {
+    if (!this.peerIdToPlayerId.has(peerId)) {
+      // this can happen if the socket is closed before the player is added
+      return;
+    }
+
+    const player = this.players.get(this.peerIdToPlayerId.get(peerId)!)!;
+    this.peerIdToPlayerId.delete(peerId);
+    this.players.delete(player.id);
+    this.removePlayer(player);
   }
 
   addPlayer(opts: AddPlayerOpts): NetworkingPlayer {
@@ -143,10 +189,13 @@ export default class NetworkingHost extends Networking {
   update(dt: number) {
     const snapshot = this.serializeSnapshot();
 
-    this.sendToPeers({
-      type: 'snapshot',
-      data: snapshot,
-    });
+    this.sendToPeers(
+      {
+        type: 'snapshot',
+        data: snapshot,
+      },
+      'unreliable'
+    );
 
     // TODO: This is wrapped in setImmediate() so that keys aren't unset before
     // everything else's update() hook is called This is a decent argument for
@@ -182,16 +231,21 @@ export default class NetworkingHost extends Networking {
     return obj;
   }
 
-  private sendToPeers(msg: any): void {
+  private sendToPeers(
+    msg: any,
+    channel: 'reliable' | 'unreliable' = 'reliable'
+  ): void {
     // const serialized = serializeMessage('host', msg);
     const serialized = JSON.stringify(msg);
 
-    for (let peer of this.peerToPlayerId.keys()) {
-      peer.send(serialized);
+    for (let peerId of this.peerIdToPlayerId.keys()) {
+      this.connection.sendPeer(peerId, serialized, channel);
     }
   }
 
   private serializeSnapshot(): Snapshot {
+    this.snapshotClock += 1;
+
     const networkedObjects = [...this.networkedObjects.values()];
 
     const serializedObjects: SnapshotObject[] = networkedObjects.map(
@@ -210,6 +264,7 @@ export default class NetworkingHost extends Networking {
 
     return {
       objects: serializedObjects,
+      clock: this.snapshotClock,
     };
   }
 

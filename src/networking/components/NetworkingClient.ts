@@ -1,46 +1,66 @@
 import { GameObject } from 'pearl';
-import * as Peer from 'simple-peer';
 import Networking, { Snapshot } from './Networking';
 
 // TODO: replace this with something better?
 import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 import { RpcMessage } from './NetworkingHost';
+import ClientConnection from '../ClientConnection';
 
-type ConnectionState = 'connecting' | 'connected' | 'error';
+interface ConnectionOptions {
+  groovejetUrl: string;
+  roomCode: string;
+}
+
+type ConnectionState = 'connecting' | 'connected' | 'error' | 'closed';
 
 export default class NetworkingClient extends Networking {
-  hostPeer!: Peer.Instance;
-
+  private connection!: ClientConnection;
   connectionState: ConnectionState = 'connecting';
   errorReason?: string;
+  private snapshotClock = 0;
+  private inputter?: PlayerInputter;
 
-  registerHostPeer(hostPeer: Peer.Instance) {
-    this.connectionState = 'connected';
+  connect(connectionOptions: ConnectionOptions) {
+    const connection = new ClientConnection(connectionOptions.groovejetUrl);
+    this.connection = connection;
 
-    this.hostPeer = hostPeer;
-
-    hostPeer.on('data', (strData: string) => {
-      // const msg = deserializeMessage('host', strData);
-      const msg = JSON.parse(strData);
-
-      if (msg.type === 'snapshot') {
-        this.onSnapshot(msg.data);
-      } else if (msg.type === 'identity') {
-        this.setIdentity(msg.data.id);
-      } else if (msg.type === 'tooManyPlayers') {
-        this.connectionState = 'error';
-        this.errorReason = 'Room at max capacity';
-      } else if (msg.type === 'rpc') {
-        this.handleRpc(msg.data);
-      } else if (msg.type === 'ping') {
-        // this.sendToHost({
-        //   type: 'pong',
-        // });
-      }
+    const promise = new Promise((resolve, reject) => {
+      connection.onOpen = () => {
+        this.onOpen();
+        resolve();
+      };
+      connection.onMessage = this.onMessage.bind(this);
     });
 
-    const inputter = new PlayerInputter({
+    connection.connectRoom(connectionOptions.roomCode);
+
+    return promise;
+  }
+
+  onMessage(strData: any) {
+    const msg = JSON.parse(strData);
+
+    if (msg.type === 'snapshot') {
+      this.onSnapshot(msg.data);
+    } else if (msg.type === 'identity') {
+      this.setIdentity(msg.data.id);
+    } else if (msg.type === 'tooManyPlayers') {
+      this.connectionState = 'error';
+      this.errorReason = 'Room at max capacity';
+    } else if (msg.type === 'rpc') {
+      this.handleRpc(msg.data);
+    } else if (msg.type === 'ping') {
+      // this.sendToHost({
+      //   type: 'pong',
+      // });
+    }
+  }
+
+  onOpen() {
+    this.connectionState = 'connected';
+
+    this.inputter = new PlayerInputter({
       onKeyDown: (keyCode) => {
         this.sendToHost({
           type: 'keyDown',
@@ -59,12 +79,19 @@ export default class NetworkingClient extends Networking {
       },
     });
 
-    inputter.registerLocalListeners();
+    this.inputter.registerLocalListeners();
+  }
+
+  onClose() {
+    this.connectionState = 'closed';
+    if (this.inputter) {
+      this.inputter.onKeyDown = () => {};
+      this.inputter.onKeyUp = () => {};
+    }
   }
 
   sendToHost(msg: any) {
-    // this.hostPeer.send(serializeMessage('client', msg));
-    this.hostPeer.send(JSON.stringify(msg));
+    this.connection.send(JSON.stringify(msg));
   }
 
   private createNetworkedPrefab(name: string, id: string): GameObject {
@@ -73,6 +100,12 @@ export default class NetworkingClient extends Networking {
   }
 
   private onSnapshot(snapshot: Snapshot) {
+    const clock = snapshot.clock;
+    if (clock < this.snapshotClock) {
+      return;
+    }
+    this.snapshotClock = clock;
+
     const unseenIds = new Set(this.networkedObjects.keys());
 
     // first, find any prefabs that don't exist, and create them. this happens
