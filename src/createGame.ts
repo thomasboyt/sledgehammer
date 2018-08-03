@@ -3,8 +3,8 @@ import { createPearl } from 'pearl';
 
 import { WIDTH, HEIGHT } from './constants';
 import Game from './components/Game';
-import NetworkingHost from './components/networking/NetworkingHost';
-import NetworkingClient from './components/networking/NetworkingClient';
+import NetworkingHost from './networking/components/NetworkingHost';
+import NetworkingClient from './networking/components/NetworkingClient';
 import networkedPrefabs from './networkedPrefabs';
 import SpriteSheetAsset from './SpriteSheetAsset';
 

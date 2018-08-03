@@ -5,10 +5,7 @@ import Networking, { Snapshot } from './Networking';
 import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 import { RpcMessage } from './NetworkingHost';
-import {
-  ConnectionOptions,
-  ClientConnection,
-} from '../../networking/GameConnection';
+import { ConnectionOptions, ClientConnection } from '../GameConnection';
 
 type ConnectionState = 'connecting' | 'connected' | 'error';
 

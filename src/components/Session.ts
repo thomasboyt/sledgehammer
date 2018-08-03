@@ -1,5 +1,7 @@
 import { Component, GameObject, Keys } from 'pearl';
-import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
+import NetworkingHost, {
+  NetworkingPlayer,
+} from '../networking/components/NetworkingHost';
 import { levels } from '../levels';
 import Game from './Game';
 import World from './World';

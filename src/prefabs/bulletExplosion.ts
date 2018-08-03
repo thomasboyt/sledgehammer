@@ -1,5 +1,5 @@
 import { Physical, Coordinates } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPrefab } from '../networking/components/Networking';
 import BulletExplosion from '../components/BulletExplosion';
 import { ZIndex } from '../types';
 

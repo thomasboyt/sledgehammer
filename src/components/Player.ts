@@ -8,7 +8,7 @@ import {
   SpriteRenderer,
 } from 'pearl';
 import Game from './Game';
-import NetworkingHost from './networking/NetworkingHost';
+import NetworkingHost from '../networking/components/NetworkingHost';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
 import Bullet from './Bullet';

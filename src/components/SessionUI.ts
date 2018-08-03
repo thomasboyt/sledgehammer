@@ -1,9 +1,9 @@
 import { Component } from 'pearl';
-import NetworkingHost from './networking/NetworkingHost';
+import NetworkingHost from '../networking/components/NetworkingHost';
 import Game from './Game';
 import { WIDTH, TILE_SIZE, WORLD_SIZE_HEIGHT, HEIGHT } from '../constants';
 import Session, { SessionPlayer } from './Session';
-import NetworkingClient from './networking/NetworkingClient';
+import NetworkingClient from '../networking/components/NetworkingClient';
 
 export default class SessionUI extends Component<null> {
   private getLocalPlayer(): SessionPlayer | undefined {

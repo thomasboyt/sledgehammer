@@ -6,12 +6,12 @@ import {
   AnimationManager,
   SpriteRenderer,
 } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPrefab } from '../networking/components/Networking';
 
 import AssetManager from '../components/AssetManager';
 import Player from '../components/Player';
 import TileEntity from '../components/TileEntity';
-import NetworkedObject from '../components/networking/NetworkedObject';
+import NetworkedObject from '../networking/components/NetworkedObject';
 import WrappedEntityRenderer from '../components/WrappedEntityRenderer';
 import SpawningDyingRenderer from '../components/SpawningDyingRenderer';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';

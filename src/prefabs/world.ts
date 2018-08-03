@@ -1,5 +1,5 @@
 import { GameObject, Physical } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPrefab } from '../networking/components/Networking';
 import TileMap from '../components/TileMap';
 import TileMapRenderer from '../components/TileMapRenderer';
 import World from '../components/World';
@@ -10,7 +10,7 @@ import {
   deserializePhysical,
   PhysicalSnapshot,
 } from '../serializers/serializePhysical';
-import NetworkedObject from '../components/networking/NetworkedObject';
+import NetworkedObject from '../networking/components/NetworkedObject';
 import TileMapCollider from '../components/TileMapCollider';
 
 interface WorldSnapshot {

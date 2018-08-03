@@ -1,7 +1,7 @@
 import { Component } from 'pearl';
-import NetworkingHost from './networking/NetworkingHost';
+import NetworkingHost from '../networking/components/NetworkingHost';
 import Session from './Session';
-import NetworkingClient from './networking/NetworkingClient';
+import NetworkingClient from '../networking/components/NetworkingClient';
 import {
   WIDTH,
   HEIGHT,

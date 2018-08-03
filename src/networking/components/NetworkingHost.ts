@@ -3,10 +3,7 @@ import { GameObject } from 'pearl';
 import Networking, { Snapshot, SnapshotObject } from './Networking';
 import Delegate from '../../util/Delegate';
 import NetworkedObject from './NetworkedObject';
-import {
-  HostConnection,
-  ConnectionOptions,
-} from '../../networking/GameConnection';
+import { HostConnection, ConnectionOptions } from '../GameConnection';
 
 let playerIdCounter = 0;
 
