@@ -1,49 +1,31 @@
 import {
-  Physical,
   BoxCollider,
   Coordinates,
   GameObject,
   AnimationManager,
   SpriteRenderer,
 } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPhysical, NetworkedPrefab } from 'pearl-networking';
 
 import AssetManager from '../components/AssetManager';
 import Player from '../components/Player';
 import TileEntity from '../components/TileEntity';
-import NetworkedObject from '../components/networking/NetworkedObject';
 import WrappedEntityRenderer from '../components/WrappedEntityRenderer';
 import SpawningDyingRenderer from '../components/SpawningDyingRenderer';
-import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
+import NetworkedAnimationManager from '../components/NetworkedAnimationManager';
 
-import {
-  serializeAnimationManager,
-  deserializeAnimationManager,
-  AnimationSnapshot,
-} from '../serializers/serializeAnimationManager';
+import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 import { ZIndex } from '../types';
 import SpriteSheetAsset from '../SpriteSheetAsset';
 
-interface PlayerSnapshot {
-  center: Coordinates;
-  angle: number;
-
-  worldId: string;
-  playerState: string;
-  playerId?: number;
-  color: [number, number, number];
-
-  animation: AnimationSnapshot;
-}
-
-const player: NetworkedPrefab<PlayerSnapshot> = {
+const player: NetworkedPrefab = {
   type: 'player',
 
   zIndex: ZIndex.Pickup,
 
   createComponents(pearl) {
     return [
-      new Physical({
+      new NetworkedPhysical({
         center: { x: 120, y: 120 },
       }),
       new BoxCollider({
@@ -57,7 +39,7 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
         worldHeight: TILE_SIZE * WORLD_SIZE_HEIGHT,
       }),
 
-      new AnimationManager({
+      new NetworkedAnimationManager({
         sheet: pearl.assets.get(SpriteSheetAsset, 'player'),
 
         initialState: 'idle',
@@ -78,56 +60,6 @@ const player: NetworkedPrefab<PlayerSnapshot> = {
       new Player(),
       new SpawningDyingRenderer(),
     ];
-  },
-
-  serialize: (obj: GameObject): PlayerSnapshot => {
-    const phys = obj.getComponent(Physical);
-    const tileEntity = obj.getComponent(TileEntity);
-    const world = tileEntity.tileMap.gameObject.getComponent(NetworkedObject);
-    const player = obj.getComponent(Player);
-    const anim = obj.getComponent(AnimationManager);
-    const renderer = obj.getComponent(SpriteRenderer);
-
-    return {
-      center: phys.center,
-      angle: phys.angle,
-
-      worldId: world.id,
-
-      playerState: player.playerState,
-      playerId: player.playerId,
-      color: player.color!,
-
-      animation: serializeAnimationManager(anim, renderer),
-    };
-  },
-
-  deserialize: (
-    obj: GameObject,
-    snapshot: PlayerSnapshot,
-    objectsById: Map<string, GameObject>
-  ) => {
-    const phys = obj.getComponent(Physical);
-    phys.center = snapshot.center;
-    phys.angle = snapshot.angle;
-
-    const world = objectsById.get(snapshot.worldId);
-
-    if (!world) {
-      throw new Error('missing world object');
-    }
-
-    const tileEntity = obj.getComponent(TileEntity);
-    tileEntity.world = world;
-
-    const player = obj.getComponent(Player);
-    player.playerState = snapshot.playerState;
-    player.playerId = snapshot.playerId;
-    player.color = snapshot.color;
-
-    const anim = obj.getComponent(AnimationManager);
-    const renderer = obj.getComponent(SpriteRenderer);
-    deserializeAnimationManager(anim, renderer, snapshot.animation);
   },
 };
 

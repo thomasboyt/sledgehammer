@@ -1,25 +1,15 @@
-import { GameObject, Physical } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { GameObject } from 'pearl';
+import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
+
 import TileMap from '../components/TileMap';
+import TileMapCollider from '../components/TileMapCollider';
 import TileMapRenderer from '../components/TileMapRenderer';
 import World from '../components/World';
+
 import { ZIndex, Tile } from '../types';
 import { WORLD_SIZE_HEIGHT, TILE_SIZE, HEIGHT } from '../constants';
-import {
-  serializePhysical,
-  deserializePhysical,
-  PhysicalSnapshot,
-} from '../serializers/serializePhysical';
-import NetworkedObject from '../components/networking/NetworkedObject';
-import TileMapCollider from '../components/TileMapCollider';
 
-interface WorldSnapshot {
-  tiles: string[][];
-  wallColor?: string;
-  sessionId: string;
-}
-
-const world: NetworkedPrefab<WorldSnapshot> = {
+const world: NetworkedPrefab = {
   type: 'world',
 
   zIndex: ZIndex.World,
@@ -35,7 +25,7 @@ const world: NetworkedPrefab<WorldSnapshot> = {
     };
 
     return [
-      new Physical({ center }),
+      new NetworkedPhysical({ center }),
       new TileMap({
         tileSize: 16,
         collisionTileTypes: [Tile.Wall],
@@ -44,31 +34,6 @@ const world: NetworkedPrefab<WorldSnapshot> = {
       new TileMapCollider(),
       new World(),
     ];
-  },
-
-  serialize(obj: GameObject): WorldSnapshot {
-    const map: TileMap<any> = obj.getComponent(TileMap);
-    const renderer = obj.getComponent(TileMapRenderer);
-    const world = obj.getComponent(World);
-    return {
-      tiles: map.tiles!,
-      wallColor: renderer.wallColor,
-      sessionId: world.sessionObj!.getComponent(NetworkedObject).id,
-    };
-  },
-
-  deserialize(obj: GameObject, snapshot: WorldSnapshot, objectsById) {
-    const map = obj.getComponent(TileMap);
-    const renderer = obj.getComponent(TileMapRenderer);
-
-    renderer.wallColor = snapshot.wallColor;
-
-    if (!map.tiles) {
-      map.setTiles(snapshot.tiles);
-    }
-
-    const world = obj.getComponent(World);
-    world.sessionObj = objectsById.get(snapshot.sessionId)!;
   },
 };
 

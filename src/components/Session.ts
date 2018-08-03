@@ -1,5 +1,10 @@
-import { Component, GameObject, Keys } from 'pearl';
-import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
+import { Component, GameObject, Keys, Entity } from 'pearl';
+import {
+  NetworkingHost,
+  NetworkingPlayer,
+  NetworkedComponent,
+  NetworkedEntity,
+} from 'pearl-networking';
 import { levels } from '../levels';
 import Game from './Game';
 import World from './World';
@@ -25,7 +30,15 @@ export interface SessionPlayer {
   isReady: boolean;
 }
 
-export default class Session extends Component<null> {
+interface SessionSnapshot {
+  gameState: GameState;
+  startTime?: number;
+  players: SessionPlayer[];
+  worldId: string;
+}
+
+export default class Session extends Component<null>
+  implements NetworkedComponent<SessionSnapshot> {
   worldObj!: GameObject;
 
   gameState: GameState = 'waiting';
@@ -172,5 +185,21 @@ export default class Session extends Component<null> {
         this.startGame();
       }
     }
+  }
+
+  serialize() {
+    return {
+      gameState: this.gameState,
+      startTime: this.startTime,
+      players: this.players,
+      worldId: this.worldObj.getComponent(NetworkedEntity).id,
+    };
+  }
+
+  deserialize(snapshot: SessionSnapshot, entitiesById: Map<string, Entity>) {
+    this.gameState = snapshot.gameState;
+    this.startTime = snapshot.startTime;
+    this.players = snapshot.players;
+    this.worldObj = entitiesById.get(snapshot.worldId)!;
   }
 }

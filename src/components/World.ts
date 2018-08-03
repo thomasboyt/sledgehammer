@@ -4,10 +4,11 @@ import {
   ShapeCollider,
   GameObject,
   Physical,
+  Entity,
 } from 'pearl';
 import { sample, sampleSize } from 'lodash-es';
 
-import NetworkingHost, { NetworkingPlayer } from './networking/NetworkingHost';
+import { NetworkingHost, NetworkingPlayer } from 'pearl-networking';
 import Player from './Player';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
@@ -20,12 +21,20 @@ import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import TileMapRenderer from './TileMapRenderer';
 import TileMapCollider from './TileMapCollider';
+import { NetworkedComponent, NetworkedEntity } from 'pearl-networking';
 
 const ENEMY_COUNT = 50;
 const ENEMY_TYPES = ['archer', 'lemonShark', 'blueThing'];
 const SPAWN_MORE = true;
 
-export default class World extends Component<null> {
+interface WorldSnapshot {
+  tiles: string[][];
+  wallColor?: string;
+  sessionId: string;
+}
+
+export default class World extends Component<null>
+  implements NetworkedComponent<WorldSnapshot> {
   sessionObj?: GameObject;
 
   pickupsCollected = 0;
@@ -330,5 +339,28 @@ export default class World extends Component<null> {
     const spawn = this.spawns[this.nextSpawnIndex % this.spawns.length];
     this.nextSpawnIndex += 1;
     return spawn;
+  }
+
+  serialize() {
+    const map: TileMap<any> = this.getComponent(TileMap);
+    const renderer = this.getComponent(TileMapRenderer);
+    return {
+      tiles: map.tiles!,
+      wallColor: renderer.wallColor,
+      sessionId: this.sessionObj!.getComponent(NetworkedEntity).id,
+    };
+  }
+
+  deserialize(snapshot: WorldSnapshot, entitiesById: Map<string, Entity>) {
+    const map = this.getComponent(TileMap);
+    const renderer = this.getComponent(TileMapRenderer);
+
+    renderer.wallColor = snapshot.wallColor;
+
+    if (!map.tiles) {
+      map.setTiles(snapshot.tiles);
+    }
+
+    this.sessionObj = entitiesById.get(snapshot.sessionId)!;
   }
 }

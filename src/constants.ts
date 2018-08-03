@@ -7,8 +7,8 @@ export const TILE_SIZE = 16;
 export const WORLD_SIZE_WIDTH = 39;
 export const WORLD_SIZE_HEIGHT = 23;
 
-export const START_COUNTDOWN_MS = 3000;
-// export const START_COUNTDOWN_MS = 0;
+// export const START_COUNTDOWN_MS = 3000;
+export const START_COUNTDOWN_MS = 0;
 
 function getParameterByName(name: string): string | null {
   var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);

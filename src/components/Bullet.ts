@@ -7,7 +7,7 @@ import {
   BoxCollider,
   VectorMaths as V,
 } from 'pearl';
-import NetworkingHost from './networking/NetworkingHost';
+import { NetworkingHost } from 'pearl-networking';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
 import Game from './Game';
 

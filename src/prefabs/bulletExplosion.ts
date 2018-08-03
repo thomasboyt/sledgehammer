@@ -1,13 +1,8 @@
-import { Physical, Coordinates } from 'pearl';
-import { NetworkedPrefab } from '../components/networking/Networking';
+import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
 import BulletExplosion from '../components/BulletExplosion';
 import { ZIndex } from '../types';
 
-interface BulletExplosionSnapshot {
-  center: Coordinates;
-}
-
-const bulletExplosion: NetworkedPrefab<BulletExplosionSnapshot> = {
+const bulletExplosion: NetworkedPrefab = {
   type: 'bulletExplosion',
 
   zIndex: ZIndex.BulletExplosion,
@@ -15,20 +10,10 @@ const bulletExplosion: NetworkedPrefab<BulletExplosionSnapshot> = {
   createComponents: () => {
     return [
       new BulletExplosion(),
-      new Physical({
+      new NetworkedPhysical({
         center: { x: 0, y: 0 },
       }),
     ];
-  },
-
-  serialize(obj) {
-    const phys = obj.getComponent(Physical);
-    return { center: phys.center };
-  },
-
-  deserialize(obj, snapshot) {
-    const phys = obj.getComponent(Physical);
-    phys.center = snapshot.center;
   },
 };
 
