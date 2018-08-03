@@ -1,44 +1,56 @@
 import { GameObject } from 'pearl';
-import * as Peer from 'simple-peer';
 import Networking, { Snapshot } from './Networking';
 
 // TODO: replace this with something better?
 import PlayerInputter from '../../util/PlayerInputter';
 import NetworkedObject from './NetworkedObject';
 import { RpcMessage } from './NetworkingHost';
+import {
+  ConnectionOptions,
+  ClientConnection,
+} from '../../networking/GameConnection';
 
 type ConnectionState = 'connecting' | 'connected' | 'error';
 
 export default class NetworkingClient extends Networking {
-  hostPeer!: Peer.Instance;
-
+  private connection!: ClientConnection;
   connectionState: ConnectionState = 'connecting';
   errorReason?: string;
 
-  registerHostPeer(hostPeer: Peer.Instance) {
-    this.connectionState = 'connected';
+  connect(connectionOptions: ConnectionOptions) {
+    const connection = new ClientConnection(connectionOptions);
+    this.connection = connection;
 
-    this.hostPeer = hostPeer;
-
-    hostPeer.on('data', (strData: string) => {
-      // const msg = deserializeMessage('host', strData);
-      const msg = JSON.parse(strData);
-
-      if (msg.type === 'snapshot') {
-        this.onSnapshot(msg.data);
-      } else if (msg.type === 'identity') {
-        this.setIdentity(msg.data.id);
-      } else if (msg.type === 'tooManyPlayers') {
-        this.connectionState = 'error';
-        this.errorReason = 'Room at max capacity';
-      } else if (msg.type === 'rpc') {
-        this.handleRpc(msg.data);
-      } else if (msg.type === 'ping') {
-        // this.sendToHost({
-        //   type: 'pong',
-        // });
-      }
+    return new Promise((resolve, reject) => {
+      connection.onOpen = () => {
+        this.onOpen();
+        resolve();
+      };
+      connection.onMessage = this.onMessage.bind(this);
     });
+  }
+
+  onMessage(strData: any) {
+    const msg = JSON.parse(strData);
+
+    if (msg.type === 'snapshot') {
+      this.onSnapshot(msg.data);
+    } else if (msg.type === 'identity') {
+      this.setIdentity(msg.data.id);
+    } else if (msg.type === 'tooManyPlayers') {
+      this.connectionState = 'error';
+      this.errorReason = 'Room at max capacity';
+    } else if (msg.type === 'rpc') {
+      this.handleRpc(msg.data);
+    } else if (msg.type === 'ping') {
+      // this.sendToHost({
+      //   type: 'pong',
+      // });
+    }
+  }
+
+  onOpen() {
+    this.connectionState = 'connected';
 
     const inputter = new PlayerInputter({
       onKeyDown: (keyCode) => {
@@ -63,8 +75,7 @@ export default class NetworkingClient extends Networking {
   }
 
   sendToHost(msg: any) {
-    // this.hostPeer.send(serializeMessage('client', msg));
-    this.hostPeer.send(JSON.stringify(msg));
+    this.connection.send(JSON.stringify(msg));
   }
 
   private createNetworkedPrefab(name: string, id: string): GameObject {

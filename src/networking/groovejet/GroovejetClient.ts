@@ -1,9 +1,9 @@
 type OnClientOfferSignal = (
-  offerSignal: string,
-  answerCallback: (answerSignal: string) => void
+  clientId: string,
+  offerSignal: RTCSessionDescriptionInit
 ) => void;
 
-type OnHostAnswerSignal = (answerSignal: string) => void;
+type OnHostAnswerSignal = (answerSignal: RTCSessionDescriptionInit) => void;
 
 interface GroovejetOptions {
   url: string;
@@ -16,7 +16,6 @@ interface GroovejetOptions {
 
 export default class GroovejetClient {
   ws: WebSocket;
-  clientId?: string;
   onClientOfferSignal?: OnClientOfferSignal;
   onHostAnswerSignal?: OnHostAnswerSignal;
 
@@ -44,11 +43,8 @@ export default class GroovejetClient {
       this.onHostAnswerSignal!(msg.data.answerSignal);
     } else if (msg.type === 'clientConnection') {
       const { clientId, offerSignal } = msg.data;
-      this.clientId = clientId;
 
-      this.onClientOfferSignal!(offerSignal, (answerSignal) => {
-        this.sendHostAnswerSignal(answerSignal);
-      });
+      this.onClientOfferSignal!(clientId, offerSignal);
     }
   }
 
@@ -60,7 +56,7 @@ export default class GroovejetClient {
     this.ws.send(JSON.stringify(msg));
   }
 
-  sendClientOfferSignal(offerSignal: string) {
+  sendClientOfferSignal(offerSignal: RTCSessionDescriptionInit) {
     this.send({
       type: 'clientSignal',
       data: {
@@ -69,12 +65,15 @@ export default class GroovejetClient {
     });
   }
 
-  sendHostAnswerSignal(answerSignal: string) {
+  sendHostAnswerSignal(
+    clientId: string,
+    answerSignal: RTCSessionDescriptionInit
+  ) {
     this.send({
       type: 'hostSignal',
       data: {
-        answerSignal: answerSignal,
-        clientId: this.clientId,
+        answerSignal,
+        clientId,
       },
     });
   }

@@ -2,25 +2,42 @@ import { Component } from 'pearl';
 import NetworkingHost from './networking/NetworkingHost';
 import Session from './Session';
 import NetworkingClient from './networking/NetworkingClient';
-import { WIDTH, HEIGHT, WORLD_SIZE_HEIGHT, TILE_SIZE } from '../constants';
+import {
+  WIDTH,
+  HEIGHT,
+  WORLD_SIZE_HEIGHT,
+  TILE_SIZE,
+  lobbyServer,
+} from '../constants';
+import initializeClient from '../initializeClient';
 
 interface Options {
   isHost: boolean;
+  roomCode: string;
 }
 
 export default class Game extends Component<Options> {
   isHost!: boolean;
+  roomCode!: string;
 
   init(opts: Options) {
     this.isHost = opts.isHost;
+    this.roomCode = opts.roomCode;
 
     if (this.isHost) {
-      this.initializeHost();
+      this.runCoroutine(this.initializeHost.bind(this));
+    } else {
+      this.runCoroutine(this.initializeClient.bind(this));
     }
   }
 
-  initializeHost() {
+  *initializeHost() {
     const networkingHost = this.getComponent(NetworkingHost);
+
+    yield networkingHost.connect({
+      groovejetUrl: lobbyServer,
+      roomCode: this.roomCode,
+    });
 
     const sessionObject = networkingHost.createNetworkedPrefab('session');
     const session = sessionObject.getComponent(Session);
@@ -34,6 +51,15 @@ export default class Game extends Component<Options> {
     });
 
     networkingHost.addLocalPlayer();
+  }
+
+  *initializeClient() {
+    const networkingClient = this.getComponent(NetworkingClient);
+
+    yield networkingClient.connect({
+      groovejetUrl: lobbyServer,
+      roomCode: this.roomCode,
+    });
   }
 
   render(ctx: CanvasRenderingContext2D) {

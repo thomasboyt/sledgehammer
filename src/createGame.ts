@@ -1,6 +1,5 @@
 require('../styles/font.css');
 import { createPearl } from 'pearl';
-import * as Peer from 'simple-peer';
 
 import { WIDTH, HEIGHT } from './constants';
 import Game from './components/Game';
@@ -11,7 +10,7 @@ import SpriteSheetAsset from './SpriteSheetAsset';
 
 interface Options {
   isHost: boolean;
-  hostPeer?: Peer.Instance;
+  roomCode: string;
 }
 
 const assets = {
@@ -22,19 +21,22 @@ const assets = {
 };
 
 export default async function createGame(opts: Options) {
-  const { isHost, hostPeer } = opts;
+  const { isHost, roomCode } = opts;
 
   let networkingComponent;
 
   if (isHost) {
-    networkingComponent = new NetworkingHost({ prefabs: networkedPrefabs });
+    networkingComponent = new NetworkingHost({
+      prefabs: networkedPrefabs,
+    });
   } else {
-    networkingComponent = new NetworkingClient({ prefabs: networkedPrefabs });
-    networkingComponent.registerHostPeer(hostPeer!);
+    networkingComponent = new NetworkingClient({
+      prefabs: networkedPrefabs,
+    });
   }
 
   return createPearl({
-    rootComponents: [networkingComponent, new Game({ isHost })],
+    rootComponents: [networkingComponent, new Game({ isHost, roomCode })],
     width: WIDTH,
     height: HEIGHT,
     canvas: document.getElementById('game') as HTMLCanvasElement,

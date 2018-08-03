@@ -1,9 +1,12 @@
 import { GameObject } from 'pearl';
 
-import * as Peer from 'simple-peer';
 import Networking, { Snapshot, SnapshotObject } from './Networking';
 import Delegate from '../../util/Delegate';
 import NetworkedObject from './NetworkedObject';
+import {
+  HostConnection,
+  ConnectionOptions,
+} from '../../networking/GameConnection';
 
 let playerIdCounter = 0;
 
@@ -54,54 +57,62 @@ export interface RpcMessage {
 }
 
 export default class NetworkingHost extends Networking {
-  peerToPlayerId = new Map<Peer.Instance, number>();
+  peerIdToPlayerId = new Map<string, number>();
   players = new Map<number, NetworkingPlayer>();
 
   onPlayerAdded = new Delegate<OnPlayerAddedMsg>();
   onPlayerRemoved = new Delegate<OnPlayerAddedMsg>();
 
-  onPeerConnected(peer: Peer.Instance) {
+  private connection!: HostConnection;
+
+  connect(connectionOptions: ConnectionOptions) {
+    const connection = new HostConnection(connectionOptions);
+    this.connection = connection;
+
+    return new Promise((resolve, reject) => {
+      connection.onGroovejetConnect = () => {
+        // report room created to parent for debug iframe usage
+        if (window.parent !== window) {
+          window.parent.postMessage(
+            {
+              type: 'hostCreatedRoom',
+              roomCode: connectionOptions.roomCode,
+            },
+            window.location.origin
+          );
+        }
+
+        resolve();
+      };
+
+      connection.onPeerConnection = this.onPeerConnected.bind(this);
+      connection.onPeerMessage = this.onPeerMessage.bind(this);
+      connection.onPeerDisconnect = this.onPeerDisconnect.bind(this);
+      // TODO: not actually implemented yet
+      // connection.onPeerError = this.onPeerDisconnect;
+    });
+  }
+
+  onPeerConnected(peerId: string) {
     if (this.players.size === MAX_CLIENTS) {
-      peer.send(
+      this.connection.sendPeer(
+        peerId,
         JSON.stringify({
           type: 'tooManyPlayers',
         })
       );
-      peer.destroy();
+      this.connection.closePeerConnection(peerId);
       return;
     }
 
-    const player = this.addPlayer({ inputter: new NetworkedInputter() });
-
-    this.peerToPlayerId.set(peer, player.id);
-
-    peer.on('data', (data: string) => {
-      // const msg = deserializeMessage('client', data);
-      const msg = JSON.parse(data);
-
-      if (msg.type === 'keyDown') {
-        this.onClientKeyDown(player, msg.data.keyCode);
-      } else if (msg.type === 'keyUp') {
-        this.onClientKeyUp(player, msg.data.keyCode);
-      } else if (msg.type === 'pong') {
-        // const ping = Date.now() - this.lastPingTime; this.pings.set(playerId,
-        // ping);
-      }
+    const player = this.addPlayer({
+      inputter: new NetworkedInputter(),
     });
 
-    peer.on('close', () => {
-      this.peerToPlayerId.delete(peer);
-      this.players.delete(player.id);
-      this.removePlayer(player);
-    });
+    this.peerIdToPlayerId.set(peerId, player.id);
 
-    peer.on('error', () => {
-      this.peerToPlayerId.delete(peer);
-      this.players.delete(player.id);
-      this.removePlayer(player);
-    });
-
-    peer.send(
+    this.connection.sendPeer(
+      peerId,
       JSON.stringify({
         type: 'identity',
         data: {
@@ -109,6 +120,28 @@ export default class NetworkingHost extends Networking {
         },
       })
     );
+  }
+
+  onPeerMessage(peerId: string, data: string) {
+    console.log('message');
+    const player = this.players.get(this.peerIdToPlayerId.get(peerId)!)!;
+    const msg = JSON.parse(data);
+
+    if (msg.type === 'keyDown') {
+      this.onClientKeyDown(player, msg.data.keyCode);
+    } else if (msg.type === 'keyUp') {
+      this.onClientKeyUp(player, msg.data.keyCode);
+    } else if (msg.type === 'pong') {
+      // const ping = Date.now() - this.lastPingTime; this.pings.set(playerId,
+      // ping);
+    }
+  }
+
+  onPeerDisconnect(peerId: string) {
+    const player = this.players.get(this.peerIdToPlayerId.get(peerId)!)!;
+    this.peerIdToPlayerId.delete(peerId);
+    this.players.delete(player.id);
+    this.removePlayer(player);
   }
 
   addPlayer(opts: AddPlayerOpts): NetworkingPlayer {
@@ -186,8 +219,8 @@ export default class NetworkingHost extends Networking {
     // const serialized = serializeMessage('host', msg);
     const serialized = JSON.stringify(msg);
 
-    for (let peer of this.peerToPlayerId.keys()) {
-      peer.send(serialized);
+    for (let peerId of this.peerIdToPlayerId.keys()) {
+      this.connection.sendPeer(peerId, serialized);
     }
   }
 
