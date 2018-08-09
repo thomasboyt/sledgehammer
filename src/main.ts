@@ -1,14 +1,13 @@
 import * as queryString from 'query-string';
 
-import initializeClient from './initializeClient';
-import initializeHost from './initializeHost';
+import createGame from './createGame';
 
 const query = queryString.parse(location.search);
 
 const roomCode = query.game;
 
 if (roomCode) {
-  initializeClient(roomCode);
+  createGame({ isHost: false, roomCode });
 } else {
-  initializeHost();
+  createGame({ isHost: true });
 }

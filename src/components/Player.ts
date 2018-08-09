@@ -6,9 +6,14 @@ import {
   AnimationManager,
   Sprite,
   SpriteRenderer,
+  Entity,
 } from 'pearl';
 import Game from './Game';
-import NetworkingHost from './networking/NetworkingHost';
+import {
+  NetworkingHost,
+  NetworkedEntity,
+  NetworkedComponent,
+} from 'pearl-networking';
 import TileEntity from './TileEntity';
 import { Tile } from '../types';
 import Bullet from './Bullet';
@@ -22,11 +27,19 @@ const PLAYER_BULLET_SPEED = 0.2;
 
 type PlayerState = 'spawning' | 'alive' | 'dead';
 
+interface Snapshot {
+  worldId: string;
+  playerState: string;
+  playerId?: number;
+  color: [number, number, number];
+}
+
 export interface Options {
   playerId: number;
 }
 
-export default class Player extends Component<Options> {
+export default class Player extends Component<Options>
+  implements NetworkedComponent<Snapshot> {
   facing: Coordinates = { x: 1, y: 0 };
   playerState = 'spawning';
 
@@ -155,5 +168,33 @@ export default class Player extends Component<Options> {
       facing: this.facing,
       speed: PLAYER_BULLET_SPEED,
     });
+  }
+
+  serialize(): Snapshot {
+    const tileEntity = this.getComponent(TileEntity);
+    const worldId = tileEntity.tileMap.gameObject.getComponent(NetworkedEntity)
+      .id;
+
+    return {
+      worldId,
+      playerState: this.playerState,
+      playerId: this.playerId,
+      color: this.color!,
+    };
+  }
+
+  deserialize(snapshot: Snapshot, entitiesById: Map<string, Entity>) {
+    const world = entitiesById.get(snapshot.worldId);
+
+    if (!world) {
+      throw new Error('missing world object');
+    }
+
+    const tileEntity = this.getComponent(TileEntity);
+    tileEntity.world = world;
+
+    this.playerState = snapshot.playerState;
+    this.playerId = snapshot.playerId;
+    this.color = snapshot.color;
   }
 }

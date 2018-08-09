@@ -1,5 +1,5 @@
-import { Physical, AnimationManager, SpriteRenderer, BoxCollider } from 'pearl';
-import { NetworkedPrefab } from '../../components/networking/Networking';
+import { Physical, SpriteRenderer, BoxCollider } from 'pearl';
+import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
 
 import TileEntity from '../../components/TileEntity';
 import WrappedEntityRenderer from '../../components/WrappedEntityRenderer';
@@ -8,26 +8,11 @@ import {
   WORLD_SIZE_WIDTH,
   WORLD_SIZE_HEIGHT,
 } from '../../constants';
-import AssetManager from '../../components/AssetManager';
-import {
-  AnimationSnapshot,
-  serializeAnimationManager,
-  deserializeAnimationManager,
-} from '../../serializers/serializeAnimationManager';
-import {
-  PhysicalSnapshot,
-  serializePhysical,
-  deserializePhysical,
-} from '../../serializers/serializePhysical';
 import BaseEnemy from '../../components/enemies/BaseEnemy';
 import { ZIndex } from '../../types';
 import SpawningDyingRenderer from '../../components/SpawningDyingRenderer';
 import SpriteSheetAsset from '../../SpriteSheetAsset';
-
-interface EnemySnapshot {
-  physical: PhysicalSnapshot;
-  animation: AnimationSnapshot;
-}
+import NetworkedAnimationManager from '../../components/NetworkedAnimationManager';
 
 interface FactoryOptions {
   type: string;
@@ -35,7 +20,7 @@ interface FactoryOptions {
   spriteSheet: string;
 }
 
-function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
+function enemyFactory(opts: FactoryOptions): NetworkedPrefab {
   return {
     type: opts.type,
     tags: ['enemy'],
@@ -43,7 +28,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
 
     createComponents: (pearl) => {
       return [
-        new Physical({
+        new NetworkedPhysical({
           center: { x: 120, y: 120 },
         }),
         new TileEntity(),
@@ -56,7 +41,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
           width: TILE_SIZE - 2,
           height: TILE_SIZE - 2,
         }),
-        new AnimationManager({
+        new NetworkedAnimationManager({
           sheet: pearl.assets.get(SpriteSheetAsset, opts.spriteSheet),
 
           initialState: 'walking',
@@ -72,26 +57,6 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab<EnemySnapshot> {
         new opts.EnemyComponent(),
         new SpawningDyingRenderer(),
       ];
-    },
-
-    serialize: (obj) => {
-      const phys = obj.getComponent(Physical);
-      const anim = obj.getComponent(AnimationManager);
-      const renderer = obj.getComponent(SpriteRenderer);
-
-      return {
-        physical: serializePhysical(phys),
-        animation: serializeAnimationManager(anim, renderer),
-      };
-    },
-
-    deserialize: (obj, snapshot) => {
-      const phys = obj.getComponent(Physical);
-      deserializePhysical(phys, snapshot.physical);
-
-      const anim = obj.getComponent(AnimationManager);
-      const renderer = obj.getComponent(SpriteRenderer);
-      deserializeAnimationManager(anim, renderer, snapshot.animation);
     },
   };
 }

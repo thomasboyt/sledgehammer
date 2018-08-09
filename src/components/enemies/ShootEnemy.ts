@@ -1,6 +1,6 @@
 import BaseEnemy from './BaseEnemy';
 import TileEntity from '../TileEntity';
-import NetworkingHost from '../networking/NetworkingHost';
+import { NetworkingHost } from 'pearl-networking';
 import Bullet from '../Bullet';
 import Player from '../Player';
 import { Physical } from 'pearl';
