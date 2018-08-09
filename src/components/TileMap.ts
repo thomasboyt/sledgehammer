@@ -1,6 +1,12 @@
-import { Component, Physical, Coordinates } from 'pearl';
+import {
+  Component,
+  Physical,
+  Coordinates,
+  TileMapCollider,
+  ITileMap,
+  TileCollisionType,
+} from 'pearl';
 import { addVector } from '../util/math';
-import TileMapCollider, { ITileMap } from './TileMapCollider';
 
 interface Options<T> {
   tileSize: number;
@@ -33,15 +39,15 @@ export default class TileMap<T> extends Component<Options<T>>
       y: this.tiles.length,
     };
 
-    const collisionMap: boolean[] = [];
-
-    this.forEachTile(({ x, y }, value) => {
-      if (this.collisionTileTypes.indexOf(value) === -1) {
-        collisionMap.push(false);
-      } else {
-        collisionMap.push(true);
-      }
-    });
+    const collisionMap: TileCollisionType[][] = this.tiles.map((row) =>
+      row.map((value) => {
+        if (this.collisionTileTypes.indexOf(value) === -1) {
+          return TileCollisionType.Empty;
+        } else {
+          return TileCollisionType.Wall;
+        }
+      })
+    );
 
     this.getComponent(TileMapCollider).initializeCollisions(this, collisionMap);
   }

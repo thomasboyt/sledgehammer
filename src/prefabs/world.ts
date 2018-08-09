@@ -1,8 +1,7 @@
-import { GameObject } from 'pearl';
+import { GameObject, TileMapCollider } from 'pearl';
 import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
 
 import TileMap from '../components/TileMap';
-import TileMapCollider from '../components/TileMapCollider';
 import TileMapRenderer from '../components/TileMapRenderer';
 import World from '../components/World';
 

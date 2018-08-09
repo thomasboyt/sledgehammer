@@ -5,6 +5,7 @@ import {
   GameObject,
   Physical,
   Entity,
+  TileMapCollider,
 } from 'pearl';
 import { sample, sampleSize } from 'lodash-es';
 
@@ -20,7 +21,6 @@ import { randomChoice, getRandomInt } from '../util/math';
 import BaseEnemy from './enemies/BaseEnemy';
 import Session, { SessionPlayer } from './Session';
 import TileMapRenderer from './TileMapRenderer';
-import TileMapCollider from './TileMapCollider';
 import { NetworkedComponent, NetworkedEntity } from 'pearl-networking';
 
 const ENEMY_COUNT = 50;
