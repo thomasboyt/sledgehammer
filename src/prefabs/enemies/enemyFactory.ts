@@ -1,4 +1,4 @@
-import { Physical, SpriteRenderer, BoxCollider } from 'pearl';
+import { Physical, SpriteRenderer, BoxCollider, KinematicBody } from 'pearl';
 import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
 
 import TileEntity from '../../components/TileEntity';
@@ -32,6 +32,7 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab {
           center: { x: 120, y: 120 },
         }),
         new TileEntity(),
+        new KinematicBody(),
         new WrappedEntityRenderer({
           // TODO: would be nice if this came from TileMap or world somehow...
           worldWidth: TILE_SIZE * WORLD_SIZE_WIDTH,
@@ -40,6 +41,8 @@ function enemyFactory(opts: FactoryOptions): NetworkedPrefab {
         new BoxCollider({
           width: TILE_SIZE - 2,
           height: TILE_SIZE - 2,
+          ignoreCollisionTags: ['enemy'],
+          isTrigger: true,
         }),
         new NetworkedAnimationManager({
           sheet: pearl.assets.get(SpriteSheetAsset, opts.spriteSheet),

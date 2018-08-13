@@ -19,16 +19,19 @@ export default class ChaseEnemy extends BaseEnemy {
 
     let nextTilePos: Coordinates;
 
-    if (this.chasingPlayer) {
-      if (this.chasingPlayer.getComponent(Player).playerState !== 'alive') {
-        this.chasingPlayer = undefined;
-      }
-    } else {
+    if (!this.chasingPlayer) {
       // before continuing: can we see a player?
       const entities = this.getEntitiesInSightline(5, ['player']);
       if (entities.length > 0) {
         this.chasingPlayer = entities[0];
       }
+    }
+
+    if (
+      this.chasingPlayer &&
+      this.chasingPlayer.getComponent(Player).playerState !== 'alive'
+    ) {
+      this.chasingPlayer = undefined;
     }
 
     if (this.chasingPlayer) {

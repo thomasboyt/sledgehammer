@@ -1,22 +1,31 @@
-import { Physical, Component, Coordinates, GameObject } from 'pearl';
+import {
+  Physical,
+  Component,
+  Coordinates,
+  GameObject,
+  KinematicBody,
+  VectorMaths as V,
+} from 'pearl';
 import TileMap from './TileMap';
-import { lerpVector } from '../util/math';
 
 class MoveTween {
   elapsedMs: number = 0;
   targetMs: number;
   phys: Physical;
+  body: KinematicBody;
   start: Coordinates;
   end: Coordinates;
 
   constructor(
     phys: Physical,
+    body: KinematicBody,
     start: Coordinates,
     end: Coordinates,
     targetMs: number
   ) {
     this.targetMs = targetMs;
     this.phys = phys;
+    this.body = body;
     this.start = start;
     this.end = end;
   }
@@ -29,7 +38,22 @@ class MoveTween {
     }
 
     const f = this.elapsedMs / this.targetMs;
-    this.phys.localCenter = lerpVector(this.start, this.end, f);
+    const nextCenter = V.lerp(this.start, this.end, f);
+    const moveVector = V.subtract(nextCenter, this.phys.localCenter);
+
+    const collisions = this.body.moveAndSlide(moveVector);
+    // TODO: Some day would be nice to have settings around what to do on
+    // collision (revert to previous position? continue going and assume other
+    // object will be destroyed?)
+    //
+    // const solidCollisions = collisions.filter((collision) =>
+    //   !collision.collider.isTrigger
+    // );
+
+    // if (solidCollisions.length) {
+    //   console.log('colliding', this.phys.entity, solidCollisions[0]);
+    //   return true;
+    // }
 
     if (f === 1) {
       return true;
@@ -110,7 +134,13 @@ export default class TileEntity extends Component<null> {
     const end = this.tileMap.tileCoordinatesToLocalCenter(wrappedEndPos);
 
     const phys = this.getComponent(Physical);
-    this.moveTween = new MoveTween(phys, start, end, timeMs);
+    this.moveTween = new MoveTween(
+      phys,
+      this.getComponent(KinematicBody),
+      start,
+      end,
+      timeMs
+    );
   }
 
   /**

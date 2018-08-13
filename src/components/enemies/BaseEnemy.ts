@@ -7,6 +7,8 @@ import {
   SpriteRenderer,
   PolygonShape,
   ShapeCollider,
+  CollisionInformation,
+  BoxCollider,
   Vector2,
 } from 'pearl';
 import { NetworkedComponent } from 'pearl-networking';
@@ -40,8 +42,10 @@ export default class BaseEnemy extends Component<null>
     renderer.scaleX = 2;
     renderer.scaleY = 2;
 
+    this.getComponent(BoxCollider).isEnabled = false;
     this.getComponent(SpawningDyingRenderer).spawn(() => {
       this.state = 'alive';
+      this.getComponent(BoxCollider).isEnabled = true;
     });
   }
 
@@ -223,6 +227,7 @@ export default class BaseEnemy extends Component<null>
 
   die() {
     this.state = 'dead';
+    this.getComponent(BoxCollider).isEnabled = false;
     const renderer = this.getComponent(SpawningDyingRenderer);
     renderer.die(() => {
       this.pearl.entities.destroy(this.gameObject);
@@ -237,6 +242,16 @@ export default class BaseEnemy extends Component<null>
 
     const renderer = this.getComponent(SpawningDyingRenderer);
     renderer.die();
+  }
+
+  onCollision(collision: CollisionInformation) {
+    if (this.state !== 'alive') {
+      return;
+    }
+
+    if (collision.entity.hasTag('bullet')) {
+      this.die();
+    }
   }
 
   render(ctx: CanvasRenderingContext2D) {

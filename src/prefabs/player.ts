@@ -4,6 +4,7 @@ import {
   GameObject,
   AnimationManager,
   SpriteRenderer,
+  KinematicBody,
 } from 'pearl';
 import { NetworkedPhysical, NetworkedPrefab } from 'pearl-networking';
 
@@ -31,8 +32,10 @@ const player: NetworkedPrefab = {
       new BoxCollider({
         width: TILE_SIZE - 2,
         height: TILE_SIZE - 2,
+        isTrigger: true,
       }),
       new TileEntity(),
+      new KinematicBody(),
       new WrappedEntityRenderer({
         // TODO: would be nice if this came from TileMap or world somehow...
         worldWidth: TILE_SIZE * WORLD_SIZE_WIDTH,

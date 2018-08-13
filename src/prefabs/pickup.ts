@@ -11,7 +11,11 @@ const pickup: NetworkedPrefab = {
   createComponents: () => {
     return [
       new NetworkedPhysical(),
-      new BoxCollider({ width: 10, height: 10 }),
+      new BoxCollider({
+        width: 10,
+        height: 10,
+        isTrigger: true,
+      }),
       new PolygonRenderer({
         fillStyle: 'white',
       }),

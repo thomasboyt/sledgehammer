@@ -7,6 +7,8 @@ import {
   Sprite,
   SpriteRenderer,
   Entity,
+  CollisionInformation,
+  BoxCollider,
   Vector2,
 } from 'pearl';
 import Game from './Game';
@@ -22,6 +24,8 @@ import { addVector } from '../util/math';
 import SpawningDyingRenderer from './SpawningDyingRenderer';
 import { DEBUG_GOD_MODE } from '../constants';
 import Session from './Session';
+import World from './World';
+import BaseEnemy from './enemies/BaseEnemy';
 
 const MOVE_TIME_MS = 120;
 const PLAYER_BULLET_SPEED = 0.2;
@@ -59,7 +63,9 @@ export default class Player extends Component<Options>
 
     this.getComponent(SpriteRenderer).mask([0, 0, 0], this.color);
 
+    this.getComponent(BoxCollider).isEnabled = false;
     this.getComponent(SpawningDyingRenderer).spawn(() => {
+      this.getComponent(BoxCollider).isEnabled = true;
       this.playerState = 'alive';
     });
   }
@@ -70,6 +76,7 @@ export default class Player extends Component<Options>
     }
 
     this.playerState = 'dead';
+    this.getComponent(BoxCollider).isEnabled = false;
     this.getComponent(TileEntity).cancelMove();
     this.rpcDie();
   }
@@ -170,6 +177,24 @@ export default class Player extends Component<Options>
       facing: this.facing,
       speed: PLAYER_BULLET_SPEED,
     });
+  }
+
+  onCollision(collision: CollisionInformation) {
+    if (this.playerState !== 'alive') {
+      return;
+    }
+
+    if (collision.entity.hasTag('bullet')) {
+      this.die();
+    } else if (collision.entity.hasTag('enemy')) {
+      if (collision.entity.getComponent(BaseEnemy).state === 'alive') {
+        this.die();
+      }
+    } else if (collision.entity.hasTag('pickup')) {
+      this.entity
+        .parent!.getComponent(World)
+        .playerCollectedPickup(this.entity, collision.entity);
+    }
   }
 
   serialize(): Snapshot {

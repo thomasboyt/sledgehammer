@@ -218,8 +218,6 @@ export default class World extends Component<null>
       return;
     }
 
-    this.handleCollisions();
-
     if (this.sessionObj!.getComponent(Session).gameState !== 'playing') {
       return;
     }
@@ -238,94 +236,7 @@ export default class World extends Component<null>
     }
   }
 
-  handleCollisions() {
-    // TODO: maybe do this via parent-child relationships if i can figure out
-    // how to implement with networking
-    const players = this.pearl.entities.all('player');
-    const enemies = this.pearl.entities.all('enemy');
-    const bullets = this.pearl.entities.all('bullet');
-    const pickups = this.pearl.entities.all('pickup');
-
-    const tileMapCollider = this.getComponent(TileMapCollider);
-
-    // BUG: with bullets and pickups, if multiple things are colliding with it,
-    // the collision logic runs TWICE
-    //
-    // this would mean: 2 players would both get points for defeating an enemy
-    // and more annoyingly, if 2 players get a pickup on the same frame, it
-    // spawns TWO PICKUPS, lol
-
-    for (let bullet of bullets) {
-      const bulletCollider = bullet.getComponent(ShapeCollider);
-
-      if (tileMapCollider.isColliding(bulletCollider)) {
-        bullet.getComponent(Bullet).explode();
-        continue;
-      }
-
-      for (let otherBullet of bullets) {
-        if (bullet === otherBullet) {
-          continue;
-        }
-
-        if (
-          bulletCollider.isColliding(otherBullet.getComponent(ShapeCollider))
-        ) {
-          bullet.getComponent(Bullet).explode();
-          otherBullet.getComponent(Bullet).explode();
-        }
-      }
-
-      for (let player of players) {
-        if (bulletCollider.isColliding(player.getComponent(ShapeCollider))) {
-          if (player.getComponent(Player).playerState === 'alive') {
-            bullet.getComponent(Bullet).explode();
-            player.getComponent(Player).die();
-          }
-        }
-      }
-
-      for (let enemy of enemies) {
-        if (bulletCollider.isColliding(enemy.getComponent(ShapeCollider))) {
-          // destroy enemy
-          if (enemy.getComponent(BaseEnemy).state === 'alive') {
-            bullet.getComponent(Bullet).explode();
-            enemy.getComponent(BaseEnemy).die();
-            continue;
-          }
-        }
-      }
-    }
-
-    for (let player of players) {
-      for (let enemy of enemies) {
-        if (
-          player
-            .getComponent(ShapeCollider)
-            .isColliding(enemy.getComponent(ShapeCollider))
-        ) {
-          if (
-            player.getComponent(Player).playerState === 'alive' &&
-            enemy.getComponent(BaseEnemy).state === 'alive'
-          ) {
-            player.getComponent(Player).die();
-          }
-        }
-      }
-
-      for (let pickup of pickups) {
-        if (
-          player
-            .getComponent(ShapeCollider)
-            .isColliding(pickup.getComponent(ShapeCollider))
-        ) {
-          this.playerCollectedPickup(player, pickup);
-        }
-      }
-    }
-  }
-
-  private playerCollectedPickup(player: GameObject, pickup: GameObject) {
+  playerCollectedPickup(player: GameObject, pickup: GameObject) {
     const playerId = player.getComponent(Player).playerId!;
     this.sessionObj!.getComponent(Session).addScore(playerId, 100);
 

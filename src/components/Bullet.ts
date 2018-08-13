@@ -6,6 +6,8 @@ import {
   Vector2,
   BoxCollider,
   VectorMaths as V,
+  CollisionInformation,
+  KinematicBody,
 } from 'pearl';
 import { NetworkingHost } from 'pearl-networking';
 import { TILE_SIZE, WORLD_SIZE_WIDTH, WORLD_SIZE_HEIGHT } from '../constants';
@@ -57,8 +59,7 @@ export default class Bullet extends Component<null> {
       return;
     }
 
-    const phys = this.getComponent(Physical);
-    phys.translate(V.multiply(this.vel, dt));
+    this.getComponent(KinematicBody).moveAndCollide(V.multiply(this.vel, dt));
 
     const collider = this.getComponent(BoxCollider);
     const bounds = collider.getLocalBounds();
@@ -74,6 +75,12 @@ export default class Bullet extends Component<null> {
   }
 
   explode() {
+    // prevent explode() from being called twice when bullet has multiple
+    // collisions
+    if (this.entity.state === 'destroyed') {
+      return;
+    }
+
     this.pearl.entities.destroy(this.gameObject);
 
     const explosionObj = this.pearl.obj
@@ -85,5 +92,9 @@ export default class Bullet extends Component<null> {
       x: phys.center.x,
       y: phys.center.y,
     };
+  }
+
+  onCollision(collision: CollisionInformation) {
+    this.explode();
   }
 }
