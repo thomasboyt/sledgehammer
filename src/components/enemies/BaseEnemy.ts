@@ -7,7 +7,9 @@ import {
   SpriteRenderer,
   PolygonShape,
   ShapeCollider,
+  Vector2,
 } from 'pearl';
+import { NetworkedComponent } from 'pearl-networking';
 import * as SAT from 'sat';
 
 import Game from '../Game';
@@ -22,7 +24,12 @@ const MOVE_TIME_MS = 320;
 
 export type EnemyState = 'spawning' | 'alive' | 'dead';
 
-export default class BaseEnemy extends Component<null> {
+interface Snapshot {
+  facing: Vector2;
+}
+
+export default class BaseEnemy extends Component<null>
+  implements NetworkedComponent<Snapshot> {
   facing: Coordinates = { x: 1, y: 0 };
   state: EnemyState = 'spawning';
 
@@ -247,5 +254,15 @@ export default class BaseEnemy extends Component<null> {
       ctx.closePath();
       ctx.fill();
     }
+  }
+
+  serialize(): Snapshot {
+    return {
+      facing: this.facing,
+    };
+  }
+
+  deserialize(snapshot: Snapshot) {
+    this.setFacing(snapshot.facing);
   }
 }

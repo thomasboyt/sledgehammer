@@ -7,6 +7,7 @@ import {
   Sprite,
   SpriteRenderer,
   Entity,
+  Vector2,
 } from 'pearl';
 import Game from './Game';
 import {
@@ -32,6 +33,7 @@ interface Snapshot {
   playerState: string;
   playerId?: number;
   color: [number, number, number];
+  facing: Vector2;
 }
 
 export interface Options {
@@ -180,6 +182,7 @@ export default class Player extends Component<Options>
       playerState: this.playerState,
       playerId: this.playerId,
       color: this.color!,
+      facing: this.facing,
     };
   }
 
@@ -196,5 +199,6 @@ export default class Player extends Component<Options>
     this.playerState = snapshot.playerState;
     this.playerId = snapshot.playerId;
     this.color = snapshot.color;
+    this.setFacing(snapshot.facing);
   }
 }
