@@ -41,7 +41,7 @@ export default class World extends Component<null>
   private spawns: Coordinates[] = [];
   private nextSpawnIndex = 0;
 
-  private players = new Map<number, GameObject>();
+  private players = new Map<string, GameObject>();
 
   loadLevel(level: LevelData) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;

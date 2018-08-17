@@ -35,7 +35,7 @@ type PlayerState = 'spawning' | 'alive' | 'dead';
 interface Snapshot {
   worldId: string;
   playerState: string;
-  playerId?: number;
+  playerId?: string;
   color: [number, number, number];
   facing: Vector2;
 }
@@ -50,7 +50,7 @@ export default class Player extends Component<Options>
   playerState = 'spawning';
 
   color?: [number, number, number];
-  playerId?: number;
+  playerId?: string;
 
   init() {
     if (this.playerId === undefined) {

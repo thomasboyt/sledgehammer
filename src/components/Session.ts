@@ -22,7 +22,7 @@ export type GameState =
   | 'playing';
 
 export interface SessionPlayer {
-  id: number;
+  id: string;
   score: number;
   // 1 - 4
   slot: number;
@@ -131,7 +131,7 @@ export default class Session extends Component<null>
     );
   }
 
-  addScore(playerId: number, score: number) {
+  addScore(playerId: string, score: number) {
     const player = this.players.find((player) => player.id === playerId);
     player!.score += score;
   }
@@ -153,7 +153,7 @@ export default class Session extends Component<null>
     });
   }
 
-  private togglePlayerReady(playerId: number) {
+  private togglePlayerReady(playerId: string) {
     const player = this.players.find((player) => player.id === playerId)!;
     player.isReady = true;
 

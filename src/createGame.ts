@@ -27,6 +27,7 @@ export default async function createGame(opts: Options) {
   if (isHost) {
     networkingComponent = new NetworkingHost({
       prefabs: networkedPrefabs,
+      maxClients: 3,
     });
   } else {
     networkingComponent = new NetworkingClient({
