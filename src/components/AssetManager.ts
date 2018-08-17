@@ -5,7 +5,7 @@ import memoize from 'micro-memoize';
 export default class AssetManager extends Component<Assets> {
   assets!: Assets;
 
-  init(assets: Assets) {
+  create(assets: Assets) {
     this.assets = assets;
   }
 

@@ -19,10 +19,12 @@ export default class Game extends Component<Options> {
   isHost!: boolean;
   roomCode?: string;
 
-  init(opts: Options) {
+  create(opts: Options) {
     this.isHost = opts.isHost;
     this.roomCode = opts.roomCode;
+  }
 
+  init() {
     if (this.isHost) {
       this.runCoroutine(this.initializeHost.bind(this));
     } else {
