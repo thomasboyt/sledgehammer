@@ -1,9 +1,4 @@
-import {
-  Coordinates,
-  PolygonRenderer,
-  BoxCollider,
-  KinematicBody,
-} from 'pearl';
+import { Vector2, PolygonRenderer, BoxCollider, KinematicBody } from 'pearl';
 import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
 import Bullet from '../components/Bullet';
 import { ZIndex } from '../types';

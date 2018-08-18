@@ -1,7 +1,6 @@
 import {
   Component,
   Physical,
-  Coordinates,
   AnimationManager,
   Entity,
   SpriteRenderer,
@@ -32,7 +31,7 @@ interface Snapshot {
 
 export default class BaseEnemy extends Component<null>
   implements NetworkedComponent<Snapshot> {
-  facing: Coordinates = { x: 1, y: 0 };
+  facing: Vector2 = { x: 1, y: 0 };
   state: EnemyState = 'spawning';
 
   init() {
@@ -50,7 +49,7 @@ export default class BaseEnemy extends Component<null>
   }
 
   // TODO: dedupe this from Player
-  setFacing(coordinates: Coordinates) {
+  setFacing(coordinates: Vector2) {
     this.facing = coordinates;
 
     let angle = Math.atan(this.facing.y / this.facing.x);
@@ -99,7 +98,7 @@ export default class BaseEnemy extends Component<null>
     tileEntity.move(nextTilePos, MOVE_TIME_MS);
   }
 
-  getNextTileDefault(): Coordinates {
+  getNextTileDefault(): Vector2 {
     const tileEntity = this.getComponent(TileEntity);
     const tileMap = tileEntity.tileMap as TileMap<Tile>;
 
@@ -115,7 +114,7 @@ export default class BaseEnemy extends Component<null>
       y: this.facing.x,
     });
 
-    let nextTilePos: Coordinates;
+    let nextTilePos: Vector2;
 
     /*
       this is gross and can maybe be refactored but the tl;dr is

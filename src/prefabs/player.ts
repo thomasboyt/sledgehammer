@@ -1,6 +1,6 @@
 import {
   BoxCollider,
-  Coordinates,
+  Vector2,
   Entity,
   AnimationManager,
   SpriteRenderer,

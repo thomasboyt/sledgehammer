@@ -1,6 +1,6 @@
 import {
   Component,
-  Coordinates,
+  Vector2,
   ShapeCollider,
   Physical,
   Entity,
@@ -37,7 +37,7 @@ export default class World extends Component<null>
   sessionObj?: Entity;
 
   pickupsCollected = 0;
-  private spawns: Coordinates[] = [];
+  private spawns: Vector2[] = [];
   private nextSpawnIndex = 0;
 
   private players = new Map<string, Entity>();
@@ -105,7 +105,7 @@ export default class World extends Component<null>
     };
   }
 
-  private isNearPlayer({ x, y }: Coordinates) {
+  private isNearPlayer({ x, y }: Vector2) {
     const playerTilePositions = [...this.players.values()].map((player) => {
       return player.getComponent(TileEntity).tilePosition;
     });
@@ -117,7 +117,7 @@ export default class World extends Component<null>
     });
   }
 
-  private isNearSpawn({ x, y }: Coordinates): boolean {
+  private isNearSpawn({ x, y }: Vector2): boolean {
     // TODO: use pathfinding for this in the future?
     return this.spawns.some((spawnPos) => {
       const dx = spawnPos.x - x;
@@ -126,10 +126,10 @@ export default class World extends Component<null>
     });
   }
 
-  private getCandidateTiles(): Coordinates[] {
+  private getCandidateTiles(): Vector2[] {
     const tileMap = this.getComponent(TileMap);
 
-    const candidates: Coordinates[] = [];
+    const candidates: Vector2[] = [];
     tileMap.forEachTile(({ x, y }, value) => {
       if (value === Tile.Empty) {
         if (!this.isNearSpawn({ x, y }) && !this.isNearPlayer({ x, y })) {
@@ -160,7 +160,7 @@ export default class World extends Component<null>
     this.addEnemy(tilePos);
   }
 
-  private addEnemy(tilePos: Coordinates) {
+  private addEnemy(tilePos: Vector2) {
     const type = sample(ENEMY_TYPES)!;
 
     const enemyObj = this.pearl.root

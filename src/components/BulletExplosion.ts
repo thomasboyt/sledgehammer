@@ -1,9 +1,9 @@
-import { Component, Coordinates, Physical } from 'pearl';
+import { Component, Vector2, Physical } from 'pearl';
 import { getRandomInt, getVectorComponents, addVector } from '../util/math';
 import Game from './Game';
 
 interface Particle {
-  center: Coordinates;
+  center: Vector2;
   angle: number;
   speed: number;
 }

@@ -1,4 +1,4 @@
-import { Entity, Coordinates } from 'pearl';
+import { Entity, Vector2 } from 'pearl';
 import * as PF from 'pathfinding';
 
 import WrappedPFGrid from '../../util/WrappedPFGrid';
@@ -17,7 +17,7 @@ export default class ChaseEnemy extends BaseEnemy {
   nextMove() {
     const tileEntity = this.getComponent(TileEntity);
 
-    let nextTilePos: Coordinates;
+    let nextTilePos: Vector2;
 
     if (!this.chasingPlayer) {
       // before continuing: can we see a player?
@@ -54,7 +54,7 @@ export default class ChaseEnemy extends BaseEnemy {
     }
   }
 
-  getNextTileChasingPlayer(): Coordinates {
+  getNextTileChasingPlayer(): Vector2 {
     const player = this.chasingPlayer!;
 
     const tileEntity = this.getComponent(TileEntity);

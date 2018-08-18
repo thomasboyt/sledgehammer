@@ -1,7 +1,6 @@
 import {
   Component,
   Physical,
-  Coordinates,
   Entity,
   Vector2,
   BoxCollider,
@@ -18,7 +17,7 @@ const worldHeight = TILE_SIZE * WORLD_SIZE_HEIGHT;
 
 interface ShootOptions {
   originObject: Entity;
-  facing: Coordinates;
+  facing: Vector2;
   speed: number;
 }
 

@@ -2,7 +2,6 @@ import {
   Component,
   Physical,
   Keys,
-  Coordinates,
   AnimationManager,
   Sprite,
   SpriteRenderer,
@@ -46,7 +45,7 @@ export interface Options {
 
 export default class Player extends Component<Options>
   implements NetworkedComponent<Snapshot> {
-  facing: Coordinates = { x: 1, y: 0 };
+  facing: Vector2 = { x: 1, y: 0 };
   playerState = 'spawning';
 
   color?: [number, number, number];
@@ -85,7 +84,7 @@ export default class Player extends Component<Options>
     this.getComponent(SpawningDyingRenderer).die();
   }
 
-  setFacing(coordinates: Coordinates) {
+  setFacing(coordinates: Vector2) {
     this.facing = coordinates;
 
     let angle = Math.atan(this.facing.y / this.facing.x);
@@ -117,7 +116,7 @@ export default class Player extends Component<Options>
     const networkedPlayer = players.get(this.playerId!)!;
     const inputter = networkedPlayer.inputter;
 
-    let inputDirection: Coordinates | null = null;
+    let inputDirection: Vector2 | null = null;
 
     if (inputter.isKeyDown(Keys.rightArrow)) {
       inputDirection = { x: 1, y: 0 };
@@ -141,7 +140,7 @@ export default class Player extends Component<Options>
     }
   }
 
-  private movePlayer(inputDirection: Coordinates) {
+  private movePlayer(inputDirection: Vector2) {
     const tileEntity = this.getComponent(TileEntity);
     const tileMap = tileEntity.tileMap;
 
@@ -199,8 +198,7 @@ export default class Player extends Component<Options>
 
   serialize(): Snapshot {
     const tileEntity = this.getComponent(TileEntity);
-    const worldId = tileEntity.tileMap.entity.getComponent(NetworkedEntity)
-      .id;
+    const worldId = tileEntity.tileMap.entity.getComponent(NetworkedEntity).id;
 
     return {
       worldId,

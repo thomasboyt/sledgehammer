@@ -1,7 +1,7 @@
 import {
   Physical,
   Component,
-  Coordinates,
+  Vector2,
   Entity,
   KinematicBody,
   VectorMaths as V,
@@ -13,14 +13,14 @@ class MoveTween {
   targetMs: number;
   phys: Physical;
   body: KinematicBody;
-  start: Coordinates;
-  end: Coordinates;
+  start: Vector2;
+  end: Vector2;
 
   constructor(
     phys: Physical,
     body: KinematicBody,
-    start: Coordinates,
-    end: Coordinates,
+    start: Vector2,
+    end: Vector2,
     targetMs: number
   ) {
     this.targetMs = targetMs;
@@ -82,12 +82,12 @@ export default class TileEntity extends Component<null> {
     return map;
   }
 
-  get tilePosition(): Coordinates {
+  get tilePosition(): Vector2 {
     const center = this.getComponent(Physical).localCenter;
     return this.tileMap.localCenterToTileCoordinates(center);
   }
 
-  setPosition(pos: Coordinates): void {
+  setPosition(pos: Vector2): void {
     const center = this.tileMap.tileCoordinatesToLocalCenter(pos);
     this.getComponent(Physical).localCenter = center;
   }
@@ -108,7 +108,7 @@ export default class TileEntity extends Component<null> {
   /**
    * Move spaces in the grid over some number of milliseconds
    */
-  move(endTilePos: Coordinates, timeMs: number): void {
+  move(endTilePos: Vector2, timeMs: number): void {
     if (this.isMoving) {
       throw new Error('already moving; cannot move again');
     }

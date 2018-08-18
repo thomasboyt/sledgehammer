@@ -1,7 +1,7 @@
 import {
   Component,
   Physical,
-  Coordinates,
+  Vector2,
   TileMapCollider,
   ITileMap,
   TileCollisionType,
@@ -24,7 +24,7 @@ export default class TileMap<T> extends Component<Options<T>>
   tileSize!: number;
   tileWidth!: number;
   tileHeight!: number;
-  worldSize?: Coordinates;
+  worldSize?: Vector2;
 
   create(opts: Options<T>) {
     this.tileSize = this.tileWidth = this.tileHeight = opts.tileSize;
@@ -52,28 +52,28 @@ export default class TileMap<T> extends Component<Options<T>>
     this.getComponent(TileMapCollider).initializeCollisions(this, collisionMap);
   }
 
-  getTile(position: Coordinates): T {
+  getTile(position: Vector2): T {
     const wrapped = this.wrapTilePosition(position);
     const tile = this.tiles![wrapped.y][wrapped.x];
     return tile;
   }
 
-  idxToTileCoordinates(idx: number): Coordinates {
+  idxToTileCoordinates(idx: number): Vector2 {
     const tx = idx % this.worldSize!.x;
     const ty = Math.floor(idx / this.worldSize!.x);
     return { x: tx, y: ty };
   }
 
-  tileCoordinatesToIdx(tilePos: Coordinates): number {
+  tileCoordinatesToIdx(tilePos: Vector2): number {
     return tilePos.y * this.worldSize!.x + tilePos.x;
   }
 
-  tileCoordinatesToWorldCenter(tilePos: Coordinates): Coordinates {
+  tileCoordinatesToWorldCenter(tilePos: Vector2): Vector2 {
     const local = this.tileCoordinatesToLocalCenter(tilePos);
     return addVector(this.getComponent(Physical).center, local);
   }
 
-  tileCoordinatesToLocalCenter(tilePos: Coordinates): Coordinates {
+  tileCoordinatesToLocalCenter(tilePos: Vector2): Vector2 {
     const { x, y } = tilePos;
 
     return {
@@ -82,7 +82,7 @@ export default class TileMap<T> extends Component<Options<T>>
     };
   }
 
-  localCenterToTileCoordinates(center: Coordinates): Coordinates {
+  localCenterToTileCoordinates(center: Vector2): Vector2 {
     const { x, y } = center;
 
     return {
@@ -91,7 +91,7 @@ export default class TileMap<T> extends Component<Options<T>>
     };
   }
 
-  worldCenterToTileCoordinates(center: Coordinates): Coordinates {
+  worldCenterToTileCoordinates(center: Vector2): Vector2 {
     const mapCenter = this.getComponent(Physical).center;
     const local = {
       x: center.x - mapCenter.x,
@@ -100,7 +100,7 @@ export default class TileMap<T> extends Component<Options<T>>
     return this.localCenterToTileCoordinates(local);
   }
 
-  forEachTile(cb: (pos: Coordinates, value: T) => void): void {
+  forEachTile(cb: (pos: Vector2, value: T) => void): void {
     const tiles = this.tiles;
 
     if (!tiles) {
@@ -114,7 +114,7 @@ export default class TileMap<T> extends Component<Options<T>>
     }
   }
 
-  wrapTilePosition(position: Coordinates): Coordinates {
+  wrapTilePosition(position: Vector2): Vector2 {
     const wrap = (n: number, bound: number): number => {
       if (n < 0) {
         return bound - 1;

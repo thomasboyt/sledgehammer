@@ -1,4 +1,4 @@
-import { Component, Physical, Coordinates } from 'pearl';
+import { Component, Physical, Vector2 } from 'pearl';
 import Session from './Session';
 import { lerp } from '../util/math';
 import { WIDTH } from '../constants';
@@ -13,7 +13,7 @@ export default class LevelTransitionManager extends Component<null> {
 
   private elapsedMs = 0;
   private prevCanvas?: HTMLCanvasElement;
-  private destPos?: Coordinates;
+  private destPos?: Vector2;
   private onFinishCb?: () => void;
 
   /**
