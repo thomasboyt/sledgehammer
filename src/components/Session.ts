@@ -1,4 +1,4 @@
-import { Component, GameObject, Keys, Entity } from 'pearl';
+import { Component, Keys, Entity } from 'pearl';
 import {
   NetworkingHost,
   NetworkingPlayer,
@@ -39,7 +39,7 @@ interface SessionSnapshot {
 
 export default class Session extends Component<null>
   implements NetworkedComponent<SessionSnapshot> {
-  worldObj!: GameObject;
+  worldObj!: Entity;
 
   gameState: GameState = 'waiting';
   startTime?: number;
@@ -51,7 +51,7 @@ export default class Session extends Component<null>
   currentLevel = 0;
 
   create() {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
+    if (!this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 
@@ -75,12 +75,12 @@ export default class Session extends Component<null>
 
     const levelIdx = this.currentLevel % levels.length;
 
-    this.worldObj = this.pearl.obj
+    this.worldObj = this.pearl.root
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('world');
 
     const world = this.worldObj.getComponent(World);
-    world.sessionObj = this.gameObject;
+    world.sessionObj = this.entity;
     world.loadLevel(levels[levelIdx]);
   }
 
@@ -164,13 +164,13 @@ export default class Session extends Component<null>
   }
 
   update(dt: number) {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
+    if (!this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 
     const hostInputter = this.pearl.inputter;
     const networkedPlayers = [
-      ...this.pearl.obj.getComponent(NetworkingHost).players.values(),
+      ...this.pearl.root.getComponent(NetworkingHost).players.values(),
     ];
 
     if (this.gameState === 'waiting') {

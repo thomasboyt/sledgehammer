@@ -2,7 +2,7 @@ import {
   Component,
   Physical,
   Coordinates,
-  GameObject,
+  Entity,
   Vector2,
   BoxCollider,
   VectorMaths as V,
@@ -17,13 +17,13 @@ const worldWidth = TILE_SIZE * WORLD_SIZE_WIDTH;
 const worldHeight = TILE_SIZE * WORLD_SIZE_HEIGHT;
 
 interface ShootOptions {
-  originObject: GameObject;
+  originObject: Entity;
   facing: Coordinates;
   speed: number;
 }
 
 export default class Bullet extends Component<null> {
-  origin?: GameObject;
+  origin?: Entity;
   vel: Vector2 = { x: 0, y: 0 };
 
   shoot(opts: ShootOptions) {
@@ -55,7 +55,7 @@ export default class Bullet extends Component<null> {
 
   update(dt: number) {
     // clean up off screen bullets
-    if (!this.pearl.obj.getComponent(Game).isHost) {
+    if (!this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 
@@ -70,7 +70,7 @@ export default class Bullet extends Component<null> {
       bounds.yMin < 0 ||
       bounds.yMax > worldHeight
     ) {
-      this.pearl.entities.destroy(this.gameObject);
+      this.pearl.entities.destroy(this.entity);
     }
   }
 
@@ -81,9 +81,9 @@ export default class Bullet extends Component<null> {
       return;
     }
 
-    this.pearl.entities.destroy(this.gameObject);
+    this.pearl.entities.destroy(this.entity);
 
-    const explosionObj = this.pearl.obj
+    const explosionObj = this.pearl.root
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('bulletExplosion');
 

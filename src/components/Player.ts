@@ -101,7 +101,7 @@ export default class Player extends Component<Options>
   }
 
   update(dt: number) {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
+    if (!this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 
@@ -113,7 +113,7 @@ export default class Player extends Component<Options>
       return;
     }
 
-    const players = this.pearl.obj.getComponent(NetworkingHost).players;
+    const players = this.pearl.root.getComponent(NetworkingHost).players;
     const networkedPlayer = players.get(this.playerId!)!;
     const inputter = networkedPlayer.inputter;
 
@@ -166,14 +166,14 @@ export default class Player extends Component<Options>
   }
 
   private playerShoot() {
-    const bullet = this.pearl.obj
+    const bullet = this.pearl.root
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('bullet');
 
-    this.gameObject.parent!.appendChild(bullet);
+    this.entity.parent!.appendChild(bullet);
 
     bullet.getComponent(Bullet).shoot({
-      originObject: this.gameObject,
+      originObject: this.entity,
       facing: this.facing,
       speed: PLAYER_BULLET_SPEED,
     });
@@ -199,7 +199,7 @@ export default class Player extends Component<Options>
 
   serialize(): Snapshot {
     const tileEntity = this.getComponent(TileEntity);
-    const worldId = tileEntity.tileMap.gameObject.getComponent(NetworkedEntity)
+    const worldId = tileEntity.tileMap.entity.getComponent(NetworkedEntity)
       .id;
 
     return {

@@ -1,4 +1,4 @@
-import { GameObject, TileMapCollider } from 'pearl';
+import { Entity, TileMapCollider } from 'pearl';
 import { NetworkedPrefab, NetworkedPhysical } from 'pearl-networking';
 
 import TileMap from '../components/TileMap';

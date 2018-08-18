@@ -1,4 +1,4 @@
-import { GameObject, Coordinates } from 'pearl';
+import { Entity, Coordinates } from 'pearl';
 import * as PF from 'pathfinding';
 
 import WrappedPFGrid from '../../util/WrappedPFGrid';
@@ -12,7 +12,7 @@ const MOVE_TIME_MS = 320;
 const CHASE_TIME_MS = 160;
 
 export default class ChaseEnemy extends BaseEnemy {
-  chasingPlayer?: GameObject;
+  chasingPlayer?: Entity;
 
   nextMove() {
     const tileEntity = this.getComponent(TileEntity);

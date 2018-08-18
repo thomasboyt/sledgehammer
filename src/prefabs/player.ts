@@ -1,7 +1,7 @@
 import {
   BoxCollider,
   Coordinates,
-  GameObject,
+  Entity,
   AnimationManager,
   SpriteRenderer,
   KinematicBody,

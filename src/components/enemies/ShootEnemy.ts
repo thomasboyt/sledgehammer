@@ -54,14 +54,14 @@ export default class ShootEnemy extends BaseEnemy {
         return;
       }
 
-      const bullet = this.pearl.obj
+      const bullet = this.pearl.root
         .getComponent(NetworkingHost)
         .createNetworkedPrefab('bullet');
 
-      this.gameObject.parent!.appendChild(bullet);
+      this.entity.parent!.appendChild(bullet);
 
       bullet.getComponent(Bullet).shoot({
-        originObject: this.gameObject,
+        originObject: this.entity,
         facing: this.facing,
         speed: ENEMY_BULLET_SPEED,
       });

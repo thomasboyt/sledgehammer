@@ -2,7 +2,6 @@ import {
   Component,
   Coordinates,
   ShapeCollider,
-  GameObject,
   Physical,
   Entity,
   TileMapCollider,
@@ -35,13 +34,13 @@ interface WorldSnapshot {
 
 export default class World extends Component<null>
   implements NetworkedComponent<WorldSnapshot> {
-  sessionObj?: GameObject;
+  sessionObj?: Entity;
 
   pickupsCollected = 0;
   private spawns: Coordinates[] = [];
   private nextSpawnIndex = 0;
 
-  private players = new Map<string, GameObject>();
+  private players = new Map<string, Entity>();
 
   loadLevel(level: LevelData) {
     const tileMap = this.getComponent(TileMap) as TileMap<Tile>;
@@ -91,11 +90,11 @@ export default class World extends Component<null>
       .tilePosition;
     const pickupTile = { x: playerTile.x - 1, y: playerTile.y };
 
-    const pickupObj = this.pearl.obj
+    const pickupObj = this.pearl.root
       .getComponent(NetworkingHost)
       .createNetworkedPrefab('pickup');
 
-    this.gameObject.appendChild(pickupObj);
+    this.entity.appendChild(pickupObj);
 
     const tileMap = this.getComponent(TileMap);
     const center = tileMap.tileCoordinatesToWorldCenter(pickupTile);
@@ -164,17 +163,17 @@ export default class World extends Component<null>
   private addEnemy(tilePos: Coordinates) {
     const type = sample(ENEMY_TYPES)!;
 
-    const enemyObj = this.pearl.obj
+    const enemyObj = this.pearl.root
       .getComponent(NetworkingHost)
       .createNetworkedPrefab(type);
 
-    this.gameObject.appendChild(enemyObj);
+    this.entity.appendChild(enemyObj);
 
     const choices = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     const facing = sample(choices)!;
 
     const tileEntity = enemyObj.getComponent(TileEntity);
-    tileEntity.world = this.gameObject;
+    tileEntity.world = this.entity;
     tileEntity.setPosition(tilePos);
 
     const enemy = enemyObj.getComponent(BaseEnemy);
@@ -186,17 +185,17 @@ export default class World extends Component<null>
       return;
     }
 
-    const networkingHost = this.pearl.obj.getComponent(NetworkingHost);
+    const networkingHost = this.pearl.root.getComponent(NetworkingHost);
 
     const playerObject = networkingHost.createNetworkedPrefab('player');
-    this.gameObject.appendChild(playerObject);
+    this.entity.appendChild(playerObject);
 
     const player = playerObject.getComponent(Player);
     player.playerId = sessionPlayer.id;
     player.color = sessionPlayer.color;
 
     const tileEntity = playerObject.getComponent(TileEntity);
-    tileEntity.world = this.gameObject;
+    tileEntity.world = this.entity;
     tileEntity.setPosition(this.getNextSpawn());
 
     this.players.set(sessionPlayer.id, playerObject);
@@ -214,7 +213,7 @@ export default class World extends Component<null>
   }
 
   update(dt: number) {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
+    if (!this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 
@@ -236,7 +235,7 @@ export default class World extends Component<null>
     }
   }
 
-  playerCollectedPickup(player: GameObject, pickup: GameObject) {
+  playerCollectedPickup(player: Entity, pickup: Entity) {
     const playerId = player.getComponent(Player).playerId!;
     this.sessionObj!.getComponent(Session).addScore(playerId, 100);
 

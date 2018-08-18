@@ -39,9 +39,9 @@ export default class BulletExplosion extends Component<null> {
 
     this.timeElapsed += dt;
 
-    if (this.pearl.obj.getComponent(Game).isHost) {
+    if (this.pearl.root.getComponent(Game).isHost) {
       if (this.timeElapsed > this.vanishMs) {
-        this.pearl.entities.destroy(this.gameObject);
+        this.pearl.entities.destroy(this.entity);
       }
     }
   }

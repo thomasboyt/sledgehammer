@@ -20,7 +20,7 @@ export default class WrappedEntityRenderer extends Component<Opts> {
     ctx.save();
     ctx.translate(center[0], center[1]);
     this.renderingAtCenter = true;
-    this.gameObject.render(ctx);
+    this.entity.render(ctx);
     this.renderingAtCenter = false;
     ctx.restore();
   }
@@ -36,7 +36,7 @@ export default class WrappedEntityRenderer extends Component<Opts> {
       return;
     }
 
-    const bounds = this.gameObject.getComponent(ShapeCollider).getLocalBounds();
+    const bounds = this.entity.getComponent(ShapeCollider).getLocalBounds();
 
     if (bounds.xMin < 0) {
       this.renderAtCenter(ctx, [worldWidth, 0]);

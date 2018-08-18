@@ -3,7 +3,7 @@ import {
   Physical,
   Coordinates,
   AnimationManager,
-  GameObject,
+  Entity,
   SpriteRenderer,
   PolygonShape,
   ShapeCollider,
@@ -66,7 +66,7 @@ export default class BaseEnemy extends Component<null>
   }
 
   update(dt: number) {
-    if (!this.pearl.obj.getComponent(Game).isHost) {
+    if (!this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 
@@ -198,8 +198,8 @@ export default class BaseEnemy extends Component<null>
     }
 
     const taggedEntities = [...this.pearl.entities.all()].filter(
-      (obj: GameObject) => {
-        return tags.some((tag) => obj.hasTag(tag)) && obj !== this.gameObject;
+      (obj: Entity) => {
+        return tags.some((tag) => obj.hasTag(tag)) && obj !== this.entity;
       }
     );
 
@@ -230,13 +230,13 @@ export default class BaseEnemy extends Component<null>
     this.getComponent(BoxCollider).isEnabled = false;
     const renderer = this.getComponent(SpawningDyingRenderer);
     renderer.die(() => {
-      this.pearl.entities.destroy(this.gameObject);
+      this.pearl.entities.destroy(this.entity);
     });
     this.rpcDie();
   }
 
   rpcDie() {
-    if (this.pearl.obj.getComponent(Game).isHost) {
+    if (this.pearl.root.getComponent(Game).isHost) {
       return;
     }
 

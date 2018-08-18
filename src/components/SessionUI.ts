@@ -7,8 +7,8 @@ import Session, { SessionPlayer } from './Session';
 export default class SessionUI extends Component<null> {
   private getLocalPlayer(): SessionPlayer | undefined {
     // TODO: make this a generic util that lives on... idk, session?
-    const networking = (this.pearl.obj.maybeGetComponent(NetworkingHost) ||
-      this.pearl.obj.maybeGetComponent(NetworkingClient))!;
+    const networking = (this.pearl.root.maybeGetComponent(NetworkingHost) ||
+      this.pearl.root.maybeGetComponent(NetworkingClient))!;
 
     const id = networking.localPlayerId;
 
@@ -59,7 +59,7 @@ export default class SessionUI extends Component<null> {
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    const { isHost } = this.pearl.obj.getComponent(Game);
+    const { isHost } = this.pearl.root.getComponent(Game);
     const { gameState, startTime, players } = this.getComponent(Session);
 
     ctx.font = '32px "1980XX", monospace';

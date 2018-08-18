@@ -2,7 +2,7 @@ import {
   Physical,
   Component,
   Coordinates,
-  GameObject,
+  Entity,
   KinematicBody,
   VectorMaths as V,
 } from 'pearl';
@@ -66,7 +66,7 @@ class MoveTween {
 export default class TileEntity extends Component<null> {
   moveTween?: MoveTween;
 
-  world?: GameObject;
+  world?: Entity;
 
   get tileMap(): TileMap<any> {
     if (!this.world) {
